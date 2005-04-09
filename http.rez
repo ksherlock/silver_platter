@@ -1,0 +1,760 @@
+#include "Types.rez"
+#include "rez.h"
+
+#define Divider $0fff
+
+type rCtlColorTbl {
+        wide array {
+            unsigned hex word;
+            };
+};
+
+
+// window titles
+resource rPString (rHTTPWindow) {
+	"  Silver Platter  "
+};
+
+
+// menus
+
+resource rPString (AppleMenu, locked, fixed, nocrossbank, nospecialmemory) {
+	" \$14 "
+};
+
+resource rPString (FileMenu, locked, fixed, nocrossbank, nospecialmemory) {
+	"  File  "
+};
+
+resource rPString (EditMenu, locked, fixed, nocrossbank, nospecialmemory) {
+	"  Edit  "
+};
+
+resource rPString (ServerMenu, locked, fixed, nocrossbank, nospecialmemory) {
+	"  Server  "
+};
+
+// menu items
+
+resource rPString (AboutMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"About\$C9"
+};
+
+resource rPString (ConfigMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Preferences\$C9"
+};
+
+//
+resource rPString (SaveMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Save Log File\$C9"
+};
+
+resource rPString (EmptyMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Empty Log"
+};
+
+//
+resource rPString (StartMMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Start Marinetti"
+};
+
+resource rPString (StopMMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Stop Marinetti"
+};
+
+resource rPString (StartHTTPMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Start HTTP Server"
+};
+
+resource rPString (StopHTTPMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Stop HTTP Server"
+};
+
+resource rPString (ResetMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Reset HTTP Server"
+};
+
+
+//
+resource rPString (CutMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Cut"
+};
+resource rPString (CopyMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Copy"
+};
+resource rPString (PasteMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Paste"
+};
+resource rPString (ClearMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Clear"
+};
+resource rPString (SelectAllMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	"Select All"
+};
+              
+
+resource rPString (Divider, locked, fixed, nocrossbank, nospecialmemory) {
+	"-"
+};
+
+resource rMenuBar (1, locked, fixed, nocrossbank, nospecialmemory) {
+	{
+		AppleMenu,
+		FileMenu,
+                EditMenu,
+		ServerMenu,
+	}
+};
+
+resource rMenu (FileMenu, locked, fixed, nocrossbank, nospecialmemory) {
+	FileMenu,
+	0xA008,
+	FileMenu,
+	{
+		SaveMItem,
+		EmptyMItem,
+	}
+};
+
+
+resource rMenu (EditMenu, locked, fixed, nocrossbank, nospecialmemory) {
+	EditMenu,
+	0xA008,
+	EditMenu,
+	{
+		CutMItem,
+		CopyMItem,
+		PasteMItem,
+		ClearMItem,
+		SelectAllMItem,
+	}
+};
+
+
+resource rMenu (ServerMenu, locked, fixed, nocrossbank, nospecialmemory) {
+	ServerMenu,
+	0xA008,
+	ServerMenu,
+	{
+		StartMMItem,
+		StopMMItem,
+		Divider,
+		StartHTTPMItem,
+		StopHTTPMItem,
+		ResetMItem,
+	}
+};
+
+
+resource rMenu (AppleMenu, locked, fixed, nocrossbank, nospecialmemory) {
+	AppleMenu,
+	0xA008,
+	AppleMenu,
+	{
+		AboutMItem,
+		Divider,
+		ConfigMItem,
+	}
+};
+
+
+resource rMenuItem (Divider, locked, fixed, nocrossbank, nospecialmemory) {
+	Divider,		// itemID
+	"","",			// itemChar, itemAltChar
+	NIL,			// itemCheck
+	$8080,			// itemFlag
+	Divider			// itemTitleRef
+};
+
+
+resource rMenuItem (AboutMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	AboutMItem,
+	"",
+	"",
+	0x0,
+	0x8000,
+	AboutMItem
+};
+
+resource rMenuItem (ConfigMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	ConfigMItem,
+	"",
+	"",
+	0x0,
+	0x8000,
+	ConfigMItem
+};
+
+//
+resource rMenuItem (SaveMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	SaveMItem,
+	"S",
+	"s",
+	0x0,
+	0x8000,
+	SaveMItem
+};
+resource rMenuItem (EmptyMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	EmptyMItem,
+	"",
+	"",
+	0x0,
+	0x8000,
+	EmptyMItem
+};
+
+//
+resource rMenuItem (StartMMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	StartMMItem,
+	"",
+	"",
+	0x0,
+	0x8000,
+	StartMMItem
+};
+
+resource rMenuItem (StopMMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	StopMMItem,
+	"",
+	"",
+	0x0,
+	0x8000,
+	StopMMItem
+};
+
+resource rMenuItem (StartHTTPMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	StartHTTPMItem,
+	"",
+	"",
+	0x0,
+	0x8000,
+	StartHTTPMItem
+};
+
+resource rMenuItem (StopHTTPMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	StopHTTPMItem,
+	"",
+	"",
+	0x0,
+	0x8000,
+	StopHTTPMItem
+};
+
+resource rMenuItem (ResetMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	ResetMItem,
+	"",
+	"",
+	0x0,
+	0x8000,
+	ResetMItem
+};
+//
+resource rMenuItem (CutMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	251,
+	"X",
+	"x",
+	0x0,
+	0x8080,
+	CutMItem
+};
+
+resource rMenuItem (CopyMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	252,
+	"C",
+	"c",
+	0x0,
+	0x8000,
+	CopyMItem
+};
+
+resource rMenuItem (PasteMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	253,
+	"V",
+	"v",
+	0x0,
+	0x8080,
+	PasteMItem
+};
+
+resource rMenuItem (ClearMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	254,
+	"",
+	"",
+	0x0,
+	0x8080,
+	ClearMItem
+};
+
+resource rMenuItem (SelectAllMItem, locked, fixed, nocrossbank, nospecialmemory) {
+	SelectAllMItem,
+	"A",
+	"a",
+	0x0,
+	0x8000,
+	SelectAllMItem
+};
+
+
+resource rControlList (rHTTPWindow) {
+	{
+		CtrlTE,
+		CtrlCount,
+	        CtrlTherm,
+        }
+};
+
+
+resource rControlTemplate(CtrlTherm) {
+	CtrlTherm,
+	{ 4, 4, 10, HTTPWindowWidth - 4},
+        thermometerControl {
+		{
+		/* flags */
+		0x0001,	// horizontal
+		/* more flags */
+		FctlProcNotPtr + RefIsResource /* + FctlTellAboutSize */,
+		/* refcon */
+		0,
+		/* position */
+		0,
+		/* scale */
+		16,	
+		/* color table */
+		CtrlTherm
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlCount) {
+	CtrlCount,
+	{12, 4, 22, 50},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText,
+			0x1002,
+			0x0,
+			CtrlCount,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlTE) {
+	CtrlTE,
+	//{-2, 0, HTTPWindowHeight + 1, HTTPWindowWidth + 2},
+	{24, 0, HTTPWindowHeight + 1, HTTPWindowWidth + 2},
+	editTextControl {
+		 {	/* optional Fields */
+			0x0,
+			FctlTarget + FctlCanBeTarget 
+			+ FctlWantsEvents + FctlProcNotPtr
+			 + FctlTellAboutSize  + FctlIsMultiPart,
+			0x0,
+			fSingleStyle + fReadOnly
+			+ fGrowRuler + fSmartCutPaste + fDrawBounds,
+			{-1, -1, -1, -1},
+			0xFFFFFFFF,
+			0,
+			0x0,
+			0,
+			0x0,
+			0x15,
+			CtrlTE,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0x0,
+			0x0,
+			0x0
+		}
+	}
+};
+
+
+
+resource rWindParam1 (rHTTPWindow) {
+	fClose + fTitle + fMove + fInfo,
+	rHTTPWindow,
+	0x0,
+	{0, 0, 0, 0},
+	rHTTPWindow,		// rWindColor
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0x0,
+	13,
+	{0, 0, HTTPWindowHeight, HTTPWindowWidth},
+	infront,
+	rHTTPWindow,		// rControlList
+	0xA09
+};
+
+resource rWindColor (rHTTPWindow) {
+	0x0000,
+	0x0F01,
+	0x021F,
+	0xF0FF,
+	0x00E0
+};
+resource rCtlColorTbl (CtrlTherm) {
+	{
+	0x0000, // blackoutline
+	0x000f,	// white interior
+	0x0000, // unused
+	0x000A	// light green mercury
+	}
+};
+
+
+
+resource rText (CtrlTE) {
+	""
+};
+
+resource rComment (1) {
+	"Silver Platter v 1.0\n\n"
+	"Copyright 2004-2005 Kelvin W Sherlock\n"
+	"Published by Syndicomm\$AA"
+};
+
+resource rVersion (1) {
+	{
+		1,
+		0,
+		0,
+		release,
+		0
+	},
+	verUS,
+	"Silver Platter",
+	"(C) 2004-2005 Kelvin Sherlock\n"
+        "Published by Syndicomm\$AA"
+};
+
+
+
+#define ConfigWindowWidth 300
+#define ConfigWindowHeight 102
+
+
+resource rWindParam1 (rConfigWindow) {
+	fAlert + fMove,
+	0x0,
+	0x0,
+	{0, 0, 0, 0},
+	0x0,
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0x0,
+	0,
+	{0, 0, ConfigWindowHeight, ConfigWindowWidth},
+	infront,
+	rConfigWindow,
+	0x9
+};
+
+
+resource rControlList (rConfigWindow) {
+	{
+		CtrlOk,
+	        CtrlCancel,
+		CtrlTeach,
+		CtrlAbort,
+		CtrlDir,
+		CtrlJail,
+		CtrlPathStat,
+		CtrlBrowse,
+		CtrlPort,
+		CtrlPortStat,
+        }
+};
+  
+
+resource rControlTemplate (CtrlBrowse) {
+	CtrlBrowse,
+	{4, 10, 17, 100},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlBrowse
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlPathStat) {
+	CtrlPathStat,
+	{20, 10, 30, ConfigWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText + fSquishText,
+			0x1002,
+			0x0,
+			CtrlPathStat,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlPortStat) {
+	CtrlPortStat,
+	{6, ConfigWindowWidth - 120, 15, ConfigWindowWidth - 82},
+	statTextControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlPortStat,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlPort) {
+	CtrlPort,
+	{4, ConfigWindowWidth - 80, 17, ConfigWindowWidth - 10},
+	editLineControl {
+		 {	/* optional Fields */
+			0x0,
+			0x7002,
+			0x0,
+			5,
+			CtrlPort,
+			0xffff,		// password char = none
+			0xC000		// leKeyIsNumber | leKeyIsSpecial
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlJail) {
+	CtrlJail,
+	{32, 10, 42, ConfigWindowWidth - 10},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlJail,
+			0
+		}
+	}
+};
+
+resource rControlTemplate (CtrlDir) {
+	CtrlDir,
+	{44, 10, 54, ConfigWindowWidth - 10},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlDir,
+			0
+		}
+	}
+};
+
+resource rControlTemplate (CtrlAbort) {
+	CtrlAbort,
+	{56, 10, 66, ConfigWindowWidth - 10},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlAbort,
+			0
+		}
+	}
+};
+
+resource rControlTemplate (CtrlTeach) {
+	CtrlTeach,
+	{68, 10, 78, ConfigWindowWidth - 10},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlTeach,
+			0
+		}
+	}
+};
+
+
+
+
+
+resource rControlTemplate (CtrlCancel) {
+	CtrlCancel,
+	{ConfigWindowHeight - 17, 10, ConfigWindowHeight - 4, 100},
+	SimpleButtonControl {
+		 {
+			0x0,
+			0x3002,
+			0x0,
+			CtrlCancel,
+			0x0,
+			{	
+				"\0x1B",
+				"\0x1B",
+				0x0,
+				0x0
+			}
+		}
+	}
+};
+
+resource rControlTemplate (CtrlOk) {
+	CtrlOk,
+	{ConfigWindowHeight - 17, ConfigWindowWidth - 110,
+	  ConfigWindowHeight - 4, ConfigWindowWidth - 10},
+	SimpleButtonControl {
+		 {
+			0x1,
+			0x3002,
+			0x0,
+			CtrlOk,
+			0x0,
+			{
+				"\n",
+				"\n",
+				0x0,
+				0x0
+			}
+		}
+	}
+};
+
+
+
+
+
+//
+resource rPString (CtrlCancel) {
+	"Cancel"
+};
+
+resource rPString (CtrlOk) {
+	"Ok"
+};
+
+resource rPString (CtrlPort) {
+	""
+};
+
+resource rPString (CtrlJail) {
+	"Use Home Directory"
+};
+
+resource rPString (CtrlDir) {
+	"Virtual Directory"
+};
+
+resource rPString (CtrlAbort) {
+	"Fast Connection Termination"
+};
+
+resource rPString (CtrlTeach) {
+	"Send Teach Text as ASCII Text"
+};
+
+
+resource rPString (CtrlBrowse) {
+	"Home"
+};
+
+
+resource rTextForLETextBox2 (CtrlPortStat) {
+	"Port"
+};
+
+resource rTextForLETextBox2 (CtrlPathStat) {
+	"/your/home/dir"
+};
+
+resource rTextForLETextBox2 (CtrlCount) {
+	""
+};
+
+
+//
+#define AboutWindowWidth  300
+#define AboutWindowHeight 120
+
+resource rWindParam1 (rAboutWindow) {
+	fMove,
+	0x0,
+	0x0,
+	{0, 0, 0, 0},
+	0x0,
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0x0,
+	0,
+	{0, 0, AboutWindowHeight, AboutWindowWidth},
+	infront,
+	rAboutWindow,		// rControlList
+	0xA09
+};
+
+resource rControlList (rAboutWindow) {
+	{
+		CtrlAbout,
+        }
+};
+
+
+resource rControlTemplate (CtrlAbout) {
+	CtrlAbout,
+	{10, 10, AboutWindowHeight - 10, AboutWindowWidth - 10},
+	statTextControl {
+		 {	
+			0x0,
+			0x1002,
+			0x0,
+			CtrlAbout,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+
+resource rTextForLETextBox2 (CtrlAbout) {
+	TBCenterJust
+	TBForeColor  TBColor1
+	"Silver Platter 1.0"
+	TBForeColor TBColor0
+	"\n\n"
+	"Copyright 2004 Kelvin W Sherlock"
+	"\n"
+	"Published by Syndicomm\$AA"
+	"\n"
+	"\n\n"
+	"This program contains materials from the ORCA/C Run-Time "
+	"Libraries, copyright 1987-1997 by Byte Works, Inc. "
+	"Used with permission."
+};
