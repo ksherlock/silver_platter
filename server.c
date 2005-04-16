@@ -822,8 +822,8 @@ Word oldPrefs;
             if (GetHandleSize(h))
             {
               TCPIPConvertIPToASCII(srBuffer.srDestIP, buffer16, 0);
-              i = orca_sprintf(buffer, "%b: %s %u\r", buffer16,
-                (*(GSString255 **)h)->text, terr);
+              i = orca_sprintf(buffer, "%b: %B %u\r", buffer16,
+                *h, terr);
               InsertString(i, buffer);
             }
           }

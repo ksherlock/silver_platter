@@ -119,10 +119,10 @@ GSString255Ptr path;
     total += sizeof(xstr) -1;
 
 #undef xstr
-#define xstr "<p>The document has moved <a href=\"%s%s\">here</a></p>\r\n" \
+#define xstr "<p>The document has moved <a href=\"%B%B\">here</a></p>\r\n" \
 "</body>\r\n<\html>\r\n"
 
-    total += orca_sprintf(cp, xstr, path->text, append->text);
+    total += orca_sprintf(cp, xstr, path, append);
   }
 
   if (q->version >= 0x0100)
@@ -132,8 +132,8 @@ GSString255Ptr path;
     if (GetHandleSize(q->host))
     {
       GSString255Ptr host = (GSString255Ptr)*q->host;
-      i = orca_sprintf(buffer, "Location: http://%s%s%s\r\n",
-        host->text, path->text, append->text);
+      i = orca_sprintf(buffer, "Location: http://%B%B%B\r\n",
+        host, path, append);
       TCPIPWriteTCP(ipid, buffer, i, false, false);
     }
     TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
@@ -295,10 +295,10 @@ GSString255Ptr gUrl, gHtml;
 
 #undef xstr
 #define xstr \
-"<title>Index of %s</title>\r\n" \
+"<title>Index of %B</title>\r\n" \
 "</head>\r\n" \
 "<body>\r\n" \
-"<h1>Index of %s</h1>\r\n"
+"<h1>Index of %B</h1>\r\n"
 
 
   hPath = MangleName(path);
@@ -309,7 +309,7 @@ GSString255Ptr gUrl, gHtml;
 
   path = hPath ? (GSString255Ptr)*hPath : path;
 
-  len = orca_sprintf(buffer, xstr, gHtml->text, gHtml->text);
+  len = orca_sprintf(buffer, xstr, gHtml, gHtml);
   BlockMove(buffer, cp, len);
   cp += len;
   total += len;
@@ -324,8 +324,8 @@ GSString255Ptr gUrl, gHtml;
     path->length = i + 1;
 
     len = orca_sprintf(buffer,
-      "<p><a href=\"%s\">Parent Directory</a></p>\r\n",
-      path->text);
+      "<p><a href=\"%B\">Parent Directory</a></p>\r\n",
+      path);
 
     BlockMove(buffer, cp, len);
     cp += len;
@@ -344,7 +344,8 @@ GSString255Ptr gUrl, gHtml;
 "<tr>\r\n" \
 "<th>Name</th><th>Size</th><th>Kind</th>\r\n" \
 "</tr>\r\n" \
-"</thead>\r\n"
+"</thead>\r\n" \
+"<tbody>\r\n"
 
   if (total + sizeof(xstr) - 1 > alloc)
   {
@@ -369,6 +370,10 @@ GSString255Ptr gUrl, gHtml;
     GetDirEntryGS(&DirDCB);
     if (_toolErr) break;
 
+    // terminate as a c-string
+    //vName.bufString.text[vName.bufString.length] = 0;
+    
+
     hUrl = MangleName(&vName.bufString);
     hHtml = MacRoman2HTML(&vName.bufString);
     if (hUrl) HLock(hUrl);
@@ -383,11 +388,11 @@ GSString255Ptr gUrl, gHtml;
     {
       len = orca_sprintf(buffer,
         "<tr>"
-          "<td><a href=\"%s%s/\">%s/</a></td>"
+          "<td><a href=\"%B%B/\">%B/</a></td>"
           "<td align=\"right\"> &mdash; </td>"
           "<td> Folder </td>"
         "</tr>\r\n",
-        path->text, gUrl->text, gHtml->text);
+        path, gUrl, gHtml);
     }
     else
     {
@@ -399,11 +404,11 @@ GSString255Ptr gUrl, gHtml;
 
       len = orca_sprintf(buffer,
 	"<tr>"
-          "<td><a href=\"%s%s\">%s</a></td>"
+          "<td><a href=\"%B%B\">%B</a></td>"
           "<td align=\"right\"> %uK </td>"
           "<td> %b </td>"
 	"</tr>\r\n",
-	path->text, gUrl->text, gHtml->text,
+	path, gUrl, gHtml,
         (Word)size,
 	fType);
     }
@@ -431,7 +436,7 @@ GSString255Ptr gUrl, gHtml;
     
   }
 #undef xstr
-#define xstr "</table>\r\n</body>\r\n</html>\r\n"
+#define xstr "</tbody></table>\r\n</body>\r\n</html>\r\n"
 
   if (total + sizeof(xstr) - 1 > alloc)
   {
@@ -543,7 +548,8 @@ GSString255Ptr gUrl, gHtml;
 "<tr>\r\n" \
 "<th>Name</th><th>Size</th><th>Kind</th>\r\n" \
 "</tr>\r\n" \
-"</thead>\r\n"
+"</thead>\r\n" \
+"<tbody>\r\n"
 
   if (total + sizeof(xstr) - 1 > alloc)
   {
@@ -574,6 +580,9 @@ GSString255Ptr gUrl, gHtml;
     if (_toolErr) continue;
     // convert first char from ':' --> '/'
     vName.bufString.text[0] = '/';
+    // terminate as a c-string
+    //vName.bufString.text[vName.bufString.length] = 0;
+
 
     hUrl = MangleName(&vName.bufString);
     hHtml = MacRoman2HTML(&vName.bufString);
@@ -587,11 +596,11 @@ GSString255Ptr gUrl, gHtml;
 
     len = orca_sprintf(buffer,
       "<tr>"
-        "<td><a href=\"%s/\">%s/</a></td>"
+        "<td><a href=\"%B/\">%B/</a></td>"
         "<td align=\"right\"> &mdash; </td>"
         "<td> Folder </td>"
       "</tr>\r\n",
-      gUrl->text, gHtml->text);
+      gUrl, gHtml);
 
 
      if (hUrl) DisposeHandle(hUrl);
@@ -615,7 +624,7 @@ GSString255Ptr gUrl, gHtml;
   }
 
 #undef xstr
-#define xstr "</table>\r\n</body>\r</html>\r\n"
+#define xstr "</tbody></table>\r\n</body>\r</html>\r\n"
 
   if (total + sizeof(xstr) - 1 > alloc)
   {
