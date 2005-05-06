@@ -18,9 +18,10 @@
 #include <TextEdit.h>
 #include <Window.h>
 
-#include <tcpip.h>
 
-#include <kstring.h>
+#include <tcpip.h>
+#include <string.h>
+
 
 #include "rez.h"
 #include "httpnda.h"
@@ -374,7 +375,7 @@ Handle h;
   {
   Word skip_tmda = 0;
 
-    memzero(&event, sizeof(event));
+    memset(&event, 0, sizeof(event));
 
     BlockMove((Pointer)param, (Pointer)&event, 16);
 
@@ -486,7 +487,7 @@ Handle h;
         WindowPtr win;
         static EventRecord ev;
 
-          memzero(&ev, sizeof(ev));
+          memset(&ev, 0, sizeof(ev));
           ev.wmTaskMask = 0x001f0004;
 
           win = NewWindow2(NULL, NULL, NULL, NULL,

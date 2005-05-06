@@ -17,7 +17,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <kstring.h>
 //#include <dfa.h>
 
 #include "httpnda.h"
@@ -25,6 +24,8 @@
 #include "config.h"
 #include "rez.h"
 #include "toolbox.h"
+
+#include "kmalloc.h"
 
 extern int orca_sprintf(char *, const char *, ...);
 
@@ -230,17 +231,15 @@ GSString255Ptr host;
     while (c = cp[i] && !isspace(c)) i++;
     if (!i) return;
 
-    h = q->host;
-    HUnlock(h);
-    SetHandleSize(i + 3, h);
+    host = kmalloc(i + 3);
+    if (host)
+    {
+      q->host = host;
+      host->length = i;
+      BlockMove(cp, host->text, i);
+      host->text[i] = 0;
+    }
 
-    if (_toolErr) return;
-    HLock(h);
-
-    host = (GSString255Ptr)*h;
-    host->length = i;
-    BlockMove(cp, host->text, i);
-    host->text[i] = 0;
     return;
   }
 }
@@ -330,17 +329,13 @@ Word cmd = -1;
 
   if (len)
   {
-    h = q->pathname;
-    HUnlock(h);
-    SetHandleSize(len + 3, h);
+    path = kmalloc(len + 3);
+    if (!path) return;
 
-    if (_toolErr) return;
-    HLock(h);
+    q->pathname = path;
 
-    path = (GSString255Ptr)*h;
     path->length = len;
     BlockMove(cp, path->text, len);
-    //todo - convert %xx
     path->text[len] = 0;
 
     cp += len;
@@ -376,33 +371,27 @@ Word cmd = -1;
 
       len = fRoot->length + path->length;
 
-      h = q->fullpath;
+      fullpath = kmalloc(len + 3);
 
-      HUnlock(h);
-      SetHandleSize(len + 3, h);
+      if (fullpath)
+      {
+        q->fullpath = fullpath;
 
-      if (_toolErr) return;
-
-      HLock(h);
-
-      fullpath = (GSString255Ptr)*h;
-
-      BlockMove(fRoot->text, fullpath->text, fRoot->length);
-      BlockMove(path->text, fullpath->text + fRoot->length, path->length);
-      fullpath->length = len;
-      fullpath->text[len] = 0;
+        BlockMove(fRoot->text, fullpath->text, fRoot->length);
+        BlockMove(path->text, fullpath->text + fRoot->length, path->length);
+        fullpath->length = len;
+        fullpath->text[len] = 0;
+      }
     }
     else
     {
-      h = q->fullpath;
-      HUnlock(h);
-      SetHandleSize(path->length + 3, h);
-
-      if (_toolErr) return;
-
-      HLock(h);
-      
-      PtrToHand((Pointer)path, h, path->length + 3);
+      GSString255Ptr fullpath;
+      fullpath = kmalloc(len + 3);
+      if (fullpath)
+      {
+        q->fullpath = fullpath;
+        BlockMove((Pointer)path, (Pointer)fullpath, len + 3);
+      }
     }
   } // if (len)
 
@@ -448,21 +437,31 @@ Word CloseDCB[2];
     DisposeHandle(q->buffer);
     q->buffer = 0;
   }
-  if (q->pathname)
+
+  // new fangled pointers.
+  if (q->request)
   {
-    HUnlock(q->pathname);
-    SetHandleSize(0, q->pathname);
-  }
-  if (q->fullpath)
-  {
-    HUnlock(q->fullpath);
-    SetHandleSize(0, q->fullpath);
+    kfree(q->request);
+    q->request = NULL;
   }
   if (q->host)
   {
-    HUnlock(q->host);
-    SetHandleSize(0, q->host);
+    kfree(q->host);
+    q->host = NULL;
   }
+
+  if (q->pathname)
+  {
+    kfree(q->pathname);
+    q->pathname = NULL;
+  }
+
+  if (q->fullpath)
+  {
+    kfree(q->fullpath);
+    q->fullpath = NULL;
+  }
+
   if (q->workHandle)
   {
     HUnlock(q->workHandle);
@@ -499,7 +498,9 @@ Word StartServer(void)
   fActive = 0;
   fUsed = 0;
 
-  memzero(queue, sizeof(queue));
+  kmstartup(MyID | 0x0f00);
+
+  memset(queue, 0, sizeof(queue));
 
   Ipid = TCPIPLogin(MyID, 0, 0, 0, 64);
 #if DEBUG
@@ -551,21 +552,7 @@ struct qEntry *q;
     TCPIPLogout(q->ipid);
     ReleaseQ(q);
 
-    if (q->pathname)
-    {
-      DisposeHandle(q->pathname);
-      q->pathname = NULL;
-    }
-    if (q->fullpath)
-    {
-      DisposeHandle(q->fullpath);
-      q->fullpath = NULL;
-    }
-    if (q->host)
-    {
-      DisposeHandle(q->host);
-      q->host = NULL;
-    }
+
     if (q->buffer)
     {
       DisposeHandle(q->buffer);
@@ -586,6 +573,9 @@ struct qEntry *q;
 
   FlagHTTP = false;
   Ipid = 0;
+
+  kmshutdown();
+
 
   #undef xstr
   #define xstr "Server stopped\r"
@@ -785,7 +775,22 @@ Word oldPrefs;
             if (h == (Handle)0) break;  // blank line
 
             cp = *h;
-            if (q->command == 0) ScanMethod(cp, q);
+            if (q->command == 0)
+            {
+              GSString255Ptr req;
+
+              Word i = GetHandleSize(h);
+              ScanMethod(cp, q);
+              req = kmalloc(2 + i);
+
+              if (req)
+              {
+                q->request = req;
+                req->length = i - 1; // includes null terminator.
+                HandToPtr(h, req->text, i);
+              }
+
+            }
             else ScanHeader(cp, q);
 
             //InsertString(GetHandleSize(h) - 1, *h);
@@ -797,6 +802,8 @@ Word oldPrefs;
           // if h == 0, all headers received.
           if (h == (Handle)0)
           {
+            q->ip = srBuffer.srDestIP;
+
             switch(q->command)
             {
             case CMD_GET:
@@ -817,14 +824,6 @@ Word oldPrefs;
 
             default:
               terr = ProcessError(405, q);
-            }
-            h = q->pathname;
-            if (GetHandleSize(h))
-            {
-              TCPIPConvertIPToASCII(srBuffer.srDestIP, buffer16, 0);
-              i = orca_sprintf(buffer, "%b: %B %u\r", buffer16,
-                *h, terr);
-              InsertString(i, buffer);
             }
           }
         }
@@ -911,6 +910,7 @@ Word oldPrefs;
       {
         if (srBuffer.srSndQueued == 0)
         {
+
           if (q->flags & FLAG_KA)
           {
             Handle h;
@@ -972,12 +972,8 @@ Word oldPrefs;
 
       //if (!q->buffer) q->buffer = NewHandle(0, MyID | 0x0d00, attrNoSpec, 0);
       //err |= _toolErr;
-      if (!q->pathname) q->pathname = NewHandle(0, MyID | 0x0d00, attrNoSpec, 0);
-      err |= _toolErr;
-      if (!q->fullpath) q->fullpath = NewHandle(0, MyID | 0x0d00, attrNoSpec, 0);
-      err |= _toolErr;
-      if (!q->host) q->host = NewHandle(0, MyID | 0x0d00, attrNoSpec, 0);
-      err |= _toolErr;
+
+
       if (!q->workHandle) q->workHandle = NewHandle(0, MyID | 0x0d00, attrNoSpec, 0);
       err |= _toolErr;
 

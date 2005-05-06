@@ -11,7 +11,7 @@
 #include <stdfile.h>
 #include <window.h>
 
-#include <kstring.h>
+#include <string.h>
 
 #include "config.h"
 #include "rez.h"
@@ -25,6 +25,13 @@ Word fPort;
 Word fDir;
 Word fTeach;
 Word fMTU;
+
+Word fAS;
+
+
+Word fLog;
+GSString255Ptr fLogDir;
+Handle fLogDirH;
 
 GSString255Ptr fRoot;
 Handle fRootH;
@@ -40,6 +47,10 @@ static char *NamePort = "\pPort";
 static char *NameRoot = "\pRoot Directory";
 static char *NameTeach ="\pTeach Ascii";
 static char *NameMTU = "\pMTU";
+static char *NameLog = "\pLog";
+static char *NameLogDir = "\pLog Directory";
+static char *NameAS = "\pAppleSingle";
+
 
 
 Handle RMLoadNamedResource2(Word rType, const char *name, LongWord *rID)
@@ -131,6 +142,11 @@ fJail = false;
 fTeach = false;
 fPort = 80;
 fMTU = 512;
+
+fLog = false;
+fLogDir = NULL;
+fLogDirH = NULL;
+
 
 fRoot = NULL;
 fRootH = NULL;
@@ -257,7 +273,7 @@ Word i;
 
   newPath = NULL;
 
-  memzero(&event, sizeof(event));
+  memset(&event, 0, sizeof(event));
   event.wmTaskMask = 0x001f0004;
 
   win = NewWindow2(NULL, NULL, NULL, NULL,

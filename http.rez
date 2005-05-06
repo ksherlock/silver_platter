@@ -427,7 +427,7 @@ resource rComment (1) {
 resource rVersion (1) {
 	{
 		1,
-		0,
+		1,
 		0,
 		release,
 		0
@@ -746,10 +746,10 @@ resource rControlTemplate (CtrlAbout) {
 resource rTextForLETextBox2 (CtrlAbout) {
 	TBCenterJust
 	TBForeColor  TBColor1
-	"Silver Platter 1.0"
+	"Silver Platter 1.1"
 	TBForeColor TBColor0
 	"\n\n"
-	"Copyright 2004 Kelvin W Sherlock"
+	"Copyright 2004-2005 Kelvin W Sherlock"
 	"\n"
 	"Published by Syndicomm\$AA"
 	"\n"

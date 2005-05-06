@@ -9,6 +9,9 @@ extern Word fDir;
 extern Word fTeach;
 extern Word fMTU;
 
+extern Word fLog;
+extern GSString255Ptr fLogDir;
+
 extern GSString255Ptr fRoot;
 extern Handle fRootH;
 

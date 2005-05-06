@@ -10,7 +10,6 @@
 
 #include "server.h"
 #include "applesingle.h"
-#include <kstring.h>
 
 extern pascal Word swap16(Word);
 extern pascal LongWord swap32(LongWord);
@@ -64,7 +63,7 @@ Word numEntries;
   if (q->command = CMD_GET)
   {
     OpenDCB.pCount = 15;
-    OpenDCB.pathname = (GSString255Ptr)*q->fullpath;
+    OpenDCB.pathname = q->fullpath;
     OpenDCB.requestAccess = readEnable;
     OpenDCB.resourceNumber = 0;
     OpenDCB.optionList = (ResultBuf255Ptr)optionData;
@@ -106,7 +105,7 @@ Word numEntries;
   else
   {
     InfoDCB.pCount = 12;
-    InfoDCB.pathname = (GSString255Ptr)*q->fullpath;
+    InfoDCB.pathname = q->fullpath;
     InfoDCB.optionList = (ResultBuf255Ptr)optionData;
 
     optionData[0] = 50 + 4;
@@ -127,7 +126,7 @@ Word numEntries;
 
 
   // find the filename
-  g = (GSString255Ptr)*q->fullpath;
+  g = q->fullpath;
   i = g->length;
   // i is 1 based, so --i is correct.
   while (g->text[--i] != '/');

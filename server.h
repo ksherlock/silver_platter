@@ -51,11 +51,16 @@ struct qEntry
   Word flags;
   Word moreFlags;
   LongWord tick;
+  LongWord ip;
+
+  GSString255Ptr host;
+  GSString255Ptr request;
+
+  GSString255Ptr pathname;
+  GSString255Ptr fullpath;
+  
 
   Handle buffer;
-  Handle pathname;
-  Handle fullpath;
-  Handle host;
   Handle workHandle;
 };
 

@@ -12,11 +12,11 @@
 #include <tcpip.h>
 #include <gsos.h>
 
-#include <kstring.h>
 
 #include "server.h"
 #include "config.h"
 #include "ftype.h"
+#include "kmalloc.h"
 
 extern int orca_sprintf(char *, const char *, ...);
 
@@ -72,7 +72,7 @@ Handle g;
 
 GSString255Ptr path;
 
-  path = (GSString255Ptr)*q->pathname;
+  path = q->pathname;
 
   g = MangleName(path);
   if (g)
@@ -129,11 +129,10 @@ GSString255Ptr path;
   {
     SendHeader(q, 301, total, NULL, "text/html", false);
 
-    if (GetHandleSize(q->host))
+    if (q->host)
     {
-      GSString255Ptr host = (GSString255Ptr)*q->host;
       i = orca_sprintf(buffer, "Location: http://%B%B%B\r\n",
-        host, path, append);
+        q->host, path, append);
       TCPIPWriteTCP(ipid, buffer, i, false, false);
     }
     TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
@@ -175,35 +174,26 @@ GSString255Ptr path;
 
 Word CheckIndex(struct qEntry *q)
 {
-Handle h;
 GSString255Ptr newpath;
 GSString255Ptr oldpath;
 char *cp;
 Word i;
 
-#if 0
-  h = q->fullpath ? q->fullpath : q->pathname;
-#endif
-  h = q->fullpath;
-
-  oldpath = (GSString255Ptr)*h;
+  oldpath = q->fullpath;
 
   #undef xstr
   #define xstr "index.html"
 
   i = oldpath->length;
 
-  h = q->workHandle;
-  HUnlock(h);
-  SetHandleSize(i + sizeof(xstr) + 2, h);
+  newpath = kmalloc(2 + i + sizeof(xstr));
 
-  if (_toolErr)
+
+  if (newpath == NULL)
   {
     return ProcessError(500, q);
   }
-  HLock(h);
 
-  newpath = (GSString255Ptr)*h;
   cp = newpath->text;
   BlockMove(oldpath->text, cp, i);
 
@@ -227,6 +217,7 @@ Word i;
   GetFileInfoGS(&InfoDCB);
   if (!_toolErr)
   {
+    kfree(newpath);
     return Redirect(q, (GSString255Ptr)"\x0a\x00index.html");
   }
 
@@ -235,8 +226,11 @@ Word i;
   GetFileInfoGS(&InfoDCB);
   if (!_toolErr)
   {
+    kfree(newpath);
     return Redirect(q, (GSString255Ptr)"\x09\x00index.htm");
   }
+
+  kfree(newpath);
 
   return 0;
 }
@@ -251,7 +245,7 @@ Word err;
 volatile Handle h; // must be volatile.
 
 char *cp;
-GSString255Ptr path = (GSString255Ptr)*q->pathname;
+GSString255Ptr path = q->pathname;
 
 Handle hUrl, hHtml, hPath;
 GSString255Ptr gUrl, gHtml;
@@ -686,13 +680,12 @@ Word ipid;
   ipid = q->ipid;
 
   //
-  if (!GetHandleSize(q->fullpath))
+  if (!q->fullpath)
   {
     return ProcessError(400, q);
   }
 
-  HLock(q->fullpath);
-  path = (GSString255Ptr)*q->fullpath;
+  path = q->fullpath;
 
 
   // ``/''  -- special case.

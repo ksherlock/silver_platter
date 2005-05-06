@@ -2,12 +2,12 @@
 # for compiling
 
 CFLAGS	+=  $(DEFINES) -v #-O
-LDLIBS += -l /usr/local/lib/libk -l /usr/local/lib/liborca
+LDLIBS += -l /usr/local/lib/liborca
 CFLAGS += -I /usr/local/include/
 
 OBJS	= httpnda.o tools.o server.o error.o file.o time.o \
  mime.o config.o methods.o ctrl.o toolbox.o header.o log.o \
- mangle.o ftype.o applesingle.o utils.o
+ mangle.o ftype.o applesingle.o utils.o kmalloc.o
 ROBJS = http.r errors.r
 
 
@@ -26,6 +26,7 @@ server.o: server.c server.h httpnda.h config.h
 toolbox.o: toolbox.c toolbox.h
 tools.o: tools.c httpnda.h
 applesingle.o: applesingle.c applesingle.h server.h
+kmalloc.o: kmalloc.c kmalloc.h
 
 # resource files
 http.r: http.rez rez.h

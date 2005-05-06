@@ -5,37 +5,62 @@
 #include <tcpip.h>
 #include <timetool.h>
 
-#include <kstring.h>
-
 #include "server.h"
+#include "config.h"
 
 extern int orca_sprintf(char *, const char *, ...);
+extern int fdprintf(word, const char *, ...);
 
 static char tiBuffer[38];
+static char buffer16[16];
+
+
+word logfd = 0;
 
 extern void tiTimeRec2GMTString(const TimeRec *, char *);
 
 void SendHeader(struct qEntry *q, Word status, LongWord size,
   const TimeRec * modTime, const char *mimeString, Boolean term)
 {
+
+
 Word ipid = q->ipid;
 Word flags = q->flags;
 Word i;
+
+
+  tiToday2GMTString(tiBuffer);
+
+
+  if (fLog && logfd)
+  {
+  char *req = q->request ? (char *)q->request : "\x00\x00";
+
+    TCPIPConvertIPToASCII(q->ip, buffer16, 0);
+
+
+    if (size != -1)
+
+      fdprintf(logfd, "%b - - [%b] \"%B\" %u %lu\r",
+        buffer16, tiBuffer, req, status, size);
+    else
+      fdprintf(logfd, "%b - - [%b] \"%B\" %u -\r",
+        buffer16, tiBuffer, req, status);
+
+
+  }
+
 
   if (q->version >= 0x0100)
   {
     i = orca_sprintf(buffer, "HTTP/1.1 %u\r\n", status);
     TCPIPWriteTCP(ipid, buffer, i, false, false);
 
-    tiToday2GMTString(tiBuffer);
-    if (!_toolErr)
-    {
-      i = orca_sprintf(buffer, "Date: %b\r\n", tiBuffer);
-      TCPIPWriteTCP(ipid, buffer, i, false, false);
-    }
+    i = orca_sprintf(buffer, "Date: %b\r\n", tiBuffer);
+    TCPIPWriteTCP(ipid, buffer, i, false, false);
 
     #undef xstr
-    #define xstr "Server: SilverPlatter/1.0 (IIgs)\r\n"
+    #define xstr "Server: SilverPlatter/1.1 (IIgs)\r\n"
     TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
 
     if (modTime)
