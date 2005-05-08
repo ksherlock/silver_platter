@@ -5,7 +5,9 @@
 enum
 {
   FLAG_KA = 0x0001,		// keep-alive
-  FLAG_CHUNKED = 0x0002		// chunked transfer
+  FLAG_CHUNKED = 0x0002,	// chunked transfer
+  FLAG_TEXT = 0x0004,		// PUT - is text/*
+  FLAG_CREATE = 0x0008		// PUT - created file.
 };
 
 // moreFlags
@@ -25,7 +27,9 @@ enum
   STATE_LOGOUT,
 
   STATE_ASINGLE_1,
-  STATE_ASINGLE_2
+  STATE_ASINGLE_2,
+
+  STATE_PUT
 };
 
 enum
@@ -52,6 +56,7 @@ struct qEntry
   Word moreFlags;
   LongWord tick;
   LongWord ip;
+  LongWord filesize;
 
   GSString255Ptr host;
   GSString255Ptr request;
@@ -68,6 +73,7 @@ extern char buffer[4096];
 
 Word ProcessError(Word, struct qEntry *);
 Word ProcessFile(struct qEntry *);
+Word ProcessPut(struct qEntry *);
 
 void SendHeader(struct qEntry *q, Word status, LongWord size,
   const TimeRec * modTime, const char *mimeString, Boolean term);

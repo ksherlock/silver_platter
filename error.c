@@ -10,8 +10,6 @@
 #include <tcpip.h>
 #include <timetool.h>
 
-#include <kstring.h>
-
 #include "server.h"
 #include "config.h"
 
@@ -75,7 +73,7 @@ char *cp;
     if (error == 405 || error == 501)
     {
       #undef xstr
-      #define xstr "Allow: GET, HEAD\r\n"
+      #define xstr "Allow: GET, HEAD, PUT\r\n"
       TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
     }
 

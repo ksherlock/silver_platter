@@ -10,6 +10,7 @@
 #include <types.h>
 #include <control.h>
 #include <gsos.h>
+#include <IntMath.h>
 #include <memory.h>
 #include <MiscTool.h>
 #include <tcpip.h>
@@ -201,6 +202,7 @@ GSString255Ptr host;
     q->flags |= FLAG_KA;
     return;
   }
+
   #undef xstr
   #define xstr "Connection: close"
   if (!strincmp(xstr, cp, sizeof(xstr) - 1))
@@ -208,6 +210,7 @@ GSString255Ptr host;
     q->flags &= ~FLAG_KA;
     return;
   }        
+
   #undef xstr
   #define xstr "Connection: keep-alive"
   if (!strincmp(xstr, cp, sizeof(xstr) - 1))
@@ -216,13 +219,10 @@ GSString255Ptr host;
     return;
   }
 
-
   #undef xstr
   #define xstr "Host:"
   if (!strincmp(xstr, cp, sizeof(xstr) - 1))
   {
-  Handle h;
-
     cp += sizeof(xstr) - 1;
 
     // move past any leading whitespace
@@ -245,6 +245,49 @@ GSString255Ptr host;
 
     return;
   }
+
+  // PUT - Content-Length & Content-Type
+  if (q->command == CMD_PUT)
+  {
+    // Content-Length: <space> <digit>+
+    #undef xstr
+    #define xstr "Content-Length:"
+    if (!strincmp(xstr, cp, sizeof(xstr) - 1))
+    {
+      cp += sizeof(xstr) - 1;
+
+      // move past any leading whitespace
+      while (isspace(*cp)) cp++;
+      if (!*cp) return;
+
+      i = 0;
+
+      while (isdigit(cp[i])) i++;
+
+      q->filesize = Dec2Long(cp, i, 0);
+
+      return;
+    }
+
+
+    // set the FLAG_TEXT if the type is text/*
+    #undef xstr
+    #define xstr "Content-Type:"
+    if (!strincmp(xstr, cp, sizeof(xstr) - 1))
+    {
+
+      cp += sizeof(xstr) - 1;
+
+      // move past any leading whitespace
+      while (isspace(*cp)) cp++;
+      if (!*cp) return;
+      if (!strincmp("text/", cp, 5)) q->flags |= FLAG_TEXT;
+
+      return;
+    }
+
+  } // q->command == CMD_PUT
+
 }
 
 // scan a request for the request and http version.
@@ -494,6 +537,7 @@ Word CloseDCB[2];
   q->flags = 0;
   q->moreFlags = 0;
   q->tick = 0;
+  q->filesize = 0;
 }    
 
 extern Word CreateLog(void);
@@ -808,8 +852,6 @@ Word oldPrefs;
             }
             else ScanHeader(cp, q);
 
-            //InsertString(GetHandleSize(h) - 1, *h);
-            //InsertString(1, "\r");
 
             DisposeHandle(h);
           } while (!done);
@@ -831,6 +873,10 @@ Word oldPrefs;
               default:
                 terr = ProcessFile(q);
               }
+              break;
+
+            case CMD_PUT:
+              terr = ProcessPut(q);
               break;
 
             case 0xfff:
@@ -919,7 +965,49 @@ Word oldPrefs;
           }
         }
       }
-      if (q->state != STATE_CLOSE) break;
+      break;
+
+      // read any incoming data, dump it to the file.
+    case STATE_PUT:
+      {
+      IORecGS WriteDCB;
+
+	// read any pending data...
+	if (srBuffer.srRcvQueued)
+	{
+        Handle h = q->workHandle;
+
+          terr = TCPIPReadTCP(ipid, 1, (Ref)h,
+            srBuffer.srRcvQueued , &rrBuffer);
+
+          HLock(h);
+	  WriteDCB.pCount = 4;
+	  WriteDCB.refNum = q->fd;
+	  WriteDCB.dataBuffer = *h;
+	  WriteDCB.requestCount = rrBuffer.rrBuffCount;
+
+	  WriteGS(&WriteDCB);
+
+	  if (_toolErr)
+          {
+            ProcessError(500,q);
+            break;
+          }
+
+          if (q->filesize)
+          {
+            q->filesize -= rrBuffer.rrBuffCount;
+            if (q->filesize <= 0)
+            {
+              SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 ,
+                0, NULL, NULL, true);
+              q->state = STATE_CLOSE;
+
+            }
+          } // q->filesize.
+	}
+      }
+      break;
         
     case STATE_CLOSE:
       {

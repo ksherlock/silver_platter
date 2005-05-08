@@ -28,6 +28,11 @@ Word fMTU;
 
 Word fAS;
 
+// PUT
+Word fPut;
+Word fPutOverWrite;
+Word fPutMkdir;	
+
 
 Word fLog;
 GSString255Ptr fLogDir;
@@ -150,6 +155,13 @@ fLogDirH = NULL;
 
 fRoot = NULL;
 fRootH = NULL;
+
+
+fPut = true;
+fPutOverWrite = false;
+fPutMkdir = false;	
+
+
 
 // 1 - check if file exists
 // 2 - if no, create the folder and file
