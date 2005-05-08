@@ -441,7 +441,7 @@ resource rVersion (1) {
 
 
 #define ConfigWindowWidth 300
-#define ConfigWindowHeight 102
+#define ConfigWindowHeight 142
 
 
 resource rWindParam1 (rConfigWindow) {
@@ -471,48 +471,21 @@ resource rControlList (rConfigWindow) {
 		CtrlTeach,
 		CtrlAbort,
 		CtrlDir,
+		CtrlLog,
 		CtrlJail,
-		CtrlPathStat,
-		CtrlBrowse,
+		CtrlLogBrowse,
+		CtrlLogStat,
+		CtrlHomeStat,
+		CtrlHomeBrowse,
 		CtrlPort,
 		CtrlPortStat,
         }
-};
-  
-
-resource rControlTemplate (CtrlBrowse) {
-	CtrlBrowse,
-	{4, 10, 17, 100},
-	SimpleButtonControl {
-		 {	/* optional Fields */
-			0x0,
-			0x1002,
-			0x0,
-			CtrlBrowse
-		}
-	}
-};
-
-
-resource rControlTemplate (CtrlPathStat) {
-	CtrlPathStat,
-	{20, 10, 30, ConfigWindowWidth - 10},
-	statTextControl {
-		 {	/* optional Fields */
-			fBlastText + fSquishText,
-			0x1002,
-			0x0,
-			CtrlPathStat,
-			0,
-			leftJust
-		}
-	}
 };
 
 
 resource rControlTemplate (CtrlPortStat) {
 	CtrlPortStat,
-	{6, ConfigWindowWidth - 120, 15, ConfigWindowWidth - 82},
+	{4, 10, 13, 50},
 	statTextControl {
 		 {	/* optional Fields */
 			0x0,
@@ -528,7 +501,7 @@ resource rControlTemplate (CtrlPortStat) {
 
 resource rControlTemplate (CtrlPort) {
 	CtrlPort,
-	{4, ConfigWindowWidth - 80, 17, ConfigWindowWidth - 10},
+	{2, 60, 15, 110},
 	editLineControl {
 		 {	/* optional Fields */
 			0x0,
@@ -542,10 +515,74 @@ resource rControlTemplate (CtrlPort) {
 	}
 };
 
+  
+
+resource rControlTemplate (CtrlHomeBrowse) {
+	CtrlHomeBrowse,
+	{17, 10, 30, 100},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlHomeBrowse
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlHomeStat) {
+	CtrlHomeStat,
+	{20, 110, 30, ConfigWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText + fSquishText,
+			0x1002,
+			0x0,
+			CtrlHomeStat,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlLogBrowse) {
+	CtrlLogBrowse,
+	{32, 10, 45, 100},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlLogBrowse
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlLogStat) {
+	CtrlLogStat,
+	{32, 110, 45, ConfigWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText + fSquishText,
+			0x1002,
+			0x0,
+			CtrlLogStat,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+
+
 
 resource rControlTemplate (CtrlJail) {
 	CtrlJail,
-	{32, 10, 42, ConfigWindowWidth - 10},
+	{52, 10, 62, ConfigWindowWidth - 10},
 	CheckControl {
 		 {	/* optional Fields */
 			0x0,
@@ -557,9 +594,26 @@ resource rControlTemplate (CtrlJail) {
 	}
 };
 
+
+resource rControlTemplate (CtrlLog) {
+	CtrlLog,
+	{64, 10, 74, ConfigWindowWidth - 10},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlLog,
+			0
+		}
+	}
+};
+
+
+
 resource rControlTemplate (CtrlDir) {
 	CtrlDir,
-	{44, 10, 54, ConfigWindowWidth - 10},
+	{76, 10, 86, ConfigWindowWidth - 10},
 	CheckControl {
 		 {	/* optional Fields */
 			0x0,
@@ -573,7 +627,7 @@ resource rControlTemplate (CtrlDir) {
 
 resource rControlTemplate (CtrlAbort) {
 	CtrlAbort,
-	{56, 10, 66, ConfigWindowWidth - 10},
+	{88, 10, 98, ConfigWindowWidth - 10},
 	CheckControl {
 		 {	/* optional Fields */
 			0x0,
@@ -587,7 +641,7 @@ resource rControlTemplate (CtrlAbort) {
 
 resource rControlTemplate (CtrlTeach) {
 	CtrlTeach,
-	{68, 10, 78, ConfigWindowWidth - 10},
+	{100, 10, 110, ConfigWindowWidth - 10},
 	CheckControl {
 		 {	/* optional Fields */
 			0x0,
@@ -665,6 +719,11 @@ resource rPString (CtrlJail) {
 	"Use Home Directory"
 };
 
+resource rPString (CtrlLog) {
+	"Save Access Logs"
+};
+
+
 resource rPString (CtrlDir) {
 	"Virtual Directory"
 };
@@ -678,18 +737,28 @@ resource rPString (CtrlTeach) {
 };
 
 
-resource rPString (CtrlBrowse) {
-	"Home"
+resource rPString (CtrlHomeBrowse) {
+	"Home Dir"
 };
+resource rPString (CtrlLogBrowse) {
+	"Log Dir"
+};
+
 
 
 resource rTextForLETextBox2 (CtrlPortStat) {
 	"Port"
 };
 
-resource rTextForLETextBox2 (CtrlPathStat) {
+resource rTextForLETextBox2 (CtrlHomeStat) {
 	"/your/home/dir"
 };
+
+resource rTextForLETextBox2 (CtrlLogStat) {
+	"/your/log/dir"
+};
+
+
 
 resource rTextForLETextBox2 (CtrlCount) {
 	""

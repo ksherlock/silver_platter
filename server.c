@@ -42,6 +42,9 @@ extern int orca_sprintf(char *, const char *, ...);
 Word fActive;
 Word fUsed;
 
+Word logfd;
+
+
 extern WindowPtr MyWindow;
 
 
@@ -493,6 +496,8 @@ Word CloseDCB[2];
   q->tick = 0;
 }    
 
+extern Word CreateLog(void);
+
 Word StartServer(void)
 {
   fActive = 0;
@@ -528,6 +533,8 @@ Word StartServer(void)
                                           
   FlagHTTP = true;
 
+  logfd = CreateLog();
+
 
   #undef xstr
   #define xstr "Server started\r"
@@ -543,6 +550,14 @@ Word StopServer(void)
 {
 Word mask;
 struct qEntry *q;
+Word CloseDCB[2];
+
+  if (logfd)
+  {
+    CloseDCB[0] = 1;
+    CloseDCB[1] = logfd;
+    CloseGS(CloseDCB);
+  }
 
   // abort any open connections
   if (fUsed) for (mask = 1, q = queue; mask; mask <<= 1, q++)

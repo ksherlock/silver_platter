@@ -4,17 +4,84 @@
 
 #include <gsos.h>
 #include <memory.h>
+#include <MiscTool.h>
 #include <stdfile.h>
 #include <textedit.h>
 #include <window.h>
 
+#include "config.h"
+#include "kmalloc.h"
 
-void SaveLog(Word MyID, Handle teH)
-{
+
+extern int orca_sprintf(char *, const char *, ...);
+
+
 static IORecGS WriteDCB;
 static CreateRecGS CreateDCB;
 static OpenRecGS OpenDCB;
 static NameRecGS DestroyDCB;
+static SetPositionRecGS SPositionDCB;
+
+
+// create a log file, return fd.
+Word CreateLog(void)
+{
+Word fd = 0;
+GSString255Ptr gstr;
+Word i;
+TimeRec tr;
+
+
+  // :wwwyyyymmdd.txt
+  if (fLog && fLogDir)
+  {
+
+    tr = ReadTimeHex();
+
+    i = fLogDir->length;
+
+    gstr = kmalloc(i + 17);
+    if (gstr == NULL) return 0;
+
+    i = orca_sprintf(gstr->text, "%B/www%04u%02u%02u.txt",
+      fLogDir, tr.year + 1900, tr.month + 1, tr.day + 1);
+
+    gstr->length = i;
+
+    CreateDCB.pCount = 4;
+    CreateDCB.pathname = gstr;
+    CreateDCB.access = 0xC3;
+    CreateDCB.fileType = 4;
+    CreateDCB.auxType = 0;
+
+    OpenDCB.pCount = 15;
+    OpenDCB.pathname = gstr;
+    OpenDCB.requestAccess = writeEnable;
+    OpenDCB.resourceNumber = 0;
+    OpenDCB.optionList = NULL;
+
+    CreateGS(&CreateDCB);
+    // ignore error.
+
+    OpenGS(&OpenDCB);
+    if(_toolErr == 0)
+    {
+      fd = OpenDCB.refNum;
+
+      SPositionDCB.pCount = 3;
+      SPositionDCB.refNum = fd;
+      SPositionDCB.base = eofMinus;
+      SPositionDCB.displacement = 0;
+      SetMarkGS(&SPositionDCB);
+    }
+    kfree(gstr);
+  }
+  return fd;
+}
+
+
+void SaveLog(Word MyID, Handle teH)
+{
 
 Word CloseDCB[2];
 SFReplyRec2 myReply;

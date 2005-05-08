@@ -213,6 +213,16 @@ fRootH = NULL;
     ReleaseResource(3, 1, rID);
   }
 
+  h = RMLoadNamedResource2(1, (Ptr)NameLog, &rID);
+  if (!_toolErr)
+  {
+    HLock(h);
+    fLog = **(Word **)h;
+    ReleaseResource(3, 1, rID);
+  }
+
+
+
   h = RMLoadNamedResource2(1, (Ptr)NameTeach, &rID);
   if (!_toolErr)
   {
@@ -239,6 +249,17 @@ fRootH = NULL;
   }
   else fJail = 0;
 
+  h = RMLoadNamedResource2(rC1InputString, (Ptr)NameLogDir, &rID);
+  if (!_toolErr)
+  {
+    DetachResource(rC1InputString, rID);
+    HLock(h);
+    fLogDirH = h;
+    fLogDir = (GSString255Ptr)*h;
+  }
+  else fLog = 0;
+
+
 
   // restore old resource file...
 
@@ -253,11 +274,17 @@ void UnloadConfig(void)
 {
   if (fd) CloseResourceFile(fd);
   fd = 0;
+
   if (fRootH)
     DisposeHandle(fRootH);
+  if (fLogDirH)
+    DisposeHandle(fLogDirH);
+
   fRootH = NULL;
   fRoot = NULL;
-}
+  fLogDirH = NULL;
+  fLog = NULL;
+}                        
 
 void DoConfig(Word MyID)
 {
@@ -265,6 +292,7 @@ static EventRecord event;
 static char buffer[10];
 
 Handle newPath;
+Handle newLog;
 
 WindowPtr win;
 Word control;
@@ -272,6 +300,7 @@ Word done;
 Word i;
 
   newPath = NULL;
+  newLog = NULL;
 
   memset(&event, 0, sizeof(event));
   event.wmTaskMask = 0x001f0004;
@@ -282,13 +311,20 @@ Word i;
   CenterWindow(win);
 
   if (fRoot)
-    SetCtlTextByID(win, CtrlPathStat, 2, (Ref)fRoot);
-  else SetCtlTextByID(win, CtrlPathStat, 1, (Ref)"");
+    SetCtlTextByID(win, CtrlHomeStat, 2, (Ref)fRoot);
+  else SetCtlTextByID(win, CtrlHomeStat, 1, (Ref)"");
+
+  if (fLogDir)
+    SetCtlTextByID(win, CtrlLogStat, 2, (Ref)fLogDir);
+  else SetCtlTextByID(win, CtrlLogStat, 1, (Ref)"");
+
 
   SetCtlValueByID(fAbort, win, CtrlAbort);
   SetCtlValueByID(fDir, win, CtrlDir);
   SetCtlValueByID(fJail, win, CtrlJail);
   SetCtlValueByID(fTeach, win, CtrlTeach);
+  SetCtlValueByID(fLog, win, CtrlLog);
+
 
   i = orca_sprintf(buffer + 1, "%u", fPort);
   buffer[0] = i;
@@ -311,7 +347,7 @@ Word i;
     case CtrlOk:
       done = true;
       break;
-    case CtrlBrowse:
+    case CtrlHomeBrowse:
       {
       SFReplyRec2 myReply;
 
@@ -348,13 +384,60 @@ Word i;
             size--;
             if (gstr->text[size] == ':') gstr->text[size] = '/';
           }
-          SetCtlTextByID(win, CtrlPathStat, 2, (Ref)cp);
+          SetCtlTextByID(win, CtrlHomeStat, 2, (Ref)cp);
 
           DisposeHandle((Handle)myReply.nameRef);
           SetCtlValueByID(1, win, CtrlJail);
         }
       }
-      break; // case CtrlBrowse
+      break; // case CtrlHomeBrowse
+
+    case CtrlLogBrowse:
+      {
+      SFReplyRec2 myReply;
+
+        myReply.nameRefDesc = refIsNewHandle;
+        myReply.pathRefDesc = refIsNewHandle;
+
+        SFGetFolder2(20, 20, refIsPointer,
+          (Ref)"\pSelect Log Directory", &myReply);
+        if (myReply.good)
+        {
+          Word size;
+          char *cp;
+          Word i;
+          GSString255Ptr gstr;
+
+          if (newLog) DisposeHandle(newLog);
+
+          newLog = (Handle)myReply.pathRef;
+          HLock(newLog);
+          cp = *newLog;
+
+          // includes trailing ':', so -1 to remove that.
+
+          size = ((ResultBuf255 *)cp)->bufString.length + 2 - 1;
+          BlockMove(cp + 2, cp, size);
+          SetHandleSize(size, newLog);
+
+          size -= 2;
+          gstr = (GSString255Ptr)cp;
+          gstr->length = size;
+
+          while (size)
+          {
+            size--;
+            if (gstr->text[size] == ':') gstr->text[size] = '/';
+          }
+          SetCtlTextByID(win, CtrlLogStat, 2, (Ref)cp);
+
+          DisposeHandle((Handle)myReply.nameRef);
+          SetCtlValueByID(1, win, CtrlLog);
+        }
+      }
+      break; // case CtrlLogBrowse
+
+
                         
     } // switch(control)
   }
@@ -372,6 +455,7 @@ Word i;
     fDir = GetCtlValueByID(win, CtrlDir);
     fJail = GetCtlValueByID(win, CtrlJail);
     fTeach = GetCtlValueByID(win, CtrlTeach);
+    fLog = GetCtlValueByID(win, CtrlLog);
 
     GetLETextByID(win, CtrlPort, (StringPtr)buffer);
     fPort = Dec2Int(buffer + 1, buffer[0], 0);
@@ -393,12 +477,26 @@ Word i;
     }
     if (!fRoot || fRoot->length == 0) fJail = false;
 
+    if (newLog)
+    {
+      if (fLogDirH) DisposeHandle(fLogDirH);
+
+      SetConfigValue(rC1InputString, NameLogDir, *newLog, GetHandleSize(newLog));
+      fLogDirH = newLog;
+      fLogDir = (GSString255Ptr)*newLog;
+    }
+    if (!fLogDir || fLogDir->length == 0) fLog = false;
+
+
+
     SetConfigValue(1, NameAbort, &fAbort, sizeof(Word));
     SetConfigValue(1, NameDir, &fDir, sizeof(Word));
     SetConfigValue(1, NameJail, &fJail, sizeof(Word));
     SetConfigValue(1, NameTeach, &fTeach, sizeof(Word));
     SetConfigValue(1, NamePort, &fPort, sizeof(Word));
     SetConfigValue(1, NameMTU, &fMTU, sizeof(Word));
+    SetConfigValue(1, NameLog, &fLog, sizeof(Word));
+
 
     UpdateResourceFile(fd);
 

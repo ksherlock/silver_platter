@@ -16,8 +16,8 @@
 
 #define CtrlPathStat	rConfigWindow + 1
 #define CtrlPortStat	rConfigWindow + 2
-#define CtrlPath	rConfigWindow + 3
-#define CtrlBrowse	rConfigWindow + 4
+#define CtrlHomeStat	rConfigWindow + 3
+#define CtrlHomeBrowse	rConfigWindow + 4
 #define CtrlCancel	rConfigWindow + 5
 #define CtrlOk		rConfigWindow + 6
 #define CtrlDir		rConfigWindow + 7
@@ -25,6 +25,10 @@
 #define CtrlJail	rConfigWindow + 9
 #define CtrlAbort	rConfigWindow + 10
 #define CtrlTeach	rConfigWindow + 11
+
+#define CtrlLogBrowse	rConfigWindow + 12
+#define CtrlLogStat	rConfigWindow + 13
+#define CtrlLog		rConfigWindow + 14
 
 #define CtrlAbout	rAboutWindow + 1
 
