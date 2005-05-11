@@ -441,7 +441,7 @@ resource rVersion (1) {
 
 
 #define ConfigWindowWidth 300
-#define ConfigWindowHeight 142
+#define ConfigWindowHeight 122
 
 
 resource rWindParam1 (rConfigWindow) {
@@ -468,24 +468,64 @@ resource rControlList (rConfigWindow) {
 	{
 		CtrlOk,
 	        CtrlCancel,
-		CtrlTeach,
-		CtrlAbort,
-		CtrlDir,
-		CtrlLog,
-		CtrlJail,
-		CtrlLogBrowse,
-		CtrlLogStat,
-		CtrlHomeStat,
-		CtrlHomeBrowse,
-		CtrlPort,
-		CtrlPortStat,
+		CtrlPopUp,
+		CtrlRect,
         }
 };
 
 
+
+// general
+resource rControlList(Ctrl_PU_1)
+{
+	{
+		CtrlTeach,
+		CtrlAbort,
+		CtrlJail,
+		CtrlHomeStat,
+		CtrlHomeBrowse,
+		CtrlPort,
+		CtrlPortStat,
+	}
+};
+
+
+resource rControlTemplate (CtrlHomeBrowse) {
+	CtrlHomeBrowse,
+	{35, 10, 0, 100},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlHomeBrowse
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlHomeStat) {
+	CtrlHomeStat,
+	{37, 110, 47, ConfigWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText + fSquishText,
+			0x1002,
+			0x0,
+			CtrlHomeStat,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+
+
+
 resource rControlTemplate (CtrlPortStat) {
 	CtrlPortStat,
-	{4, 10, 13, 50},
+	{20, 10, 30, 50},
 	statTextControl {
 		 {	/* optional Fields */
 			0x0,
@@ -501,7 +541,7 @@ resource rControlTemplate (CtrlPortStat) {
 
 resource rControlTemplate (CtrlPort) {
 	CtrlPort,
-	{2, 60, 15, 110},
+	{19, 60, 32, 110},
 	editLineControl {
 		 {	/* optional Fields */
 			0x0,
@@ -515,74 +555,9 @@ resource rControlTemplate (CtrlPort) {
 	}
 };
 
-  
-
-resource rControlTemplate (CtrlHomeBrowse) {
-	CtrlHomeBrowse,
-	{17, 10, 30, 100},
-	SimpleButtonControl {
-		 {	/* optional Fields */
-			0x0,
-			0x1002,
-			0x0,
-			CtrlHomeBrowse
-		}
-	}
-};
-
-
-resource rControlTemplate (CtrlHomeStat) {
-	CtrlHomeStat,
-	{20, 110, 30, ConfigWindowWidth - 10},
-	statTextControl {
-		 {	/* optional Fields */
-			fBlastText + fSquishText,
-			0x1002,
-			0x0,
-			CtrlHomeStat,
-			0,
-			leftJust
-		}
-	}
-};
-
-
-resource rControlTemplate (CtrlLogBrowse) {
-	CtrlLogBrowse,
-	{32, 10, 45, 100},
-	SimpleButtonControl {
-		 {	/* optional Fields */
-			0x0,
-			0x1002,
-			0x0,
-			CtrlLogBrowse
-		}
-	}
-};
-
-
-resource rControlTemplate (CtrlLogStat) {
-	CtrlLogStat,
-	{32, 110, 45, ConfigWindowWidth - 10},
-	statTextControl {
-		 {	/* optional Fields */
-			fBlastText + fSquishText,
-			0x1002,
-			0x0,
-			CtrlLogStat,
-			0,
-			leftJust
-		}
-	}
-};
-
-
-
-
-
 resource rControlTemplate (CtrlJail) {
 	CtrlJail,
-	{52, 10, 62, ConfigWindowWidth - 10},
+	{52, 10, 0, 0},
 	CheckControl {
 		 {	/* optional Fields */
 			0x0,
@@ -595,39 +570,10 @@ resource rControlTemplate (CtrlJail) {
 };
 
 
-resource rControlTemplate (CtrlLog) {
-	CtrlLog,
-	{64, 10, 74, ConfigWindowWidth - 10},
-	CheckControl {
-		 {	/* optional Fields */
-			0x0,
-			0x1002,
-			0x0,
-			CtrlLog,
-			0
-		}
-	}
-};
-
-
-
-resource rControlTemplate (CtrlDir) {
-	CtrlDir,
-	{76, 10, 86, ConfigWindowWidth - 10},
-	CheckControl {
-		 {	/* optional Fields */
-			0x0,
-			0x1002,
-			0x0,
-			CtrlDir,
-			0
-		}
-	}
-};
 
 resource rControlTemplate (CtrlAbort) {
 	CtrlAbort,
-	{88, 10, 98, ConfigWindowWidth - 10},
+	{64, 10, 0, 0},
 	CheckControl {
 		 {	/* optional Fields */
 			0x0,
@@ -641,7 +587,7 @@ resource rControlTemplate (CtrlAbort) {
 
 resource rControlTemplate (CtrlTeach) {
 	CtrlTeach,
-	{100, 10, 110, ConfigWindowWidth - 10},
+	{76, 10, 0, 0},
 	CheckControl {
 		 {	/* optional Fields */
 			0x0,
@@ -656,6 +602,234 @@ resource rControlTemplate (CtrlTeach) {
 
 
 
+
+
+// directories
+resource rControlList(Ctrl_PU_2)
+{
+	{
+		CtrlDir,	// Virtual Directory?
+	}
+};
+
+resource rControlTemplate (CtrlDir) {
+	CtrlDir,
+	{20, 10, 0, 0},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlDir,
+			0
+		}
+	}
+};
+
+
+
+
+// uploads.
+resource rControlList(Ctrl_PU_3)
+{
+	{
+		CtrlPut,
+		CtrlPutMkdir,
+		CtrlPutOverwrite,
+	}
+};
+
+resource rControlTemplate (CtrlPut) {
+	CtrlPut,
+	{20, 10, 0, 0},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlPut,
+			0
+		}
+	}
+};
+
+resource rControlTemplate (CtrlPutMkdir) {
+	CtrlPutMkdir,
+	{32, 10, 0, 0},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlPutMkdir,
+			0
+		}
+	}
+};
+
+resource rControlTemplate (CtrlPutOverwrite) {
+	CtrlPutOverwrite,
+	{44, 10, 0, 0},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlPutOverwrite,
+			0
+		}
+	}
+};
+
+
+
+
+
+
+// logs.
+resource rControlList(Ctrl_PU_4)
+{
+	{
+		CtrlLog,
+		CtrlLogBrowse,
+		CtrlLogStat,
+	}
+};
+
+resource rControlTemplate (CtrlLogBrowse) {
+	CtrlLogBrowse,
+	{20, 10, 33, 100},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlLogBrowse
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlLogStat) {
+	CtrlLogStat,
+	{22, 110, 32, ConfigWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText + fSquishText,
+	       		0x1002,
+			0x0,
+			CtrlLogStat,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlLog) {
+	CtrlLog,
+	{35, 10, 0, 0},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlLog,
+			0
+		}
+	}
+};
+
+
+
+
+
+//
+
+
+resource rControlTemplate (CtrlRect) {
+	CtrlRect,
+	{10, 4, ConfigWindowHeight - 20, ConfigWindowWidth - 4},
+	rectangleControl {
+		 {	/* optional Fields */
+
+			0xFF01,		   // flag
+			FctlProcNotPtr,		// moreFlags
+			0x00000000     // refCon
+		}
+	}
+};
+
+
+resource rControlTemplate (CtrlPopUp, nocrossbank) {
+       CtrlPopUp,		// ID
+       {4, 10,  0,  0},	// rect
+       popUpControl {{
+               $0062,		// flag
+               $1002,		// moreFlags
+               $00000000,	// refCon
+               $0000,		// titleWidth
+               CtrlPopUp,	// menuRef
+               Ctrl_PU_1,	// initialValue
+               0		// colorTableRef
+       }};
+};
+
+resource rMenu (CtrlPopUp, nocrossbank){
+    CtrlPopUp,
+    0xA000,
+    CtrlPopUp,
+    {
+     	Ctrl_PU_1,
+	Ctrl_PU_2,
+	Ctrl_PU_3,
+	Ctrl_PU_4,
+    };
+};
+
+resource rMenuItem (Ctrl_PU_1, nocrossbank) {
+       Ctrl_PU_1,                  // itemID
+       "","",                  // itemChar, itemAltChar
+       NIL,                    // itemCheck
+       $8000,                  // itemFlag
+       Ctrl_PU_1           // itemTitleRef
+};
+
+
+resource rMenuItem (Ctrl_PU_2, nocrossbank) {
+       Ctrl_PU_2,                  // itemID
+       "","",                  // itemChar, itemAltChar
+       NIL,                    // itemCheck
+       $8000,                  // itemFlag
+       Ctrl_PU_2           // itemTitleRef
+};
+
+resource rMenuItem (Ctrl_PU_3, nocrossbank) {
+       Ctrl_PU_3,                  // itemID
+       "","",                  // itemChar, itemAltChar
+       NIL,                    // itemCheck
+       $8000,                  // itemFlag
+       Ctrl_PU_3           // itemTitleRef
+};
+
+resource rMenuItem (Ctrl_PU_4, nocrossbank) {
+       Ctrl_PU_4,                  // itemID
+       "","",                  // itemChar, itemAltChar
+       NIL,                    // itemCheck
+       $8000,                  // itemFlag
+       Ctrl_PU_4           // itemTitleRef
+};
+
+
+resource rPstring(CtrlPopUp, nocrossbank){""};
+resource rPstring(Ctrl_PU_1, nocrossbank){"General"};
+resource rPstring(Ctrl_PU_2, nocrossbank){"Directories"};
+resource rPstring(Ctrl_PU_3, nocrossbank){"Uploads"};
+resource rPstring(Ctrl_PU_4, nocrossbank){"Logging"};
+                                           
+
+
+ 
 
 resource rControlTemplate (CtrlCancel) {
 	CtrlCancel,
@@ -727,6 +901,19 @@ resource rPString (CtrlLog) {
 resource rPString (CtrlDir) {
 	"Virtual Directory"
 };
+
+resource rPString (CtrlPut) {
+	"Enable PUT"
+};
+
+resource rPString (CtrlPutMkdir) {
+	"Create Directories"
+};
+
+resource rPString (CtrlPutOverwrite) {
+	"Overwrite Existing Files"
+};
+
 
 resource rPString (CtrlAbort) {
 	"Fast Connection Termination"

@@ -1,6 +1,7 @@
 #pragma noroot
 #pragma lint -1
 #pragma optimize -1
+#pragma debug 0x8000
 
 #include <control.h>
 #include <event.h>
@@ -30,7 +31,7 @@ Word fAS;
 
 // PUT
 Word fPut;
-Word fPutOverWrite;
+Word fPutOverwrite;
 Word fPutMkdir;	
 
 
@@ -55,6 +56,11 @@ static char *NameMTU = "\pMTU";
 static char *NameLog = "\pLog";
 static char *NameLogDir = "\pLog Directory";
 static char *NameAS = "\pAppleSingle";
+
+static char *NamePut ="\pPut";
+static char *NamePutMkdir = "\pPut Mkdir";
+static char *NamePutOverwrite = "\pPut Overwrite";
+
 
 
 
@@ -158,7 +164,7 @@ fRootH = NULL;
 
 
 fPut = true;
-fPutOverWrite = false;
+fPutOverwrite = false;
 fPutMkdir = false;	
 
 
@@ -298,6 +304,140 @@ void UnloadConfig(void)
   fLog = NULL;
 }                        
 
+
+
+static Handle screens[4];
+static Word current;
+
+void LoadControls(WindowPtr win, Word value)
+{
+  static char buffer[10];
+
+  CtlRecHndl *ctls;
+  Word index;
+  Word i;
+
+  index = value - (Ctrl_PU_1);
+
+
+  // check if actually changed.
+  if (index == current) return;
+
+  // hide the old controls.
+  if (current != -1)
+  {
+    ctls = (CtlRecHndl *)*screens[current];
+    while (*ctls)
+    {
+      HideControl(*ctls);
+      ctls++;
+    }
+  }
+
+
+  // check if loaded.
+  if (screens[index] == NULL)
+  {
+  CtlRecHndl c;
+  Handle h;
+
+    h = LoadResource(rControlList, value);
+    if (_toolErr) return;
+
+    DetachResource(rControlList, value);
+
+    HLock(h);
+    screens[index] = h;
+
+    ctls = (CtlRecHndl *)*h;
+    while (*ctls)
+    {
+      c = NewControl2(win, refIsResource, (Ref)*ctls);
+      InvalOneCtlByID(win, (Long)*ctls);
+      *ctls = c;
+
+      ctls++;
+
+      // set initial values.
+      switch(value)
+      {
+      // general
+      case Ctrl_PU_1:
+
+        SetCtlValueByID(fJail, win, CtrlJail);
+        SetCtlValueByID(fTeach, win, CtrlTeach);
+        SetCtlValueByID(fAbort, win, CtrlAbort);
+
+        if (fRoot)
+          SetCtlTextByID(win, CtrlHomeStat, 2, (Ref)fRoot);
+        else SetCtlTextByID(win, CtrlHomeStat, 1, (Ref)"");
+
+	i = orca_sprintf(buffer + 1, "%u", fPort);
+	buffer[0] = i;
+	SetLETextByID(win, CtrlPort, (StringPtr)buffer);
+
+        break;
+
+      // directory
+      case Ctrl_PU_2:
+
+        SetCtlValueByID(fDir, win, CtrlDir);
+
+        break;
+
+      // Put
+      case Ctrl_PU_3:
+
+	SetCtlValueByID(fPut, win, CtrlPut);
+	SetCtlValueByID(fPutMkdir, win, CtrlPutMkdir);
+	SetCtlValueByID(fPutOverwrite, win, CtrlPutOverwrite);
+
+        break;
+
+      // logging.
+      case Ctrl_PU_4:
+
+	SetCtlValueByID(fLog, win, CtrlLog);
+
+	if (fLogDir)
+	  SetCtlTextByID(win, CtrlLogStat, 2, (Ref)fLogDir);
+	else SetCtlTextByID(win, CtrlLogStat, 1, (Ref)"");
+
+        break;
+      }
+    }
+  }
+  else
+  {
+    ctls = (CtlRecHndl *)*screens[index];
+    while (*ctls)
+    {
+      ShowControl(*ctls);
+      ctls++;
+    }
+  }
+  //InvalCtls(win);
+
+  current = index;
+}
+
+
+// convert apple-. to esc.
+void EventHook(EventRecord *event)
+{
+  switch (event->what)
+  {
+  case keyDownEvt:
+  case autoKeyEvt:
+    if (event->message == '.' && event->modifiers & appleKey)
+    {
+      event->modifiers = 0;
+      event->message = 0x1b;
+    }
+    break;
+  }
+}
+
 void DoConfig(Word MyID)
 {
 static EventRecord event;
@@ -307,7 +447,7 @@ Handle newPath;
 Handle newLog;
 
 WindowPtr win;
-Word control;
+volatile Word control;
 Word done;
 Word i;
 
@@ -322,43 +462,35 @@ Word i;
 
   CenterWindow(win);
 
-  if (fRoot)
-    SetCtlTextByID(win, CtrlHomeStat, 2, (Ref)fRoot);
-  else SetCtlTextByID(win, CtrlHomeStat, 1, (Ref)"");
+  current = -1;
+  screens[0] = NULL;
+  screens[1] = NULL;
+  screens[2] = NULL;
+  screens[3] = NULL;
 
-  if (fLogDir)
-    SetCtlTextByID(win, CtrlLogStat, 2, (Ref)fLogDir);
-  else SetCtlTextByID(win, CtrlLogStat, 1, (Ref)"");
-
-
-  SetCtlValueByID(fAbort, win, CtrlAbort);
-  SetCtlValueByID(fDir, win, CtrlDir);
-  SetCtlValueByID(fJail, win, CtrlJail);
-  SetCtlValueByID(fTeach, win, CtrlTeach);
-  SetCtlValueByID(fLog, win, CtrlLog);
-
-
-  i = orca_sprintf(buffer + 1, "%u", fPort);
-  buffer[0] = i;
-  SetLETextByID(win, CtrlPort, (StringPtr)buffer);
+  LoadControls(win, Ctrl_PU_1);
 
   ShowWindow(win);
 
   for (done = false; !done; )
   {
-    control = (Word)DoModalWindow(&event, NULL, NULL, NULL, 0x0008);
+    control = (Word)DoModalWindow(&event, NULL, (void *)EventHook, NULL, 0x0008);
     switch(control)
     {
-    case 0:
-      if ( (event.what == keyDownEvt) || (event.what == autoKeyEvt)
-        && event.modifiers & appleKey 
-        && (Word)event.message == '.')
-        done = true;
-      break;
     case CtrlCancel:
     case CtrlOk:
       done = true;
       break;
+
+    // switch the visible controls.
+    case CtrlPopUp:
+      {
+	Word value;
+        value = GetCtlValueByID(win, CtrlPopUp);
+        LoadControls(win, value);
+      }
+      break;
+
     case CtrlHomeBrowse:
       {
       SFReplyRec2 myReply;
@@ -449,10 +581,9 @@ Word i;
       }
       break; // case CtrlLogBrowse
 
-
-                        
     } // switch(control)
   }
+
   // save and such
   if (control == CtrlOk)
   {
@@ -463,51 +594,78 @@ Word i;
   Handle h;
 
 
-    fAbort = GetCtlValueByID(win, CtrlAbort);
-    fDir = GetCtlValueByID(win, CtrlDir);
-    fJail = GetCtlValueByID(win, CtrlJail);
-    fTeach = GetCtlValueByID(win, CtrlTeach);
-    fLog = GetCtlValueByID(win, CtrlLog);
-
-    GetLETextByID(win, CtrlPort, (StringPtr)buffer);
-    fPort = Dec2Int(buffer + 1, buffer[0], 0);
-    if (_toolErr || !fPort) fPort = 80;
-
-
     oFile = GetCurResourceFile();
     SetCurResourceFile(fd);
     oDepth = SetResourceFileDepth(1);
 
 
-    if (newPath)
+    if (screens[0])
     {
-      if (fRootH) DisposeHandle(fRootH);
+      fAbort = GetCtlValueByID(win, CtrlAbort);
+      fJail = GetCtlValueByID(win, CtrlJail);
+      fTeach = GetCtlValueByID(win, CtrlTeach);
 
-      SetConfigValue(rC1InputString, NameRoot, *newPath, GetHandleSize(newPath));
-      fRootH = newPath;
-      fRoot = (GSString255Ptr)*newPath;
+      GetLETextByID(win, CtrlPort, (StringPtr)buffer);
+      fPort = Dec2Int(buffer + 1, buffer[0], 0);
+      if (_toolErr || !fPort) fPort = 80;
+
+      if (newPath)
+      {
+	if (fRootH) DisposeHandle(fRootH);
+
+	SetConfigValue(rC1InputString, NameRoot, *newPath, GetHandleSize(newPath));
+	fRootH = newPath;
+	fRoot = (GSString255Ptr)*newPath;
+      }
+      if (!fRoot || fRoot->length == 0) fJail = false;
+
+
+      SetConfigValue(1, NameAbort, &fAbort, sizeof(Word));
+      SetConfigValue(1, NameJail, &fJail, sizeof(Word));
+      SetConfigValue(1, NameTeach, &fTeach, sizeof(Word));
+      SetConfigValue(1, NamePort, &fPort, sizeof(Word));
+
     }
-    if (!fRoot || fRoot->length == 0) fJail = false;
 
-    if (newLog)
+    if (screens[1])
     {
-      if (fLogDirH) DisposeHandle(fLogDirH);
-
-      SetConfigValue(rC1InputString, NameLogDir, *newLog, GetHandleSize(newLog));
-      fLogDirH = newLog;
-      fLogDir = (GSString255Ptr)*newLog;
+      fDir = GetCtlValueByID(win, CtrlDir);
+      SetConfigValue(1, NameDir, &fDir, sizeof(Word));
     }
-    if (!fLogDir || fLogDir->length == 0) fLog = false;
+
+    if (screens[2])
+    {
+      fPut = GetCtlValueByID(win, CtrlPut);
+      fPutMkdir = GetCtlValueByID(win, CtrlPutMkdir);
+      fPutOverwrite = GetCtlValueByID(win, CtrlPutOverwrite);
 
 
+      SetConfigValue(1, NamePut, &fPut, sizeof(Word));
+      SetConfigValue(1, NamePutMkdir, &fPutMkdir, sizeof(Word));
+      SetConfigValue(1, NamePutOverwrite, &fPutOverwrite, sizeof(Word));
 
-    SetConfigValue(1, NameAbort, &fAbort, sizeof(Word));
-    SetConfigValue(1, NameDir, &fDir, sizeof(Word));
-    SetConfigValue(1, NameJail, &fJail, sizeof(Word));
-    SetConfigValue(1, NameTeach, &fTeach, sizeof(Word));
-    SetConfigValue(1, NamePort, &fPort, sizeof(Word));
-    SetConfigValue(1, NameMTU, &fMTU, sizeof(Word));
-    SetConfigValue(1, NameLog, &fLog, sizeof(Word));
+    }
+
+    if (screens[3])
+    {
+      fLog = GetCtlValueByID(win, CtrlLog);
+
+      if (newLog)
+      {
+	if (fLogDirH) DisposeHandle(fLogDirH);
+
+	SetConfigValue(rC1InputString, NameLogDir, *newLog, GetHandleSize(newLog));
+	fLogDirH = newLog;
+	fLogDir = (GSString255Ptr)*newLog;
+      }
+      if (!fLogDir || fLogDir->length == 0) fLog = false;
+
+      SetConfigValue(1, NameLog, &fLog, sizeof(Word));
+
+    }
+
+
+    //SetConfigValue(1, NameMTU, &fMTU, sizeof(Word));
 
 
     UpdateResourceFile(fd);
@@ -517,4 +675,9 @@ Word i;
   }
 
   CloseWindow(win);                             
+
+  if (screens[0]) DisposeHandle(screens[0]);
+  if (screens[1]) DisposeHandle(screens[1]);
+  if (screens[2]) DisposeHandle(screens[2]);
+  if (screens[3]) DisposeHandle(screens[3]);
 }

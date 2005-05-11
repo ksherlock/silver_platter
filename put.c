@@ -33,7 +33,7 @@ Word i;
 
   q->flags |= FLAG_CREATE;
 
-  if (fPutOverWrite)
+  if (fPutOverwrite)
   {
     DestroyDCB.pCount = 1;
     DestroyDCB.pathname = q->fullpath;

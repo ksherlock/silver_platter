@@ -17,7 +17,7 @@ extern Handle fRootH;
 
 // PUT
 extern Word fPut;
-extern Word fPutOverWrite;
+extern Word fPutOverwrite;
 extern Word fPutMkdir;	
 
 
