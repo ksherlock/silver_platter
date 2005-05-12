@@ -10,9 +10,21 @@
 #define HTTPWindowWidth		280
 
 
+
+#define CtrlRect	rHTTPWindow + 100
+
 #define CtrlTE		rHTTPWindow + 1
 #define CtrlTherm	rHTTPWindow + 2
 #define CtrlCount	rHTTPWindow + 3
+
+//--
+
+#define CtrlPopUp	rConfigWindow + 101
+#define Ctrl_PU_1	rConfigWindow + 102
+#define Ctrl_PU_2	rConfigWindow + 103
+#define Ctrl_PU_3	rConfigWindow + 104
+#define Ctrl_PU_4	rConfigWindow + 105
+
 
 #define CtrlPathStat	rConfigWindow + 1
 #define CtrlPortStat	rConfigWindow + 2
@@ -29,6 +41,15 @@
 #define CtrlLogBrowse	rConfigWindow + 12
 #define CtrlLogStat	rConfigWindow + 13
 #define CtrlLog		rConfigWindow + 14
+
+#define CtrlPut		rConfigWindow + 15
+#define CtrlPutMkdir	rConfigWindow + 16
+#define CtrlPutOverwrite	rConfigWindow + 17
+
+#define Ctrl_AS_Stat	rConfigWindow + 18
+#define Ctrl_AS_Never	rConfigWindow + 19
+#define Ctrl_AS_Always	rConfigWindow + 20
+#define Ctrl_AS_Forked	rConfigWindow + 21
 
 #define CtrlAbout	rAboutWindow + 1
 

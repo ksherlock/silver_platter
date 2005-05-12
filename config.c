@@ -27,7 +27,7 @@ Word fDir;
 Word fTeach;
 Word fMTU;
 
-Word fAS;
+Word fAppleSingle;
 
 // PUT
 Word fPut;
@@ -55,7 +55,7 @@ static char *NameTeach ="\pTeach Ascii";
 static char *NameMTU = "\pMTU";
 static char *NameLog = "\pLog";
 static char *NameLogDir = "\pLog Directory";
-static char *NameAS = "\pAppleSingle";
+static char *NameAppleSingle = "\pAppleSingle";
 
 static char *NamePut ="\pPut";
 static char *NamePutMkdir = "\pPut Mkdir";
@@ -148,7 +148,10 @@ static CreateRecGS CreateDCB = {4, (GSString255Ptr)&folderPath, 0xe3, 0x0f, 0};
 
 // default prefs
 fAbort = true;
+
 fDir = true;
+fAppleSingle = 0;
+
 fJail = false;
 fTeach = false;
 fPort = 80;
@@ -222,6 +225,15 @@ fPutMkdir = false;
     fDir = **(Word **)h;
     ReleaseResource(3, 1, rID);
   }
+
+  h = RMLoadNamedResource2(1, (Ptr)NameAppleSingle, &rID);
+  if (!_toolErr)
+  {
+    HLock(h);
+    fAppleSingle = **(Word **)h;
+    ReleaseResource(3, 1, rID);
+  }
+
 
   h = RMLoadNamedResource2(1, (Ptr)NameJail, &rID);
   if (!_toolErr)
@@ -382,6 +394,7 @@ void LoadControls(WindowPtr win, Word value)
       case Ctrl_PU_2:
 
         SetCtlValueByID(fDir, win, CtrlDir);
+        SetCtlValueByID(1, win, Ctrl_AS_Never + fAppleSingle);
 
         break;
 
@@ -630,7 +643,10 @@ Word i;
     if (screens[1])
     {
       fDir = GetCtlValueByID(win, CtrlDir);
+      fAppleSingle = FindRadioButton(win,0);
+
       SetConfigValue(1, NameDir, &fDir, sizeof(Word));
+      SetConfigValue(1, NameAppleSingle, &fAppleSingle, sizeof(Word));
     }
 
     if (screens[2])

@@ -218,26 +218,15 @@ static Word menuColor[] = {0x00e0, 0x000f, 0x0000 };
 
   FlagConnect = TCPIPGetConnectStatus();
 
-  // load our resource. -- see TN.iigs #71
-  //oldRApp = GetCurResourceApp();
-  //ResourceStartUp(MyID);
-  //myPath = LGetPathname2(MyID, 1);
-
   levelDCB.pCount = 2;
   GetLevelGS(&levelDCB);
   oldLevel = levelDCB.level;
   levelDCB.level = 0;
   SetLevelGS(&levelDCB);
 
-  //prefsDCB.pCount = 1;
-  //GetSysPrefsGS(&prefsDCB);
-  //oldPrefs = prefsDCB.preferences;
-  //prefsDCB.preferences = (prefsDCB.preferences & 0x1fff) | 0x8000;
-  //SetSysPrefsGS(&prefsDCB);
 
   oldPrefs = DoSysPrefs(0xE000, 0x8000);
 
-  //MyRID = OpenResourceFile(readEnable, NULL, myPath);
   oldRApp = OpenResourceFileByID(readEnable, MyID);
   //
   MyWindow = NewWindow2(NULL, 0, DrawWindow, NULL,
@@ -279,11 +268,6 @@ static Word menuColor[] = {0x00e0, 0x000f, 0x0000 };
   if (!FlagConfig) FlagConfig = LoadConfig(MyID);
   LoadFTypes(MyID);
 
-
-
-  // restore...
-  //prefsDCB.preferences = oldPrefs;
-  //SetSysPrefsGS(&prefsDCB);
   DoSysPrefs(0xffff, oldPrefs);
 
   levelDCB.level = oldLevel;

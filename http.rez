@@ -609,6 +609,10 @@ resource rControlList(Ctrl_PU_2)
 {
 	{
 		CtrlDir,	// Virtual Directory?
+		Ctrl_AS_Stat,
+		Ctrl_AS_Never,
+		Ctrl_AS_Always,
+		Ctrl_AS_Forked,
 	}
 };
 
@@ -624,6 +628,64 @@ resource rControlTemplate (CtrlDir) {
 			0
 		}
 	}
+};
+
+
+resource rControlTemplate (Ctrl_AS_Stat) {
+	Ctrl_AS_Stat,
+	{32, 10, 42, ConfigWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText,
+			0x1002,
+			0x0,
+			Ctrl_AS_Stat,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+
+resource rControlTemplate (Ctrl_AS_Never, nocrossbank) {
+       Ctrl_AS_Never,              // ID
+       {44, 10,  0,  0},	// rect
+
+       RadioControl {{
+               $0000,		// flag
+               $1002,		// moreFlags
+               $00000000,	// refCon
+               Ctrl_AS_Never,	// title Ref
+               0		// initial value  (on)
+       }};
+};
+
+resource rControlTemplate (Ctrl_AS_Always, nocrossbank) {
+       Ctrl_AS_Always,              // ID
+       {56, 10,  0,  0},	// rect
+
+       RadioControl {{
+               $0000,		// flag
+               $1002,		// moreFlags
+               $00000000,	// refCon
+               Ctrl_AS_Always,	// title Ref
+               0		// initial value  (on)
+       }};
+};
+
+
+resource rControlTemplate (Ctrl_AS_Forked, nocrossbank) {
+       Ctrl_AS_Forked,              // ID
+       {68, 10,  0,  0},	// rect
+
+       RadioControl {{
+               $0000,		// flag
+               $1002,		// moreFlags
+               $00000000,	// refCon
+               Ctrl_AS_Forked,	// title Ref
+               0		// initial value  (on)
+       }};
 };
 
 
@@ -894,13 +956,28 @@ resource rPString (CtrlJail) {
 };
 
 resource rPString (CtrlLog) {
-	"Save Access Logs"
+	"Enable Logging"
 };
 
 
 resource rPString (CtrlDir) {
-	"Virtual Directory"
+	"Virtual Directory Listings"
 };
+
+
+resource rPString (Ctrl_AS_Never) {
+	"Never"
+};
+
+resource rPString (Ctrl_AS_Always) {
+	"Always"
+};
+
+resource rPString (Ctrl_AS_Forked) {
+	"Forked Files Only"
+};
+
+
 
 resource rPString (CtrlPut) {
 	"Enable PUT"
@@ -944,6 +1021,11 @@ resource rTextForLETextBox2 (CtrlHomeStat) {
 resource rTextForLETextBox2 (CtrlLogStat) {
 	"/your/log/dir"
 };
+
+resource rTextForLETextBox2 (Ctrl_AS_Stat) {
+	"List AppleSingle Files"
+};
+
 
 
 

@@ -51,6 +51,8 @@ char *cp;
 
   ipid = q->ipid;
 
+  q->flags &= ~FLAG_KA;
+
   h = LoadResource(rTextBlock, error);
   if (_toolErr)
   {
@@ -111,7 +113,6 @@ char *cp;
   if (h) ReleaseResource(3, rTextBlock, error);
   
   q->state = STATE_CLOSE;
-  q->flags &= ~FLAG_KA;
- 
+
   return error;
 }

@@ -72,6 +72,9 @@ Handle g;
 
 GSString255Ptr path;
 
+  // testing...
+  q->flags &= ~FLAG_KA;
+
   path = q->pathname;
 
   g = MangleName(path);
@@ -120,7 +123,7 @@ GSString255Ptr path;
 
 #undef xstr
 #define xstr "<p>The document has moved <a href=\"%B%B\">here</a></p>\r\n" \
-"</body>\r\n<\html>\r\n"
+"</body>\r\n</html>\r\n"
 
     total += orca_sprintf(cp, xstr, path, append);
   }
@@ -251,6 +254,7 @@ Handle hUrl, hHtml, hPath;
 GSString255Ptr gUrl, gHtml;
 
 
+  if (err = CheckIndex(q)) return err;
 
   if (!fDir)
   {
@@ -261,8 +265,6 @@ GSString255Ptr gUrl, gHtml;
     SendHeader(q, 200, -1, NULL, "text/html", true);
     return 200;
   }
-
-  if (err = CheckIndex(q)) return err;
 
 
   DirDCB.refNum = q->fd;
@@ -336,7 +338,7 @@ GSString255Ptr gUrl, gHtml;
 "<table border=\"0\" cellspacing=\"2\" cellpadding=\"2\">\r\n" \
 "<thead align=\"left\">\r\n" \
 "<tr>\r\n" \
-"<th>Name</th><th>Size</th><th>Kind</th>\r\n" \
+"<th>Name</th><th>Size</th><th>Kind</th><th></th>\r\n" \
 "</tr>\r\n" \
 "</thead>\r\n" \
 "<tbody>\r\n"
@@ -384,7 +386,7 @@ GSString255Ptr gUrl, gHtml;
         "<tr>"
           "<td><a href=\"%B%B/\">%B/</a></td>"
           "<td align=\"right\"> &mdash; </td>"
-          "<td> Folder </td>"
+          "<td> Folder </td><td></td>"
         "</tr>\r\n",
         path, gUrl, gHtml);
     }
@@ -393,18 +395,51 @@ GSString255Ptr gUrl, gHtml;
       const char *fType = FindFType(DirDCB.fileType, DirDCB.auxType);
 
       LongWord size = DirDCB.eof;
+      Word as = false;
+
       size += 1023;
       size >>= 10;  // convert to K.
 
-      len = orca_sprintf(buffer,
-	"<tr>"
-          "<td><a href=\"%B%B\">%B</a></td>"
-          "<td align=\"right\"> %uK </td>"
-          "<td> %b </td>"
-	"</tr>\r\n",
-	path, gUrl, gHtml,
-        (Word)size,
-	fType);
+      switch(fAppleSingle)
+      {
+      case 0:
+        as = false;
+        break;
+      case 1:
+        as = true;
+        break;
+     case 2:
+       as = (DirDCB.flags & 0x8000);
+       break;
+      }
+
+      if (as)
+      {
+	len = orca_sprintf(buffer,
+	  "<tr>"
+            "<td><a href=\"%B%B\">%B</a></td>"
+            "<td align=\"right\"> %uK </td>"
+            "<td> %b </td>"
+            "<td><a href=\"%B%B?applesingle\">AppleSingle</a></td>"
+	  "</tr>\r\n",
+	  path, gUrl, gHtml,
+          (Word)size,
+	  fType,
+          path, gUrl);
+
+      }
+      else
+      {
+	len = orca_sprintf(buffer,
+	  "<tr>"
+            "<td><a href=\"%B%B\">%B</a></td>"
+            "<td align=\"right\"> %uK </td>"
+            "<td> %b </td> <td></td>"
+	  "</tr>\r\n",
+	  path, gUrl, gHtml,
+          (Word)size,
+	  fType);
+      }
     }
 
 

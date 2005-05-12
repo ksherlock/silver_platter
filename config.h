@@ -20,7 +20,7 @@ extern Word fPut;
 extern Word fPutOverwrite;
 extern Word fPutMkdir;	
 
-
+extern Word fAppleSingle;
 
 Word LoadConfig(Word);
 void UnloadConfig(void);
