@@ -261,6 +261,32 @@ fPutMkdir = false;
     ReleaseResource(3, 1, rID);
   }
 
+  h = RMLoadNamedResource2(1, (Ptr)NamePut, &rID);
+  if (!_toolErr)
+  {
+    HLock(h);
+    fPut = **(Word **)h;
+    ReleaseResource(3, 1, rID);
+  }
+  h = RMLoadNamedResource2(1, (Ptr)NamePutMkdir, &rID);
+  if (!_toolErr)
+  {
+    HLock(h);
+    fPutMkdir = **(Word **)h;
+    ReleaseResource(3, 1, rID);
+  }
+  h = RMLoadNamedResource2(1, (Ptr)NamePutOverwrite, &rID);
+  if (!_toolErr)
+  {
+    HLock(h);
+    fPutOverwrite = **(Word **)h;
+    ReleaseResource(3, 1, rID);
+  }
+
+
+
+
+
   h = RMLoadNamedResource2(1, (Ptr)NameMTU, &rID);
   if (!_toolErr)
   {
@@ -654,7 +680,6 @@ Word i;
       fPut = GetCtlValueByID(win, CtrlPut);
       fPutMkdir = GetCtlValueByID(win, CtrlPutMkdir);
       fPutOverwrite = GetCtlValueByID(win, CtrlPutOverwrite);
-
 
       SetConfigValue(1, NamePut, &fPut, sizeof(Word));
       SetConfigValue(1, NamePutMkdir, &fPutMkdir, sizeof(Word));

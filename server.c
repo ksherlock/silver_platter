@@ -40,6 +40,8 @@ extern int orca_sprintf(char *, const char *, ...);
 // dfa table for methods
 //extern Word methods[];
 
+extern Word ConvertCRLF(char *, Word);
+
 Word fActive;
 Word fUsed;
 
@@ -231,7 +233,7 @@ GSString255Ptr host;
 
     // find the length...
     i = 0;
-    while (c = cp[i] && !isspace(c)) i++;
+    while ((c = cp[i]) && !isspace(c)) i++;
     if (!i) return;
 
     host = kmalloc(i + 3);
@@ -392,7 +394,7 @@ Word cmd = -1;
     i = j = 0;
     while (c = path->text[i++])
     {
-      if (c == '%' && isxdigit(path->text[i]) && isxdigit(path->text[i + 1]))
+      if ((c == '%') && isxdigit(path->text[i]) && isxdigit(path->text[i + 1]))
       {
 	Word a, b;
 	c = path->text[i++];
@@ -971,6 +973,9 @@ Word oldPrefs;
     case STATE_PUT:
       {
       IORecGS WriteDCB;
+      Word i;
+      Word size;
+      char *cp;
 
 	// read any pending data...
 	if (srBuffer.srRcvQueued)
@@ -981,10 +986,15 @@ Word oldPrefs;
             srBuffer.srRcvQueued , &rrBuffer);
 
           HLock(h);
+          cp = *h;
+          i = size = rrBuffer.rrBuffCount;
+
+          if (q->flags & FLAG_TEXT) i = ConvertCRLF(cp, i);
+
 	  WriteDCB.pCount = 4;
 	  WriteDCB.refNum = q->fd;
-	  WriteDCB.dataBuffer = *h;
-	  WriteDCB.requestCount = rrBuffer.rrBuffCount;
+	  WriteDCB.dataBuffer = cp;
+	  WriteDCB.requestCount = i;
 
 	  WriteGS(&WriteDCB);
 
@@ -996,7 +1006,7 @@ Word oldPrefs;
 
           if (q->filesize)
           {
-            q->filesize -= rrBuffer.rrBuffCount;
+            q->filesize -= size;
             if (q->filesize <= 0)
             {
               SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 ,

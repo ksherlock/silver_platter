@@ -72,8 +72,6 @@ Handle g;
 
 GSString255Ptr path;
 
-  // testing...
-  q->flags &= ~FLAG_KA;
 
   path = q->pathname;
 

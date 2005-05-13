@@ -980,7 +980,7 @@ resource rPString (Ctrl_AS_Forked) {
 
 
 resource rPString (CtrlPut) {
-	"Enable PUT"
+	"Enable Uploads"
 };
 
 resource rPString (CtrlPutMkdir) {
