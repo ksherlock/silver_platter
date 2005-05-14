@@ -85,7 +85,7 @@ char *cp;
   #undef MIN
   #define MIN(a,b) (a) < (b) ? (a) : (b)
 
-  if (q->command == CMD_GET)
+  if (q->command != CMD_HEAD)
   {
     if (q->flags & FLAG_CHUNKED)
     {
