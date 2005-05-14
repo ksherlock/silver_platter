@@ -121,6 +121,23 @@ LongWord rID;
   }
 }
 
+Word LoadWord(const char *name, Word defval)
+{
+Handle h;
+Word ret;
+LongWord rID;
+
+
+  h = RMLoadNamedResource2(1, (Ptr)name, &rID);
+  if (_toolErr) return defval;
+
+  HLock(h);
+  ret = **(Word **)h;
+  ReleaseResource(3, 1, rID);
+
+  return ret;
+}
+
 /*
  * load default values.
  * return 0 on failure, anything else on success.
@@ -146,29 +163,6 @@ static GSString32 folderPath = {sizeof(xstr) - 1, xstr};
 static FileInfoRecGS InfoDCB = {12, (GSString255Ptr)&filePath};
 static CreateRecGS CreateDCB = {4, (GSString255Ptr)&folderPath, 0xe3, 0x0f, 0};
 
-// default prefs
-fAbort = true;
-
-fDir = true;
-fAppleSingle = 0;
-
-fJail = false;
-fTeach = false;
-fPort = 80;
-fMTU = 512;
-
-fLog = false;
-fLogDir = NULL;
-fLogDirH = NULL;
-
-
-fRoot = NULL;
-fRootH = NULL;
-
-
-fPut = true;
-fPutOverwrite = false;
-fPutMkdir = false;	
 
 
 
@@ -202,98 +196,28 @@ fPutMkdir = false;
   oDepth = SetResourceFileDepth(1);
 
 
-  h = RMLoadNamedResource2(1, (Ptr)NameAbort, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fAbort = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
+  fLogDir = NULL;
+  fLogDirH = NULL;
 
-  h = RMLoadNamedResource2(1, (Ptr)NamePort, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fPort = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
-
-  h = RMLoadNamedResource2(1, (Ptr)NameDir, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fDir = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
-
-  h = RMLoadNamedResource2(1, (Ptr)NameAppleSingle, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fAppleSingle = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
+  fRoot = NULL;
+  fRootH = NULL;
 
 
-  h = RMLoadNamedResource2(1, (Ptr)NameJail, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fJail = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
+  fAbort = LoadWord(NameAbort, true);
+  fPort = LoadWord(NamePort, 80);
+  fDir = LoadWord(NameDir, true);
+  fAppleSingle = LoadWord(NameAppleSingle, 0);
+  fJail = LoadWord(NameJail, false);
+  fLog = LoadWord(NameLog, false);
+  fTeach = LoadWord(NameTeach, false);
 
-  h = RMLoadNamedResource2(1, (Ptr)NameLog, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fLog = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
+  fPut = LoadWord(NamePut, false);
+  fPutMkdir = LoadWord(NamePutMkdir, false);
+  fPutOverwrite = LoadWord(NamePutOverwrite, false);
 
+  fMTU = LoadWord(NameMTU, 512);
 
-
-  h = RMLoadNamedResource2(1, (Ptr)NameTeach, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fTeach = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
-
-  h = RMLoadNamedResource2(1, (Ptr)NamePut, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fPut = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
-  h = RMLoadNamedResource2(1, (Ptr)NamePutMkdir, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fPutMkdir = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
-  h = RMLoadNamedResource2(1, (Ptr)NamePutOverwrite, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fPutOverwrite = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
-
-
-
-
-
-  h = RMLoadNamedResource2(1, (Ptr)NameMTU, &rID);
-  if (!_toolErr)
-  {
-    HLock(h);
-    fMTU = **(Word **)h;
-    ReleaseResource(3, 1, rID);
-  }
+//
 
   h = RMLoadNamedResource2(rC1InputString, (Ptr)NameRoot, &rID);
   if (!_toolErr)
