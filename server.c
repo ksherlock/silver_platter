@@ -18,7 +18,7 @@
 #include <string.h>
 #include <ctype.h>
 
-//#include <dfa.h>
+#include <dfa.h>
 
 #include "httpnda.h"
 #include "server.h"
@@ -39,7 +39,8 @@ extern int orca_sprintf(char *, const char *, ...);
 
 
 // dfa table for methods
-//extern Word methods[];
+extern Word methods[];
+extern Word headers[];
 
 extern Word ConvertCRLF(char *, Word);
 
@@ -197,70 +198,46 @@ char c;
 int i;
 Handle h;
 GSString255Ptr host;
+Word header;
 
-  #undef xstr
-  #define xstr "Keep-Alive:"
-  if (!strincmp(xstr, cp, sizeof(xstr) - 1))
+  i = MatchDFA(headers, cp, &header);
+  if (i)
   {
-    q->flags |= FLAG_KA;
-    return;
-  }
-
-  #undef xstr
-  #define xstr "Connection: close"
-  if (!strincmp(xstr, cp, sizeof(xstr) - 1))
-  {
-    q->flags &= ~FLAG_KA;
-    return;
-  }        
-
-  #undef xstr
-  #define xstr "Connection: keep-alive"
-  if (!strincmp(xstr, cp, sizeof(xstr) - 1))
-  {
-    q->flags |= FLAG_KA;
-    return;
-  }
-
-  #undef xstr
-  #define xstr "Host:"
-  if (!strincmp(xstr, cp, sizeof(xstr) - 1))
-  {
-    cp += sizeof(xstr) - 1;
+    cp += i;
 
     // move past any leading whitespace
     while (isspace(*cp)) cp++;
-    if (!*cp) return;
 
-    // find the length...
-    i = 0;
-    while ((c = cp[i]) && !isspace(c)) i++;
-    if (!i) return;
 
-    host = kmalloc(i + 3);
-    if (host)
+    switch(header)
     {
-      q->host = host;
-      host->length = i;
-      BlockMove(cp, host->text, i);
-      host->text[i] = 0;
-    }
+    case 1: // Connection: keep-alive.
+      q->flags |= FLAG_KA;
+      break;
 
-    return;
-  }
+    case 2: // Connection: close
+      q->flags &= ~FLAG_KA;
+      break;
 
-  // PUT - Content-Length & Content-Type
-  if (q->command == CMD_PUT)
-  {
-    // Content-Length: <space> <digit>+
-    #undef xstr
-    #define xstr "Content-Length:"
-    if (!strincmp(xstr, cp, sizeof(xstr) - 1))
-    {
-      cp += sizeof(xstr) - 1;
+    case 3: // Host:
+      if (!*cp) return;
 
-      // move past any leading whitespace
-      while (isspace(*cp)) cp++;
+      // find the length...
+      i = 0;
+      while ((c = cp[i]) && !isspace(c)) i++;
+      if (!i) return;
+
+      host = kmalloc(i + 3);
+      if (host)
+      {
+	q->host = host;
+	host->length = i;
+	BlockMove(cp, host->text, i);
+	host->text[i] = 0;
+      }
+      break;
+
+    case 4:  //Content-Length
       if (!*cp) return;
 
       i = 0;
@@ -268,29 +245,19 @@ GSString255Ptr host;
       while (isdigit(cp[i])) i++;
 
       q->filesize = Dec2Long(cp, i, 0);
+      break;
 
-      return;
-    }
-
-
-    // set the FLAG_TEXT if the type is text/*
-    #undef xstr
-    #define xstr "Content-Type:"
-    if (!strincmp(xstr, cp, sizeof(xstr) - 1))
-    {
-
-      cp += sizeof(xstr) - 1;
-
-      // move past any leading whitespace
-      while (isspace(*cp)) cp++;
+    case 5: // Content-Type ... check if text/*
       if (!*cp) return;
       if (!strincmp("text/", cp, 5)) q->flags |= FLAG_TEXT;
+      break;
 
-      return;
-    }
-
-  } // q->command == CMD_PUT
-
+    case 6: // Depth: 0, 1, or infinity.
+      if (isdigit(c = *cp)) q->depth = c - '0';
+      else q->depth = -1;
+      break;
+    }                     
+  }
 }
 
 // scan a request for the request and http version.
@@ -305,55 +272,11 @@ int i, j;
 
 Word cmd = -1;
 
-
-  q->command = -1;
-
   // format: <method> <space>+ <path> <space>+ (HTTP/\d.\d)?
 
-  //match = MatchDFA(methods, cp, &q->command);
-  //if (match) cp += match;
+  match = MatchDFA(methods, cp, &cmd);
+  if (match) cp += match;
 
-  if (!strincmp("GET ", cp, 4))
-  {
-    cmd = CMD_GET;
-    cp += 4;
-  }
-  else if (!strincmp("HEAD ", cp, 5))
-  {
-    cmd = CMD_HEAD;
-    cp += 5;
-  }
-  else if (!strincmp("OPTIONS ", cp, 8))
-  {
-    cmd = CMD_OPTIONS;
-    cp += 8;
-  }
-  else if (!strincmp("POST ", cp, 5))
-  {
-    cmd = CMD_POST;
-    cp += 5;
-  }
-  else if (!strincmp("PUT ", cp, 4))
-  {
-    cmd = CMD_PUT;
-    cp += 4;
-  }
-  else if (!strincmp("DELETE ", cp, 7))
-  {
-    cmd = CMD_DELETE;
-    cp += 7;
-  }
-  else if (!strincmp("TRACE ", cp, 6))
-  {
-    cmd = CMD_TRACE;
-    cp += 6;
-  }
-  else if (!strincmp("CONNECT ", cp, 8))
-  {
-    cmd = CMD_CONNECT;
-    cp += 8;
-  }
-                     
   else
   {
     // skip past the offending command.
@@ -541,6 +464,8 @@ Word CloseDCB[2];
   q->moreFlags = 0;
   q->tick = 0;
   q->filesize = 0;
+  q->depth = -1;
+
 }    
 
 extern Word CreateLog(void);
@@ -882,7 +807,7 @@ Word oldPrefs;
               terr = ProcessPut(q);
               break;
 
-            case 0xfff:
+            case 0xffff:
               terr = ProcessError(501, q);
               break;
 
@@ -1078,6 +1003,7 @@ Word oldPrefs;
       else q->state = STATE_ESTABLISH;
 
       q->tick = GetTick() + 60 * 60;
+      q->depth = -1;
 
       // allocate any handles if needed.
       err = 0;
