@@ -41,7 +41,16 @@ enum
   CMD_PUT,
   CMD_DELETE,
   CMD_TRACE,
-  CMD_CONNECT
+  CMD_CONNECT,
+
+  // WebDAV
+  CMD_PROPFIND,
+  CMD_PROPPATCH,
+  CMD_MKCOL,
+  CMD_COPY,
+  CMD_MOVE,
+  CMD_LOCK,
+  CMD_UNLOCK
 };
 
 struct qEntry
@@ -57,6 +66,7 @@ struct qEntry
   LongWord tick;
   LongWord ip;
   LongWord filesize;
+  Word depth;
 
   GSString255Ptr host;
   GSString255Ptr request;
