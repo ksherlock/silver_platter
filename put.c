@@ -11,12 +11,7 @@
 
 #include "server.h"
 #include "config.h"
-
-static CreateRecGS CreateDCB;
-static OpenRecGS OpenDCB;
-static NameRecGS DestroyDCB;
-static IORecGS WriteDCB;
-static FileInfoRecGS InfoDCB;
+#include "globals.h"
 
 
 //#pragma debug -1
@@ -199,12 +194,12 @@ Word i;
     if (q->flags & FLAG_TEXT) i = ConvertCRLF(cp, i);
 
 
-    WriteDCB.pCount = 4;
-    WriteDCB.refNum = OpenDCB.refNum;
-    WriteDCB.dataBuffer = *q->buffer;
-    WriteDCB.requestCount = i;
+    IODCB.pCount = 4;
+    IODCB.refNum = OpenDCB.refNum;
+    IODCB.dataBuffer = *q->buffer;
+    IODCB.requestCount = i;
 
-    WriteGS(&WriteDCB);
+    WriteGS(&IODCB);
 
     if (_toolErr) return ProcessError(500, q);
 

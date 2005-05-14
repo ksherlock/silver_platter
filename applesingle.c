@@ -10,6 +10,7 @@
 
 #include "server.h"
 #include "applesingle.h"
+#include "globals.h"
 
 extern pascal Word swap16(Word);
 extern pascal LongWord swap32(LongWord);
@@ -41,8 +42,6 @@ static ASHeader header;
 static ASFileDates dates;
 static ASEntry entry;
 static ASProdosInfo pInfo;
-static OpenRecGS OpenDCB;
-static FileInfoRecGS InfoDCB;
 static Word optionData[25 + 2];
 
 ASFinderInfo *fdInfo;

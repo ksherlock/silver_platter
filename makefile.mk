@@ -7,7 +7,7 @@ CFLAGS += -I /usr/local/include/
 
 OBJS	= httpnda.o tools.o server.o error.o file.o time.o \
  mime.o config.o methods.o ctrl.o toolbox.o header.o log.o \
- mangle.o ftype.o applesingle.o utils.o kmalloc.o put.o
+ mangle.o ftype.o applesingle.o utils.o kmalloc.o put.o globals.o
 ROBJS = http.r errors.r
 
 
@@ -28,6 +28,7 @@ tools.o: tools.c httpnda.h
 applesingle.o: applesingle.c applesingle.h server.h
 kmalloc.o: kmalloc.c kmalloc.h
 put.o: put.c config.h server.h
+globals.o: globals.c globals.h
 
 # resource files
 http.r: http.rez rez.h

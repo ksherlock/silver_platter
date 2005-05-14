@@ -11,7 +11,7 @@
 
 #include <tcpip.h>
 #include <gsos.h>
-
+#include "globals.h"
 
 #include "server.h"
 #include "config.h"
@@ -38,8 +38,6 @@ extern Word MyID;
 static ResultBuf32 dName = {36};
 static ResultBuf255 vName = {259};
 
-static FileInfoRecGS InfoDCB;
-static OpenRecGS OpenDCB;
 static DInfoRecGS DInfoDCB = {3, 0, &dName};
 static VolumeRecGS VolumeDCB = {6, &dName.bufString, &vName};
 static DirEntryRecGS DirDCB = {14, 0, 0, 1, 1, &vName};

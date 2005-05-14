@@ -27,6 +27,7 @@
 #include "toolbox.h"
 
 #include "kmalloc.h"
+#include "globals.h"
 
 extern int orca_sprintf(char *, const char *, ...);
 
@@ -897,17 +898,15 @@ Word oldPrefs;
     case STATE_ASINGLE_1:  // apple single, data fork
     case STATE_ASINGLE_2:  // apple single, resource fork
       {
-      IORecGS ReadDCB;
-
-        ReadDCB.pCount = 4;
-        ReadDCB.refNum = q->state == STATE_ASINGLE_2 ? q->rfd : q->fd;
-        ReadDCB.dataBuffer = buffer;
-        ReadDCB.requestCount = 4096;
-        ReadGS(&ReadDCB);
+        IODCB.pCount = 4;
+        IODCB.refNum = q->state == STATE_ASINGLE_2 ? q->rfd : q->fd;
+        IODCB.dataBuffer = buffer;
+        IODCB.requestCount = 4096;
+        ReadGS(&IODCB);
         if ((terr = _toolErr) == 0)
         {
         char *cp = buffer;
-        Word total = (Word)ReadDCB.transferCount;
+        Word total = (Word)IODCB.transferCount;
 
           if (q->flags & FLAG_CHUNKED)
           {
@@ -915,7 +914,7 @@ Word oldPrefs;
             TCPIPWriteTCP(ipid, buffer16, i, false, false);
           }
 
-          //TCPIPWriteTCP(ipid, buffer, ReadDCB.transferCount, false, false);
+          //TCPIPWriteTCP(ipid, buffer, IODCB.transferCount, false, false);
 	  do
 	  {
 	    Word i = MIN(total, fMTU);
@@ -932,7 +931,7 @@ Word oldPrefs;
 
           #ifdef DEBUG
           i = orca_sprintf(buffer, "TCPIPWriteTCP(%d) [%d bytes sent]\r",
-            ipid, (Word)ReadDCB.transferCount);
+            ipid, (Word)IODCB.transferCount);
           InsertString(i, buffer);
           #endif
         }                                   
@@ -972,7 +971,7 @@ Word oldPrefs;
       // read any incoming data, dump it to the file.
     case STATE_PUT:
       {
-      IORecGS WriteDCB;
+      IORecGS IODCB;
       Word i;
       Word size;
       char *cp;
@@ -991,12 +990,12 @@ Word oldPrefs;
 
           if (q->flags & FLAG_TEXT) i = ConvertCRLF(cp, i);
 
-	  WriteDCB.pCount = 4;
-	  WriteDCB.refNum = q->fd;
-	  WriteDCB.dataBuffer = cp;
-	  WriteDCB.requestCount = i;
+	  IODCB.pCount = 4;
+	  IODCB.refNum = q->fd;
+	  IODCB.dataBuffer = cp;
+	  IODCB.requestCount = i;
 
-	  WriteGS(&WriteDCB);
+	  WriteGS(&IODCB);
 
 	  if (_toolErr)
           {
