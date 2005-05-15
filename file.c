@@ -83,7 +83,6 @@ GSString255Ptr path;
  // build the html...sigh
 
   h = NULL;
-  total = -1;
 
   if (q->command != CMD_HEAD)
   {
@@ -124,18 +123,19 @@ GSString255Ptr path;
     total += orca_sprintf(cp, xstr, path, append);
   }
 
-  if (q->version >= 0x0100)
-  {
-    SendHeader(q, 301, total, NULL, "text/html", false);
 
-    if (q->host)
-    {
-      i = orca_sprintf(buffer, "Location: http://%B%B%B\r\n",
-        q->host, path, append);
-      TCPIPWriteTCP(ipid, buffer, i, false, false);
-    }
-    TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
+  SendHeader(q, 301, q->command == CMD_HEAD ? -1 : total,
+    NULL, "text/html", false);
+
+  if (q->host)
+  {
+    i = orca_sprintf(buffer, "Location: http://%B%B%B\r\n",
+      q->host, path, append);
+    TCPIPWriteTCP(ipid, buffer, i, false, false);
   }
+  if (q->version >= 0x0100)
+    TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
+
 
   if (g) DisposeHandle(g);
 
