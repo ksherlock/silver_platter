@@ -31,6 +31,11 @@
 
 extern int orca_sprintf(char *, const char *, ...);
 
+extern Word ProcessPropfind(struct qEntry *q);
+extern Word ProcessOptions(struct qEntry *q);
+      
+
+
 #undef MIN
 #define MIN(a,b) (a) < (b) ? (a) : (b)
 
@@ -791,6 +796,10 @@ Word oldPrefs;
 
             switch(q->command)
             {
+            case CMD_OPTIONS:
+              terr = ProcessOptions(q);
+              break;
+
             case CMD_GET:
             case CMD_HEAD:
               switch (q->moreFlags)
@@ -806,6 +815,11 @@ Word oldPrefs;
             case CMD_PUT:
               terr = ProcessPut(q);
               break;
+
+            case CMD_PROPFIND:
+              terr = ProcessPropfind(q);
+              break;
+  
 
             case 0xffff:
               terr = ProcessError(501, q);

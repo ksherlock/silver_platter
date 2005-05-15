@@ -75,7 +75,7 @@ char *cp;
     if (error == 405 || error == 501)
     {
       #undef xstr
-      #define xstr "Allow: GET, HEAD, PUT\r\n"
+      #define xstr "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND\r\n"
       TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
     }
 
