@@ -4,6 +4,7 @@ read rTextBlock (400, purgeable3, nospecialmemory) "html/err400.html";
 read rTextBlock (403, purgeable3, nospecialmemory) "html/err403.html";
 read rTextBlock (404, purgeable3, nospecialmemory) "html/err404.html";
 read rTextBlock (405, purgeable3, nospecialmemory) "html/err405.html";
+read rTextBlock (409, purgeable3, nospecialmemory) "html/err409.html";
 read rTextBlock (500, purgeable3, nospecialmemory) "html/err500.html";
 read rTextBlock (501, purgeable3, nospecialmemory) "html/err501.html";
                                                                

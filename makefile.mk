@@ -41,7 +41,8 @@ tcp.o: tcp.c
 
 # resource files
 http.r: http.rez rez.h
-errors.r: errors.rez html/err400.html html/err403.html html/err404.html \
+errors.r: errors.rez html/err400.html html/err403.html \
+    html/err404.html html/err409.html \
 	html/err500.html html/err501.html
 
 #dfa table
