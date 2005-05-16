@@ -30,7 +30,7 @@ Word ProcessMkcol(struct qEntry *q)
   
   CreateGS(&CreateDCB);
   
-  if (_toolErr) return ProcessError(q, 409);
+  if (_toolErr) return ProcessError(409, q);
   
   SendHeader(q, 201, 0, NULL, NULL, true);
   

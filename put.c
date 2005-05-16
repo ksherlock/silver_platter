@@ -205,10 +205,10 @@ Word i;
 
     DisposeHandle(q->buffer);
     q->buffer = NULL;
-    if (q->filesize)
+    if (q->contentlength)
     {
-      q->filesize -= size;
-      if (q->filesize <= 0)
+      q->contentlength -= size;
+      if (q->contentlength <= 0)
       {
         SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 , 0, NULL, NULL, true);
         q->state = STATE_CLOSE;

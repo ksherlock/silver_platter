@@ -245,7 +245,7 @@ Word header;
 
       while (isdigit(cp[i])) i++;
 
-      q->filesize = Dec2Long(cp, i, 0);
+      q->contentlength = Dec2Long(cp, i, 0);
       break;
 
     case 5: // Content-Type ... check if text/*
@@ -464,7 +464,7 @@ Word CloseDCB[2];
   q->flags = 0;
   q->moreFlags = 0;
   q->tick = 0;
-  q->filesize = 0;
+  q->contentlength = 0;
   q->depth = -1;
 
 }    
@@ -821,6 +821,11 @@ Word oldPrefs;
               break;
   
 
+			case CMD_PROPPATCH:
+			case CMD_LOCK:
+			case CMD_UNLOCK:
+			case CMD_COPY:
+			case CMD_MOVE:
             case 0xffff:
               terr = ProcessError(501, q);
               break;
@@ -844,7 +849,7 @@ Word oldPrefs;
         ReadGS(&IODCB);
         if ((terr = _toolErr) == 0)
         {
-          WriteData(q, buffer, (Word)IODCB.transferCount;);
+          WriteData(q, buffer, (Word)IODCB.transferCount);
 
 
           #ifdef DEBUG
@@ -919,17 +924,17 @@ Word oldPrefs;
             break;
           }
 
-          if (q->filesize)
+          if (q->contentlength)
           {
-            q->filesize -= size;
-            if (q->filesize <= 0)
+            q->contentlength -= size;
+            if (q->contentlength <= 0)
             {
               SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 ,
                 0, NULL, NULL, true);
               q->state = STATE_CLOSE;
 
             }
-          } // q->filesize.
+          } // q->contentlength.
 	}
       }
       break;

@@ -65,7 +65,7 @@ struct qEntry
   Word moreFlags;
   LongWord tick;
   LongWord ip;
-  LongWord filesize;
+  LongWord contentlength;
   Word depth;
 
   GSString255Ptr host;
