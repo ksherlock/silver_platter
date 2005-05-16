@@ -17,6 +17,7 @@
 #include "config.h"
 #include "ftype.h"
 #include "kmalloc.h"
+#include "MemBuffer.h"
 
 extern int orca_sprintf(char *, const char *, ...);
 
@@ -57,15 +58,14 @@ Word Redirect(struct qEntry *q, GSString255Ptr append)
 {
 Word ipid = q->ipid;
 Word i;
-volatile Handle h;
-char *cp;
-
-Word alloc;
-Word total;
-
 Handle g;
 
 GSString255Ptr path;
+
+  CREATE_BUFFER(m, q->workHandle);
+  	
+  HUnlock(q->workHandle);
+  SetHandleSize(0, q->workHandle);
 
 
   path = q->pathname;
@@ -79,28 +79,13 @@ GSString255Ptr path;
 
  // build the html...sigh
 
-  h = NULL;
-
   if (q->command != CMD_HEAD)
   {
-    total = 0;
-    alloc = 2048;
+  	Word err;
 
-    h = q->workHandle;
-    HUnlock(h);
-    SetHandleSize(alloc, h);
-    if (_toolErr)
-    {
-      if (g) DisposeHandle(g);
-      return ProcessError(500, q);
-    }
-    HLock(h);
-
-    cp = *h;
-
-    BlockMove(_htmlHead, cp, sizeof(_htmlHead) - 1);
-    cp += sizeof(_htmlHead) -1;
-    total = sizeof(_htmlHead) -1;
+	
+	err = BufferAppend(&m, _htmlHead, sizeof(_htmlHead) - 1);
+	if (err) return ProcessError(500, q);
 
 #undef xstr
 #define xstr \
@@ -109,19 +94,20 @@ GSString255Ptr path;
 "<body>\r\n" \
 "<h1>301 Moved Permanently</h1>\r\n"
 
-    BlockMove(xstr, cp, sizeof(xstr) - 1);
-    cp += sizeof(xstr) -1;
-    total += sizeof(xstr) -1;
+	err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
+	if (err) return ProcessError(500, q);
 
 #undef xstr
 #define xstr "<p>The document has moved <a href=\"%B%B\">here</a></p>\r\n" \
 "</body>\r\n</html>\r\n"
 
-    total += orca_sprintf(cp, xstr, path, append);
+    i = orca_sprintf(buffer, xstr, path, append);
+	err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
+	if (err) return ProcessError(500, q);
   }
 
 
-  SendHeader(q, 301, q->command == CMD_HEAD ? -1 : total,
+  SendHeader(q, 301, q->command == CMD_HEAD ? (LongWord)-1 : m.used,
     NULL, "text/html", false);
 
   if (q->host)
@@ -138,7 +124,7 @@ GSString255Ptr path;
 
   if (q->command == CMD_GET)
   {
-  	WriteData(q, *h, total);
+  	WriteData(q, *m.h, m.used);
   	WriteData(q, NULL, 0);
   }                 
 
@@ -214,19 +200,15 @@ Word i;
 
 Word ListDirectory(struct qEntry *q)
 {
-Word len;
-Word total;
-Word alloc;
+Word i;
 Word err;
 
-volatile Handle h; // must be volatile.
-
-char *cp;
 GSString255Ptr path = q->pathname;
 
 Handle hUrl, hHtml, hPath;
 GSString255Ptr gUrl, gHtml;
 
+CREATE_BUFFER(m, q->workHandle);
 
   if (err = CheckIndex(q)) return err;
 
@@ -243,248 +225,205 @@ GSString255Ptr gUrl, gHtml;
 
   DirDCB.refNum = q->fd;
 
-  total = 0;
-  alloc = 2048;
-
-  h = q->workHandle;
-  HUnlock(h);
-  SetHandleSize(alloc, h);
-
-  if (_toolErr)
-  {
-    return ProcessError(500, q);
-  }
-  HLock(h);
-  cp = *h;
-
-  // hardcoded ... ewww
-
-  BlockMove(_htmlHead, cp, sizeof(_htmlHead) - 1);
-  cp += sizeof(_htmlHead) -1;
-  total = sizeof(_htmlHead) -1;
-
-#undef xstr
-#define xstr \
-"<title>Index of %B</title>\r\n" \
-"</head>\r\n" \
-"<body>\r\n" \
-"<h1>Index of %B</h1>\r\n"
-
-
+  HUnlock(q->workHandle);
+  SetHandleSize(0, q->workHandle);
+  
+  
   hPath = MangleName(path);
   hHtml = MacRoman2HTML(path);
   if (hPath) HLock(hPath);
   if (hHtml) HLock(hHtml);
+  
   gHtml = hHtml ? (GSString255Ptr)*hHtml : path;
-
   path = hPath ? (GSString255Ptr)*hPath : path;
-
-  len = orca_sprintf(buffer, xstr, gHtml, gHtml);
-  BlockMove(buffer, cp, len);
-  cp += len;
-  total += len;
-
-  // if we're jailed and at the root, no parent directory
-  if (path->length > 1)
+  
+  // do ... while (false) to allow breaking.
+  do
   {
-    Word i, j;
-    i = j = path->length;
-    i -= 2; // -1 to convert o 0-index, -1 to skip trailing /
-    while (path->text[i] != '/') i--;
-    path->length = i + 1;
+  	err = BufferAppend(&m, _htmlHead, sizeof(_htmlHead) - 1);
+  	if (err) break;
+  	
+  	#undef xstr
+	#define xstr \
+	"<title>Index of %B</title>\r\n" \
+	"</head>\r\n" \
+	"<body>\r\n" \
+	"<h1>Index of %B</h1>\r\n"
 
-    len = orca_sprintf(buffer,
-      "<p><a href=\"%B\">Parent Directory</a></p>\r\n",
-      path);
+  	i = orca_sprintf(buffer, xstr, gHtml, gHtml);
 
-    BlockMove(buffer, cp, len);
-    cp += len;
-    total += len;
+  	err = BufferAppend(&m, buffer, i);
+  	if (err) break;
+  	
+ 
+	   
+	// if we're jailed and at the root, no parent directory
+	if (path->length > 1)
+	{
+	  Word i, j;
+	  i = j = path->length;
+	  i -= 2; // -1 to convert o 0-index, -1 to skip trailing /
+	  while (path->text[i] != '/') i--;
+	  path->length = i + 1;
+	
+	  i = orca_sprintf(buffer,
+	    "<p><a href=\"%B\">Parent Directory</a></p>\r\n",
+	    path);
+	
+  	  err = BufferAppend(&m, buffer, i);
+  	  if (err) break;
+	
+	  path->length = j;
+	}
+	
+	if (hHtml) DisposeHandle(hHtml);
+    hHtml = NULL;
+    
 
-    path->length = j;
-  }
+    #undef xstr
+	#define xstr \
+	"<table border=\"0\" cellspacing=\"2\" cellpadding=\"2\">\r\n" \
+	"<thead align=\"left\">\r\n" \
+	"<tr>\r\n" \
+	"<th>Name</th><th>Size</th><th>Kind</th><th></th>\r\n" \
+	"</tr>\r\n" \
+	"</thead>\r\n" \
+	"<tbody>\r\n"
+	
+	err = BufferAppend(&m, xstr, sizeof(xstr) -1);
+	if (err) break;
 
+    for(;;)
+	{
+	  GetDirEntryGS(&DirDCB);
+	  if (_toolErr) break;
+	
+	  if ((InfoDCB.access & 0x0100) 
+	    && (fDirHidden == false))
+	    continue;
+	
+	    
+	  hUrl = MangleName(&vName.bufString);
+	  hHtml = MacRoman2HTML(&vName.bufString);
+	  if (hUrl) HLock(hUrl);
+	  if (hHtml) HLock(hHtml);
+	
+	  gUrl = hUrl ? (GSString255Ptr)*hUrl : &vName.bufString;
+	  gHtml = hHtml ? (GSString255Ptr)*hHtml : &vName.bufString;
+	
+	
+	  // folder -- no size, include trailing /
+	  if (DirDCB.fileType == 0x0f)
+	  {
+	    i = orca_sprintf(buffer,
+	        "<tr>"
+	          "<td><a href=\"%B%B/\">%B/</a></td>"
+	          "<td align=\"right\"> &mdash; </td>"
+	          "<td> Folder </td><td></td>"
+	        "</tr>\r\n",
+	        path, gUrl, gHtml);
+	  }
+	  else
+	  {
+	    const char *fType = FindFType(DirDCB.fileType, DirDCB.auxType);
+	
+	    LongWord size = DirDCB.eof;
+	    Word as = false;
+	
+	    size += 1023;
+	    size >>= 10;  // convert to K.
+	
+	    switch(fAppleSingle)
+	    {
+	    case 0:
+	      as = false;
+	      break;
+	    case 1:
+	      as = true;
+	      break;
+	   case 2:
+	     as = (DirDCB.flags & 0x8000);
+	     break;
+	    }
+	
+	    if (as)
+	    {
+		i = orca_sprintf(buffer,
+		      "<tr>"
+	          "<td><a href=\"%B%B\">%B</a></td>"
+	          "<td align=\"right\"> %uK </td>"
+	          "<td> %b </td>"
+	          "<td><a href=\"%B%B?applesingle\">AppleSingle</a></td>"
+		      "</tr>\r\n",
+		      path, gUrl, gHtml,
+	          (Word)size,
+		      fType,
+	          path, gUrl);
+	    }
+	    else
+	    {
+		  i = orca_sprintf(buffer,
+		        "<tr>"
+	            "<td><a href=\"%B%B\">%B</a></td>"
+	            "<td align=\"right\"> %uK </td>"
+	            "<td> %b </td> <td></td>"
+		        "</tr>\r\n",
+		        path, gUrl, gHtml,
+	            (Word)size,
+		        fType);
+	     }
+	   }
+	
+	
+	   if (hUrl) DisposeHandle(hUrl);
+	   if (hHtml) DisposeHandle(hHtml);
+	   
+	   
+	  	err = BufferAppend(&m, buffer, i);
+	    if (err) break;
+	  } // dir entry listing.
+	  if (err) break;
+	  
+	#undef xstr
+	#define xstr "</tbody></table>\r\n</body>\r\n</html>\r\n"
+	
+	err = BufferAppend(&m, xstr, sizeof(xstr) -1);
+	if (err) break;	
+  	
+  } while (false);
+
+  
+  if (hPath) DisposeHandle(hPath);
   if (hHtml) DisposeHandle(hHtml);
+  if (hUrl) DisposeHandle(hUrl);
+  
+  if (err) return ProcessError(500, q);
 
 
-#undef xstr
-#define xstr \
-"<table border=\"0\" cellspacing=\"2\" cellpadding=\"2\">\r\n" \
-"<thead align=\"left\">\r\n" \
-"<tr>\r\n" \
-"<th>Name</th><th>Size</th><th>Kind</th><th></th>\r\n" \
-"</tr>\r\n" \
-"</thead>\r\n" \
-"<tbody>\r\n"
+  SendHeader(q, 200, m.used, NULL, "text/html", true);
 
-  if (total + sizeof(xstr) - 1 > alloc)
-  {
-    HUnlock(h);
-    alloc += 2048;
-    SetHandleSize(alloc, h);
-    if (_toolErr)
-    {
-      if (hPath) DisposeHandle(hPath);
-      return ProcessError(500, q);
-    }
-    HLock(h);
-    cp = *h + total;
-  }
-
-  BlockMove(xstr, cp, sizeof(xstr) - 1);
-  total += sizeof(xstr) - 1;
-  cp += sizeof(xstr) - 1;
-
-  for(;;)
-  {
-    GetDirEntryGS(&DirDCB);
-    if (_toolErr) break;
-
-    // terminate as a c-string
-    //vName.bufString.text[vName.bufString.length] = 0;
-    
-
-    hUrl = MangleName(&vName.bufString);
-    hHtml = MacRoman2HTML(&vName.bufString);
-    if (hUrl) HLock(hUrl);
-    if (hHtml) HLock(hHtml);
-
-    gUrl = hUrl ? (GSString255Ptr)*hUrl : &vName.bufString;
-    gHtml = hHtml ? (GSString255Ptr)*hHtml : &vName.bufString;
-
-
-    // folder -- no size, include trailing /
-    if (DirDCB.fileType == 0x0f)
-    {
-      len = orca_sprintf(buffer,
-        "<tr>"
-          "<td><a href=\"%B%B/\">%B/</a></td>"
-          "<td align=\"right\"> &mdash; </td>"
-          "<td> Folder </td><td></td>"
-        "</tr>\r\n",
-        path, gUrl, gHtml);
-    }
-    else
-    {
-      const char *fType = FindFType(DirDCB.fileType, DirDCB.auxType);
-
-      LongWord size = DirDCB.eof;
-      Word as = false;
-
-      size += 1023;
-      size >>= 10;  // convert to K.
-
-      switch(fAppleSingle)
-      {
-      case 0:
-        as = false;
-        break;
-      case 1:
-        as = true;
-        break;
-     case 2:
-       as = (DirDCB.flags & 0x8000);
-       break;
-      }
-
-      if (as)
-      {
-	len = orca_sprintf(buffer,
-	  "<tr>"
-            "<td><a href=\"%B%B\">%B</a></td>"
-            "<td align=\"right\"> %uK </td>"
-            "<td> %b </td>"
-            "<td><a href=\"%B%B?applesingle\">AppleSingle</a></td>"
-	  "</tr>\r\n",
-	  path, gUrl, gHtml,
-          (Word)size,
-	  fType,
-          path, gUrl);
-
-      }
-      else
-      {
-	len = orca_sprintf(buffer,
-	  "<tr>"
-            "<td><a href=\"%B%B\">%B</a></td>"
-            "<td align=\"right\"> %uK </td>"
-            "<td> %b </td> <td></td>"
-	  "</tr>\r\n",
-	  path, gUrl, gHtml,
-          (Word)size,
-	  fType);
-      }
-    }
-
-
-    if (hUrl) DisposeHandle(hUrl);
-    if (hHtml) DisposeHandle(hHtml);
-
-    if (len + total > alloc)
-    {
-      HUnlock(h);
-      alloc += 2048;
-      SetHandleSize(alloc, h);
-      if (_toolErr)
-      {
-        if (hPath) DisposeHandle(hPath);
-        return ProcessError(500, q);
-      }
-      HLock(h);
-      cp = *h + total;
-    }
-    BlockMove(buffer, cp, len);
-    total += len;
-    cp += len;
-    
-  }
-#undef xstr
-#define xstr "</tbody></table>\r\n</body>\r\n</html>\r\n"
-
-  if (total + sizeof(xstr) - 1 > alloc)
-  {
-    HUnlock(h);
-    alloc += sizeof(xstr) - 1;
-    SetHandleSize(alloc, h);
-    if (_toolErr)
-    {
-      if (hPath) DisposeHandle(hPath);
-      return ProcessError(500, q);
-    }
-    HLock(h);
-    cp = *h + total;
-  }
-  BlockMove(xstr, cp, sizeof(xstr) - 1);
-  total += sizeof(xstr) - 1;
-
-  cp = *h;
-
-  SendHeader(q, 200, total, NULL, "text/html", true);
-
-
-  WriteData(q, *h, total);
+  WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);
 
-
-  if (hPath) DisposeHandle(hPath);
   q->state = STATE_CLOSE;
-  return 200;
+  return 200; 
 }
+
+
+
+
 
 // list the volumes
 Word ListVolumes(struct qEntry *q)
 {
-int i;
-Word len;
-Word total;
-Word alloc;
-
-volatile Handle h;
-char *cp;
+Word i;
+Word d;
 
 Handle hUrl, hHtml;
 GSString255Ptr gUrl, gHtml;
+Word err;
 
+CREATE_BUFFER(m, q->workHandle);
 
   if (!fDir)
   {
@@ -496,142 +435,98 @@ GSString255Ptr gUrl, gHtml;
     return 200;
   }
 
-  total = 0;
-  alloc = 2048;
+  HUnlock(q->workHandle);
+  SetHandleSize(0, q->workHandle);
 
-  h = q->workHandle;
-  HUnlock(h);
-  SetHandleSize(alloc, h);
-  if (_toolErr)
+  do 
   {
-    return ProcessError(500, q);
-  }
-  HLock(h);
-  cp = *h;
-
-  // hardcoded ... ewww
-
-  BlockMove(_htmlHead, cp, sizeof(_htmlHead) - 1);
-  cp += sizeof(_htmlHead) -1;
-  total = sizeof(_htmlHead) -1;
+    err = BufferAppend(&m, _htmlHead, sizeof(_htmlHead) - 1);
+	if (err) break;
 
 
-#undef xstr
-#define xstr \
-"<title>Index of /</title>\r\n" \
-"</head>\r\n" \
-"<body>\r\n" \
-"<h1>Index of /</h1>\r\n" 
+	#undef xstr
+	#define xstr \
+	"<title>Index of /</title>\r\n" \
+	"</head>\r\n" \
+	"<body>\r\n" \
+	"<h1>Index of /</h1>\r\n" 
 
-  BlockMove(xstr, cp, sizeof(xstr) - 1);
-  cp += sizeof(xstr) -1;
-  total += sizeof(xstr) -1;
+	err = BufferAppend(&m, xstr, sizeof(xstr) -1);
+	if (err) break;	
+  	
+  	#undef xstr
+	#define xstr \
+	"<table border=\"0\" cellspacing=\"2\" cellpadding=\"2\">\r\n" \
+	"<thead align=\"left\">\r\n" \
+	"<tr>\r\n" \
+	"<th>Name</th><th>Size</th><th>Kind</th>\r\n" \
+	"</tr>\r\n" \
+	"</thead>\r\n" \
+	"<tbody>\r\n"
+  	
+	err = BufferAppend(&m, xstr, sizeof(xstr) -1);
+	if (err) break;
+	
+	
+	for (d = 1; ; i++)
+  	{
+      DInfoDCB.devNum = d;
+      DInfoGS(&DInfoDCB);
+      if (_toolErr) break;
+      if (DInfoDCB.characteristics & 0x80 == 0) continue;
 
-#undef xstr
-#define xstr \
-"<table border=\"0\" cellspacing=\"2\" cellpadding=\"2\">\r\n" \
-"<thead align=\"left\">\r\n" \
-"<tr>\r\n" \
-"<th>Name</th><th>Size</th><th>Kind</th>\r\n" \
-"</tr>\r\n" \
-"</thead>\r\n" \
-"<tbody>\r\n"
+      VolumeGS(&VolumeDCB);
+      if (_toolErr) continue;
+    
+      if ((VolumeDCB.fileSysID == appleShareFSID) 
+        && (fDirAppleShare == false))
+        continue;
+      
+      
+      // convert first char from ':' --> '/'
+      vName.bufString.text[0] = '/';
 
-  if (total + sizeof(xstr) - 1 > alloc)
-  {
-    HUnlock(h);
-    alloc += 2048;
-    SetHandleSize(alloc, h);
-    if (_toolErr)
-    {
-      return ProcessError(500, q);
-    }
-    HLock(h);
-    cp = *h + total;
-  }
+      hUrl = MangleName(&vName.bufString);
+      hHtml = MacRoman2HTML(&vName.bufString);
 
-  BlockMove(xstr, cp, sizeof(xstr) - 1);
-  total += sizeof(xstr) - 1;
-  cp += sizeof(xstr) - 1;
+      if (hUrl) HLock(hUrl);
+      if (hHtml) HLock(hHtml);
 
-
-  for (i = 1; ; i++)
-  {
-    DInfoDCB.devNum = i;
-    DInfoGS(&DInfoDCB);
-    if (_toolErr) break;
-    if (DInfoDCB.characteristics & 0x80 == 0) continue;
-
-    VolumeGS(&VolumeDCB);
-    if (_toolErr) continue;
-    // convert first char from ':' --> '/'
-    vName.bufString.text[0] = '/';
-    // terminate as a c-string
-    //vName.bufString.text[vName.bufString.length] = 0;
+      gUrl = hUrl ? (GSString255Ptr)*hUrl : &vName.bufString;
+      gHtml = hHtml ? (GSString255Ptr)*hHtml : &vName.bufString;
 
 
-    hUrl = MangleName(&vName.bufString);
-    hHtml = MacRoman2HTML(&vName.bufString);
-
-    if (hUrl) HLock(hUrl);
-    if (hHtml) HLock(hHtml);
-
-    gUrl = hUrl ? (GSString255Ptr)*hUrl : &vName.bufString;
-    gHtml = hHtml ? (GSString255Ptr)*hHtml : &vName.bufString;
-
-
-    len = orca_sprintf(buffer,
-      "<tr>"
+      i = orca_sprintf(buffer,
+        "<tr>"
         "<td><a href=\"%B/\">%B/</a></td>"
         "<td align=\"right\"> &mdash; </td>"
         "<td> Folder </td>"
-      "</tr>\r\n",
-      gUrl, gHtml);
+        "</tr>\r\n",
+        gUrl, gHtml);
 
 
-     if (hUrl) DisposeHandle(hUrl);
-     if (hHtml) DisposeHandle(hHtml);
+       if (hUrl) DisposeHandle(hUrl);
+       if (hHtml) DisposeHandle(hHtml);
 
-    if (len + total > alloc)
-    {
-      HUnlock(h);
-      alloc += 2048;
-      SetHandleSize(alloc, h);
-      if (_toolErr)
-      {
-        return ProcessError(500, q);
-      }
-      HLock(h);
-      cp = *h + total;
+
+  	   err = BufferAppend(&m, buffer, i);
+	   if (err) break;
     }
-    BlockMove(buffer, cp, len);
-    total += len;
-    cp += len;
-  }
 
-#undef xstr
-#define xstr "</tbody></table>\r\n</body>\r</html>\r\n"
+    #undef xstr
+    #define xstr "</tbody></table>\r\n</body>\r</html>\r\n"
 
-  if (total + sizeof(xstr) - 1 > alloc)
-  {
-    HUnlock(h);
-    alloc += sizeof(xstr) - 1;
-    SetHandleSize(alloc, h);
-    if (_toolErr)
-    {
-      return ProcessError(500, q);
-    }
-    HLock(h);
-    cp = *h + total;
-  }
-  BlockMove(xstr, cp, sizeof(xstr) - 1);
-  total += sizeof(xstr) - 1;
+ 	err = BufferAppend(&m, xstr, sizeof(xstr) -1);
+	if (err) break;
 
-  cp = *h;
+  } while (false);
 
-  SendHeader(q, 200, total, NULL, "text/html", true);
+  if (err) return ProcessError(500, q);
 
-  WriteData(q, *h, total);
+
+  SendHeader(q, 200, m.used, NULL, "text/html", true);
+
+  WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);
   
   q->state = STATE_CLOSE;

@@ -9,6 +9,8 @@
 
 #include "server.h"
 #include "globals.h"
+#include "MemBuffer.h"
+
 
 extern int orca_sprintf(char *, const char *, ...);
 
@@ -30,40 +32,10 @@ Word i = path->length;
 }
 
 
-struct mBuffer
-{
-  Handle h;
-  Word alloc;
-  Word used;
-};
-
-// returns _toolError on failure.
-Word BufferAppend(struct mBuffer *buffer, void * data, Word size)
-{
-  char *cp;
-  Handle h = buffer->h;
-
-  if (buffer->used + size > buffer->alloc)
-  {
-    h = buffer->h;
-    HUnlock(h);
-    buffer->alloc += 2048;
-    SetHandleSize(buffer->alloc, h);
-    if (_toolErr) return _toolErr;
-    HLock(h);
-  }
-  cp = *h + buffer->used;
-
-  BlockMove(data, cp, size);
-  buffer->used += size;
-
-  return 0;
-}
-
 
 //  add XML for one entry.  if base, then no name will be sent.
 Word AddEntry(
-  struct mBuffer *m,
+  MemBuffer *m,
   GSString255Ptr path,  // path of the item
   FileInfoRecGS *info,  // data on the item
   Word child)          // true if subitem in a collection.
@@ -185,15 +157,11 @@ static DirEntryRecGS DirDCB = {14, 0, 0, 1, 1, &vName};
 #if 0
 static Word ListVolumes(struct qEntry *q)
 {
-struct mBuffer m;
 Word err;
+CREATE_BUFFER(m, q->workHandle);
 
-
+  HUnlock(q->workHandle);
   SetHandleSize(0, q->workHandle);
-
-  m.h = q->workHandle;
-  m.alloc = 0;
-  m.used = 0;
 
 
   #undef xstr
@@ -223,6 +191,10 @@ Word err;
 
       VolumeGS(&VolumeDCB);
       if (_toolErr) continue;
+      
+      if ((VolumeDCB.fileSysID == appleShareFSID) 
+        && (fDirAppleShare == false))
+      	continue;
 
       // convert first char from ':' --> '/'
       vName.bufString.text[0] = '/';
@@ -238,8 +210,6 @@ Word err;
 
   err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
   if (err) return ProcessError(500,q);
-
-
 
 
   SendHeader(q, 207, m.used, NULL, "text/xml", true);
@@ -266,17 +236,13 @@ LongWord size;
 Word i;
 GSString255Ptr path;
 
-struct mBuffer m;
 Word err;
-
 static char buffer32[32];
 
+CREATE_BUFFER(m, q->workHandle);
 
+  HUnlock(q->workHandle);
   SetHandleSize(0, q->workHandle);
-
-  m.h = q->workHandle;
-  m.alloc = 0;
-  m.used = 0;
 
   path = q->fullpath;
 
@@ -358,6 +324,11 @@ static char buffer32[32];
     {
       GetDirEntryGS(&DirDCB);
       if (_toolErr) break;
+      
+      // check for hidden files
+      if ((InfoDCB.access & 0x0100) 
+        && (fDirHidden == false))
+        continue;
 
       InfoDCB.fileType = DirDCB.fileType;
       InfoDCB.auxType = DirDCB.auxType;
