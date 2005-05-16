@@ -81,6 +81,9 @@ struct qEntry
 
 extern char buffer[4096];
 
+
+void WriteData(struct qEntry *, const char *, Word);
+
 Word ProcessError(Word, struct qEntry *);
 Word ProcessFile(struct qEntry *);
 Word ProcessPut(struct qEntry *);

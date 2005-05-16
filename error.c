@@ -75,40 +75,18 @@ char *cp;
     if (error == 405 || error == 501)
     {
       #undef xstr
-      #define xstr "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND\r\n"
+      #define xstr "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND, MKCOL\r\n"
       TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
     }
 
     TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
   }
 
-  #undef MIN
-  #define MIN(a,b) (a) < (b) ? (a) : (b)
 
   if (q->command != CMD_HEAD)
   {
-    if (q->flags & FLAG_CHUNKED)
-    {
-      int i = orca_sprintf(buffer, "%x\r\n", len);
-      TCPIPWriteTCP(ipid, buffer, i, false, false);
-    }
-
-    do
-    {
-      Word i = MIN(len, fMTU);
-
-      TCPIPWriteTCP(ipid, cp, i, false, false);
-      TCPIPPoll();
-              
-      cp += i;
-      len -= i;
-    } while (len);
-
-    //TCPIPWriteTCP(ipid, cp, len, false, false);
-
-    if (q->flags & FLAG_CHUNKED)
-      TCPIPWriteTCP(ipid, "\r\n0\r\n\r\n", 7, false, false);
-
+  	WriteData(q, cp, len);
+  	WriteData(q, NULL, 0);
   }
   if (h) ReleaseResource(3, rTextBlock, error);
   

@@ -381,9 +381,8 @@ static char buffer32[32];
 
   SendHeader(q, 207, m.used, NULL, "text/xml", true);
 
-
-  // todo - write function that will break up, handle chunking, etc.
-  TCPIPWriteTCP(q->ipid, *m.h, m.used, false, false);
+  WriteData(q, *m.h, m.used);
+  WriteData(q, NULL, 0);
 
   q->state = STATE_CLOSE;
   return 207;

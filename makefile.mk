@@ -9,7 +9,7 @@ OBJS	= httpnda.o tools.o server.o error.o file.o time.o \
  mime.o config.o ctrl.o toolbox.o header.o log.o \
  mangle.o ftype.o applesingle.o utils.o kmalloc.o put.o \
  globals.o methods.o headers.o  \
- propfind.o options.o
+ propfind.o options.o tcp.o mkcol.o
 
 ROBJS = http.r errors.r
 
@@ -35,6 +35,9 @@ globals.o: globals.c globals.h
 
 propfind.o: propfind.c server.h
 options.o: options.c server.h
+mkcol.o: mkcol.c server.h
+
+tcp.o: tcp.c
 
 # resource files
 http.r: http.rez rez.h

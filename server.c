@@ -33,11 +33,7 @@ extern int orca_sprintf(char *, const char *, ...);
 
 extern Word ProcessPropfind(struct qEntry *q);
 extern Word ProcessOptions(struct qEntry *q);
-      
-
-
-#undef MIN
-#define MIN(a,b) (a) < (b) ? (a) : (b)
+extern Word ProcessMkcol(struct qEntry *q);      
 
 
 #define DEBUG 1
@@ -819,6 +815,10 @@ Word oldPrefs;
             case CMD_PROPFIND:
               terr = ProcessPropfind(q);
               break;
+              
+            case CMD_MKCOL:
+              terr = ProcessMkcol(q);
+              break;
   
 
             case 0xffff:
@@ -844,29 +844,8 @@ Word oldPrefs;
         ReadGS(&IODCB);
         if ((terr = _toolErr) == 0)
         {
-        char *cp = buffer;
-        Word total = (Word)IODCB.transferCount;
+          WriteData(q, buffer, (Word)IODCB.transferCount;);
 
-          if (q->flags & FLAG_CHUNKED)
-          {
-            int i = orca_sprintf(buffer16, "%x\r\n", total);
-            TCPIPWriteTCP(ipid, buffer16, i, false, false);
-          }
-
-          //TCPIPWriteTCP(ipid, buffer, IODCB.transferCount, false, false);
-	  do
-	  {
-	    Word i = MIN(total, fMTU);
-
-	    TCPIPWriteTCP(ipid, cp, i, false, false);
-            TCPIPPoll();
-	    cp += i;
-	    total -= i;
-	  } while (total);
-
-
-          if (q->flags & FLAG_CHUNKED)
-            TCPIPWriteTCP(ipid, "\r\n",2, false, false);
 
           #ifdef DEBUG
           i = orca_sprintf(buffer, "TCPIPWriteTCP(%d) [%d bytes sent]\r",
@@ -885,9 +864,7 @@ Word oldPrefs;
             }
             else
             {
-              if (q->flags & FLAG_CHUNKED)
-                TCPIPWriteTCP(ipid, "0\r\n\r\n", 5, false, false);
-              q->state = STATE_CLOSE;
+			  WriteData(q, NULL, 0); // if chunked.
             }
           }
           else // read error - just close and be done with it.

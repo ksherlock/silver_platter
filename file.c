@@ -20,9 +20,6 @@
 
 extern int orca_sprintf(char *, const char *, ...);
 
-#undef MIN
-#define MIN(a,b) (a) < (b) ? (a) : (b)
-
 
 extern const char *GetMimeString(GSString255Ptr, Word, LongWord);
 
@@ -141,27 +138,8 @@ GSString255Ptr path;
 
   if (q->command == CMD_GET)
   {
-    if (q->flags & FLAG_CHUNKED)
-    {
-      int i = orca_sprintf(buffer, "%x\r\n", total);
-      TCPIPWriteTCP(ipid, buffer, i, false, false);
-    }
-
-    cp = *h;
-    do
-    {
-      Word i = MIN(total, fMTU);
-
-      TCPIPWriteTCP(ipid, cp, i, false, false);
-      TCPIPPoll();
-
-      cp += i;
-      total -= i;
-    } while (total);
-    //TCPIPWriteTCP(ipid, cp, total, false, false);
-
-    if (q->flags & FLAG_CHUNKED)
-      TCPIPWriteTCP(ipid, "\r\n0\r\n\r\n", 7, false, false);
+  	WriteData(q, *h, total);
+  	WriteData(q, NULL, 0);
   }                 
 
   q->state = STATE_CLOSE;
@@ -484,26 +462,9 @@ GSString255Ptr gUrl, gHtml;
   SendHeader(q, 200, total, NULL, "text/html", true);
 
 
-  if (q->flags & FLAG_CHUNKED)
-  {
-    int i = orca_sprintf(buffer, "%x\r\n", total);
-    TCPIPWriteTCP(q->ipid, buffer, i, false, false);
-  }
+  WriteData(q, *h, total);
+  WriteData(q, NULL, 0);
 
-  //TCPIPWriteTCP(q->ipid, cp, total, false, false);
-  do
-  {
-    Word i = MIN(total, fMTU);
-
-    TCPIPWriteTCP(q->ipid, cp, i, false, false);
-    TCPIPPoll();
-            
-    cp += i;
-    total -= i;
-  } while (total);
-  if (q->flags & FLAG_CHUNKED)
-    TCPIPWriteTCP(q->ipid, "\r\n0\r\n\r\n", 7, false, false);
-    
 
   if (hPath) DisposeHandle(hPath);
   q->state = STATE_CLOSE;
@@ -670,25 +631,8 @@ GSString255Ptr gUrl, gHtml;
 
   SendHeader(q, 200, total, NULL, "text/html", true);
 
-  if (q->flags & FLAG_CHUNKED)
-  {
-    int i = orca_sprintf(buffer, "%x\r\n", total);
-    TCPIPWriteTCP(q->ipid, buffer, i, false, false);
-  }
-
-  //TCPIPWriteTCP(q->ipid, cp, total, false, false);
-  do
-  {
-    Word i = MIN(total, fMTU);
-
-    TCPIPWriteTCP(q->ipid, cp, i, false, false);
-    TCPIPPoll();
-            
-    cp += i;
-    total -= i;
-  } while (total);
-  if (q->flags & FLAG_CHUNKED)
-    TCPIPWriteTCP(q->ipid, "\r\n0\r\n\r\n", 7, false, false);
+  WriteData(q, *h, total);
+  WriteData(q, NULL, 0);
   
   q->state = STATE_CLOSE;
   return 200;
