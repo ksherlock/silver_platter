@@ -613,6 +613,8 @@ resource rControlList(Ctrl_PU_2)
 		Ctrl_AS_Never,
 		Ctrl_AS_Always,
 		Ctrl_AS_Forked,
+		CtrlDirHidden,
+		CtrlDirAppleShare,
 	}
 };
 
@@ -686,6 +688,34 @@ resource rControlTemplate (Ctrl_AS_Forked, nocrossbank) {
                Ctrl_AS_Forked,	// title Ref
                0		// initial value  (on)
        }};
+};
+
+resource rControlTemplate (CtrlDirHidden) {
+	CtrlDirHidden,
+	{80, 10, 0, 0},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlDirHidden,
+			0
+		}
+	}
+};
+
+resource rControlTemplate (CtrlDirAppleShare) {
+	CtrlDirAppleShare,
+	{92, 10, 0, 0},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlDirAppleShare,
+			0
+		}
+	}
 };
 
 
@@ -962,6 +992,12 @@ resource rPString (CtrlLog) {
 
 resource rPString (CtrlDir) {
 	"Virtual Directory Listings"
+};
+resource rPString (CtrlDirHidden) {
+	"Show Hidden Files"
+};
+resource rPString (CtrlDirAppleShare) {
+	"Show AppleShare Volumes"
 };
 
 

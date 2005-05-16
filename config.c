@@ -23,7 +23,6 @@ extern int orca_sprintf(char *, const char *, ...);
 Word fAbort;
 Word fJail;
 Word fPort;
-Word fDir;
 Word fTeach;
 Word fMTU;
 
@@ -33,6 +32,11 @@ Word fAppleSingle;
 Word fPut;
 Word fPutOverwrite;
 Word fPutMkdir;	
+
+// virtual directory options.
+Word fDir;
+Word fDirHidden;
+Word fDirAppleShare;
 
 
 Word fLog;
@@ -47,7 +51,6 @@ static Word fd;
 
 
 static char *NameAbort = "\pFast Close";
-static char *NameDir = "\pVirtual Directories";
 static char *NameJail = "\pJail";
 static char *NamePort = "\pPort";
 static char *NameRoot = "\pRoot Directory";
@@ -56,6 +59,11 @@ static char *NameMTU = "\pMTU";
 static char *NameLog = "\pLog";
 static char *NameLogDir = "\pLog Directory";
 static char *NameAppleSingle = "\pAppleSingle";
+
+static char *NameDir = "\pVirtual Directories";
+static char *NameDirHidden = "\pShow Hidden Files";
+static char *NameDirAppleShare = "\pShow AppleShare";
+
 
 static char *NamePut ="\pPut";
 static char *NamePutMkdir = "\pPut Mkdir";
@@ -205,11 +213,16 @@ static CreateRecGS CreateDCB = {4, (GSString255Ptr)&folderPath, 0xe3, 0x0f, 0};
 
   fAbort = LoadWord(NameAbort, true);
   fPort = LoadWord(NamePort, 80);
-  fDir = LoadWord(NameDir, true);
   fAppleSingle = LoadWord(NameAppleSingle, 0);
   fJail = LoadWord(NameJail, false);
   fLog = LoadWord(NameLog, false);
   fTeach = LoadWord(NameTeach, false);
+
+
+  fDir = LoadWord(NameDir, true);
+  fDirHidden = LoadWord(NameDirHidden, false);
+  fDirAppleShare = LoadWord(NameDirAppleShare, false);
+
 
   fPut = LoadWord(NamePut, false);
   fPutMkdir = LoadWord(NamePutMkdir, false);
@@ -344,6 +357,9 @@ void LoadControls(WindowPtr win, Word value)
       case Ctrl_PU_2:
 
         SetCtlValueByID(fDir, win, CtrlDir);
+        SetCtlValueByID(fDirHidden, win, CtrlDirHidden);
+        SetCtlValueByID(fDirAppleShare, win, CtrlDirAppleShare);
+
         SetCtlValueByID(1, win, Ctrl_AS_Never + fAppleSingle);
 
         break;
@@ -593,9 +609,15 @@ Word i;
     if (screens[1])
     {
       fDir = GetCtlValueByID(win, CtrlDir);
+      fDirHidden = GetCtlValueByID(win, CtrlDirHidden);
+      fDirAppleShare = GetCtlValueByID(win, CtrlDirAppleShare);
+      
       fAppleSingle = FindRadioButton(win,0);
 
       SetConfigValue(1, NameDir, &fDir, sizeof(Word));
+      SetConfigValue(1, NameDirHidden, &fDirHidden, sizeof(Word));
+      SetConfigValue(1, NameDirAppleShare, &fDirAppleShare, sizeof(Word));
+
       SetConfigValue(1, NameAppleSingle, &fAppleSingle, sizeof(Word));
     }
 

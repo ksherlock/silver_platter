@@ -5,7 +5,7 @@
 extern word fAbort;
 extern Word fJail;
 extern Word fPort;
-extern Word fDir;
+
 extern Word fTeach;
 extern Word fMTU;
 
@@ -21,6 +21,11 @@ extern Word fPutOverwrite;
 extern Word fPutMkdir;	
 
 extern Word fAppleSingle;
+
+
+extern Word fDir;
+extern Word fDirHidden;
+extern Word fDirAppleShare;
 
 Word LoadConfig(Word);
 void UnloadConfig(void);

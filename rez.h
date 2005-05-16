@@ -51,6 +51,10 @@
 #define Ctrl_AS_Always	rConfigWindow + 20
 #define Ctrl_AS_Forked	rConfigWindow + 21
 
+#define CtrlDirHidden	rConfigWindow + 22
+#define CtrlDirAppleShare	rConfigWindow + 23
+
+
 #define CtrlAbout	rAboutWindow + 1
 
 // menus
