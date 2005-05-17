@@ -210,6 +210,8 @@ GSString255Ptr gUrl, gHtml;
 
 CREATE_BUFFER(m, q->workHandle);
 
+  q->state = STATE_CLOSE;
+
   if (err = CheckIndex(q)) return err;
 
   if (!fDir)
@@ -399,13 +401,11 @@ CREATE_BUFFER(m, q->workHandle);
   
   if (err) return ProcessError(500, q);
 
-
   SendHeader(q, 200, m.used, NULL, "text/html", true);
 
   WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);
 
-  q->state = STATE_CLOSE;
   return 200; 
 }
 
@@ -424,6 +424,8 @@ GSString255Ptr gUrl, gHtml;
 Word err;
 
 CREATE_BUFFER(m, q->workHandle);
+
+  q->state = STATE_CLOSE;
 
   if (!fDir)
   {
@@ -529,7 +531,6 @@ CREATE_BUFFER(m, q->workHandle);
   WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);
   
-  q->state = STATE_CLOSE;
   return 200;
 }
 

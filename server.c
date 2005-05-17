@@ -35,6 +35,7 @@ extern Word ProcessPropfind(struct qEntry *q);
 extern Word ProcessOptions(struct qEntry *q);
 extern Word ProcessMkcol(struct qEntry *q);      
 
+extern Word ReadData(struct qEntry *, void *, Word);
 
 #define DEBUG 1
 
@@ -50,7 +51,6 @@ Word fUsed;
 
 Word logfd;
 
-
 extern WindowPtr MyWindow;
 
 
@@ -59,7 +59,6 @@ char buffer[4096];
 
 
 // appends h1 onto h2
-
 void AppendHandle(Handle h1, Handle h2)
 {
 longword s1, s2;
@@ -84,7 +83,6 @@ longword s1, s2;
 // -1 == for no line
 // bit 31 set == dispose the buffer.
 // line may be delimited by \r, \n, \r\n, or \n\r... <sigh>
-
 Handle GetLine(Handle h)
 {
 Word hsize;
@@ -159,7 +157,6 @@ Word length;
   return ret;
 }
 
-
 // check for ?asingle, ?html and remove from the string.
 Word ScanCGI(GSString255Ptr g)
 {
@@ -190,8 +187,6 @@ char c;
   return 0;
 }
 
-
-
 // scan for headers we recognize.
 void ScanHeader(char *cp, struct qEntry *q)
 {
@@ -208,7 +203,6 @@ Word header;
 
     // move past any leading whitespace
     while (isspace(*cp)) cp++;
-
 
     switch(header)
     {
@@ -250,6 +244,7 @@ Word header;
 
     case 5: // Content-Type ... check if text/*
       if (!*cp) return;
+
       if (!strincmp("text/", cp, 5)) q->flags |= FLAG_TEXT;
       break;
 
@@ -277,7 +272,6 @@ Word cmd = -1;
 
   match = MatchDFA(methods, cp, &cmd);
   if (match) cp += match;
-
   else
   {
     // skip past the offending command.
@@ -288,6 +282,7 @@ Word cmd = -1;
   while (isspace(*cp)) cp++;
 
   // URI: should be /fully/qualified/path
+  // TODO '*' is valid for OPTIONS.
 
   if (*cp != '/')
     return;
@@ -312,7 +307,6 @@ Word cmd = -1;
     path->text[len] = 0;
 
     cp += len;
-
 
     // now demangle %xx codes.
     // since the demanglesd size will always be less, we're safe.
@@ -441,7 +435,6 @@ Word CloseDCB[2];
     SetHandleSize(0, q->workHandle);
   }
 
-
   if (q->fd)                       
   {
     CloseDCB[0] = 1;
@@ -466,10 +459,11 @@ Word CloseDCB[2];
   q->tick = 0;
   q->contentlength = 0;
   q->depth = -1;
-
 }    
 
+
 extern Word CreateLog(void);
+
 
 Word StartServer(void)
 {
@@ -481,6 +475,7 @@ Word StartServer(void)
   memset(queue, 0, sizeof(queue));
 
   Ipid = TCPIPLogin(MyID, 0, 0, 0, 64);
+
 #if DEBUG
   if (_toolErr)
       InsertString(
@@ -489,6 +484,7 @@ Word StartServer(void)
 #endif
 
   TCPIPSetSourcePort(Ipid, fPort);
+
 #if DEBUG
   if (_toolErr)
       InsertString(
@@ -497,6 +493,7 @@ Word StartServer(void)
 #endif
                                     
   TCPIPListenTCP(Ipid);
+
 #if DEBUG
   if (_toolErr)
       InsertString(
@@ -508,7 +505,6 @@ Word StartServer(void)
 
   logfd = CreateLog();
 
-
   #undef xstr
   #define xstr "Server started\r"
   InsertString(sizeof(xstr) - 1, xstr);
@@ -518,6 +514,7 @@ Word StartServer(void)
 
   return true;
 }
+
 
 Word StopServer(void)
 {
@@ -540,7 +537,6 @@ Word CloseDCB[2];
     TCPIPLogout(q->ipid);
     ReleaseQ(q);
 
-
     if (q->buffer)
     {
       DisposeHandle(q->buffer);
@@ -551,8 +547,8 @@ Word CloseDCB[2];
       DisposeHandle(q->workHandle);
       q->workHandle = NULL;
     }
-
   }
+
   fUsed = 0;
   fActive = 0;
 
@@ -564,7 +560,6 @@ Word CloseDCB[2];
 
   kmshutdown();
 
-
   #undef xstr
   #define xstr "Server stopped\r"
   InsertString(sizeof(xstr) - 1, xstr);
@@ -574,6 +569,7 @@ Word CloseDCB[2];
       
   return true;
 }
+
 
 // close all connections waiting to close.
 void ResetServer(void)
@@ -596,19 +592,20 @@ Word ipid;
     fUsed &= (~mask);
   } 
 
-  if (MyWindow) SetCtlValueByID(fActive, MyWindow, CtrlTherm);
   if (MyWindow)
   {
     static char buffer[6];
     orca_sprintf(buffer, "%u", fActive);
     SetCtlTextByID(MyWindow, CtrlCount, 1, (Ref)buffer);
+
+    SetCtlValueByID(fActive, MyWindow, CtrlTherm);
   }
 
   #undef xstr
   #define xstr "Server reset\r"
   InsertString(sizeof(xstr) - 1, xstr);
-
 }
+
 
 void Server(void)
 {
@@ -777,10 +774,8 @@ Word oldPrefs;
                 req->length = i - 1; // includes null terminator.
                 HandToPtr(h, req->text, i);
               }
-
             }
             else ScanHeader(cp, q);
-
 
             DisposeHandle(h);
           } while (!done);
@@ -820,12 +815,11 @@ Word oldPrefs;
               terr = ProcessMkcol(q);
               break;
   
-
-			case CMD_PROPPATCH:
-			case CMD_LOCK:
-			case CMD_UNLOCK:
-			case CMD_COPY:
-			case CMD_MOVE:
+	    case CMD_PROPPATCH:
+	    case CMD_LOCK:
+	    case CMD_UNLOCK:
+	    case CMD_COPY:
+	    case CMD_MOVE:
             case 0xffff:
               terr = ProcessError(501, q);
               break;
@@ -851,7 +845,6 @@ Word oldPrefs;
         {
           WriteData(q, buffer, (Word)IODCB.transferCount);
 
-
           #ifdef DEBUG
           i = orca_sprintf(buffer, "TCPIPWriteTCP(%d) [%d bytes sent]\r",
             ipid, (Word)IODCB.transferCount);
@@ -870,7 +863,7 @@ Word oldPrefs;
             else
             {
 			  WriteData(q, NULL, 0); // if chunked.
-			  q->state = STATE_CLOSE;
+                          q->state = STATE_CLOSE;
             }
           }
           else // read error - just close and be done with it.
@@ -893,28 +886,16 @@ Word oldPrefs;
       // read any incoming data, dump it to the file.
     case STATE_PUT:
       {
-      IORecGS IODCB;
-      Word i;
-      Word size;
-      char *cp;
+        Word i;
 
-	// read any pending data...
-	if (srBuffer.srRcvQueued)
-	{
-        Handle h = q->workHandle;
-
-          terr = TCPIPReadTCP(ipid, 1, (Ref)h,
-            srBuffer.srRcvQueued , &rrBuffer);
-
-          HLock(h);
-          cp = *h;
-          i = size = rrBuffer.rrBuffCount;
-
-          if (q->flags & FLAG_TEXT) i = ConvertCRLF(cp, i);
+        i = ReadData(q, buffer, 4096);
+        if (i)
+        {
+          if (q->flags & FLAG_TEXT) i = ConvertCRLF(buffer, i);
 
 	  IODCB.pCount = 4;
 	  IODCB.refNum = q->fd;
-	  IODCB.dataBuffer = cp;
+	  IODCB.dataBuffer = buffer;
 	  IODCB.requestCount = i;
 
 	  WriteGS(&IODCB);
@@ -924,19 +905,13 @@ Word oldPrefs;
             ProcessError(500,q);
             break;
           }
-
-          if (q->contentlength)
-          {
-            q->contentlength -= size;
-            if (q->contentlength <= 0)
-            {
-              SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 ,
-                0, NULL, NULL, true);
-              q->state = STATE_CLOSE;
-
-            }
-          } // q->contentlength.
-	}
+        }
+        if ((q->version > 0x0900) && (!q->contentlength))
+        {
+          SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 ,
+            0, NULL, NULL, true);
+          q->state = STATE_CLOSE;
+        } // q->contentlength.
       }
       break;
         
@@ -944,11 +919,21 @@ Word oldPrefs;
       {
         if (srBuffer.srSndQueued == 0)
         {
-
           if (q->flags & FLAG_KA)
           {
             Handle h;
+
+            // if a content-length headers was sent, purge any remaining data.
+            // since KA is only valid for HTTP 1.0+, no need to check version.
+
+            if (q->contentlength)
+            {
+              ReadData(q, buffer, 4096);
+              if (q->contentlength) break;
+            }
+
             h = q->buffer;
+
             q->buffer = NULL;
             ReleaseQ(q);
             // reset these values.
@@ -991,8 +976,6 @@ Word oldPrefs;
       // find an open slot...
       for (mask = 1, q = queue; fUsed & mask; mask <<= 1, q++) ;
 
-      //memzero(q, sizeof(struct qEntry));
-
       q->ipid = child;
       TCPIPStatusTCP(child, &srBuffer);
       if (srBuffer.srState == TCPSESTABLISHED)
@@ -1008,10 +991,8 @@ Word oldPrefs;
       //if (!q->buffer) q->buffer = NewHandle(0, MyID | 0x0d00, attrNoSpec, 0);
       //err |= _toolErr;
 
-
       if (!q->workHandle) q->workHandle = NewHandle(0, MyID | 0x0d00, attrNoSpec, 0);
       err |= _toolErr;
-
 
       if (err)
       {
@@ -1043,6 +1024,7 @@ Word oldPrefs;
   if (oldActive != fActive && MyWindow)
   {
     static char buffer[6];
+
 
     SetCtlValueByID(fActive, MyWindow, CtrlTherm);
     orca_sprintf(buffer, "%u", fActive);

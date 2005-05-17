@@ -14,7 +14,6 @@
 #include "globals.h"
 
 
-//#pragma debug -1
 // normalizes CR, LF, and CRLF to a CR.
 // returns new length of data.
 Word ConvertCRLF(char *data, Word length)
@@ -53,8 +52,6 @@ char c;
   return rlength;
 
 }
-#pragma debug 0x8000
-
 
 Word NextSlash(const char *str)
 {
@@ -176,50 +173,6 @@ Word i;
 
   q->fd = OpenDCB.refNum;
 
-
-  // q->buffer may have file data... if so, write it here.
-
-  // todo - verify handlesize <= filesize?
-
-  if (q->buffer)
-  {
-    char * cp;
-    Word size;
-
-    i = size = (Word)GetHandleSize(q->buffer);
-    HLock(q->buffer);
-
-    cp = *q->buffer;
-
-    if (q->flags & FLAG_TEXT) i = ConvertCRLF(cp, i);
-
-
-    IODCB.pCount = 4;
-    IODCB.refNum = OpenDCB.refNum;
-    IODCB.dataBuffer = *q->buffer;
-    IODCB.requestCount = i;
-
-    WriteGS(&IODCB);
-
-    if (_toolErr) return ProcessError(500, q);
-
-    DisposeHandle(q->buffer);
-    q->buffer = NULL;
-    if (q->contentlength)
-    {
-      q->contentlength -= size;
-      if (q->contentlength <= 0)
-      {
-        SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 , 0, NULL, NULL, true);
-        q->state = STATE_CLOSE;
-        return 204;
-      }
-    }
-  }
-
-
-
   q->state = STATE_PUT;
   return 204;
-
 }
