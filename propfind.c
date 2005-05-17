@@ -10,7 +10,7 @@
 #include "server.h"
 #include "globals.h"
 #include "MemBuffer.h"
-
+#include "config.h"
 
 extern int orca_sprintf(char *, const char *, ...);
 
@@ -326,7 +326,7 @@ CREATE_BUFFER(m, q->workHandle);
       if (_toolErr) break;
       
       // check for hidden files
-      if ((InfoDCB.access & 0x0100) 
+      if ((DirDCB.access & 0x0004) 
         && (fDirHidden == false))
         continue;
 

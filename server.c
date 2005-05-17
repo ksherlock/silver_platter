@@ -870,6 +870,7 @@ Word oldPrefs;
             else
             {
 			  WriteData(q, NULL, 0); // if chunked.
+			  q->state = STATE_CLOSE;
             }
           }
           else // read error - just close and be done with it.

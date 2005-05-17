@@ -298,7 +298,7 @@ CREATE_BUFFER(m, q->workHandle);
 	  GetDirEntryGS(&DirDCB);
 	  if (_toolErr) break;
 	
-	  if ((InfoDCB.access & 0x0100) 
+	  if ((DirDCB.access & 0x0004) 
 	    && (fDirHidden == false))
 	    continue;
 	
@@ -468,7 +468,7 @@ CREATE_BUFFER(m, q->workHandle);
 	if (err) break;
 	
 	
-	for (d = 1; ; i++)
+	for (d = 1; ; d++)
   	{
       DInfoDCB.devNum = d;
       DInfoGS(&DInfoDCB);
