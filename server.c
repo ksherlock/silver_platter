@@ -906,7 +906,7 @@ Word oldPrefs;
             break;
           }
         }
-        if ((q->version > 0x0900) && (!q->contentlength))
+        if ((q->version > 0x0009) && (!q->contentlength))
         {
           SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 ,
             0, NULL, NULL, true);
