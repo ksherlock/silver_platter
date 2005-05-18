@@ -16,7 +16,7 @@
 #include "server.h"
 #include "config.h"
 #include "ftype.h"
-#include "kmalloc.h"
+#include "pointer.h"
 #include "MemBuffer.h"
 
 extern int orca_sprintf(char *, const char *, ...);
@@ -24,8 +24,8 @@ extern int orca_sprintf(char *, const char *, ...);
 
 extern const char *GetMimeString(GSString255Ptr, Word, LongWord);
 
-extern Handle MacRoman2HTML(const GSString255 *gstr);
-extern Handle MangleName(const GSString255 *gstr);
+extern void * MacRoman2HTML(const GSString255 *gstr);
+extern void * MangleName(const GSString255 *gstr);
 
 
 extern Word MyID;
@@ -58,7 +58,7 @@ Word Redirect(struct qEntry *q, GSString255Ptr append)
 {
 Word ipid = q->ipid;
 Word i;
-Handle g;
+void *path_uri;
 
 GSString255Ptr path;
 
@@ -70,11 +70,11 @@ GSString255Ptr path;
 
   path = q->pathname;
 
-  g = MangleName(path);
-  if (g)
+  path_uri = MangleName(path);
+  if (path_uri == NULL)
   {
-    HLock(g);
-    path = (GSString255Ptr)*g;
+    path_uri = path;
+    RetainPointer(path);
   }
 
  // build the html...sigh
@@ -101,7 +101,7 @@ GSString255Ptr path;
 #define xstr "<p>The document has moved <a href=\"%B%B\">here</a></p>\r\n" \
 "</body>\r\n</html>\r\n"
 
-    i = orca_sprintf(buffer, xstr, path, append);
+    i = orca_sprintf(buffer, xstr, path_uri, append);
 	err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
 	if (err) return ProcessError(500, q);
   }
@@ -113,14 +113,14 @@ GSString255Ptr path;
   if (q->host)
   {
     i = orca_sprintf(buffer, "Location: http://%B%B%B\r\n",
-      q->host, path, append);
+      q->host, path_uri, append);
     TCPIPWriteTCP(ipid, buffer, i, false, false);
   }
   if (q->version >= 0x0100)
     TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
 
 
-  if (g) DisposeHandle(g);
+  ReleasePointer(path_uri);
 
   if (q->command == CMD_GET)
   {
@@ -149,7 +149,7 @@ Word i;
 
   i = oldpath->length;
 
-  newpath = kmalloc(2 + i + sizeof(xstr));
+  newpath = NewPointer(2 + i + sizeof(xstr));
 
 
   if (newpath == NULL)
@@ -180,7 +180,7 @@ Word i;
   GetFileInfoGS(&InfoDCB);
   if (!_toolErr)
   {
-    kfree(newpath);
+    DisposePointer(newpath);
     return Redirect(q, (GSString255Ptr)"\x0a\x00index.html");
   }
 
@@ -189,11 +189,11 @@ Word i;
   GetFileInfoGS(&InfoDCB);
   if (!_toolErr)
   {
-    kfree(newpath);
+    DisposePointer(newpath);
     return Redirect(q, (GSString255Ptr)"\x09\x00index.htm");
   }
 
-  kfree(newpath);
+  DisposePointer(newpath);
 
   return 0;
 }
@@ -203,14 +203,15 @@ Word ListDirectory(struct qEntry *q)
 Word i;
 Word err;
 
-GSString255Ptr path = q->pathname;
+GSString255Ptr path;  
 
-Handle hUrl, hHtml, hPath;
-GSString255Ptr gUrl, gHtml;
+GSString255Ptr path_uri;
+GSString255Ptr path_html;
 
 CREATE_BUFFER(m, q->workHandle);
 
   q->state = STATE_CLOSE;
+  path = q->pathname;
 
   if (err = CheckIndex(q)) return err;
 
@@ -231,13 +232,19 @@ CREATE_BUFFER(m, q->workHandle);
   SetHandleSize(0, q->workHandle);
   
   
-  hPath = MangleName(path);
-  hHtml = MacRoman2HTML(path);
-  if (hPath) HLock(hPath);
-  if (hHtml) HLock(hHtml);
+  path_uri = (GSString255Ptr)MangleName(path);
+  path_html = (GSString255Ptr)MacRoman2HTML(path);
+  if (path_uri == NULL)
+  {
+    path_uri = path;
+    RetainPointer(path);	
+  }
+  if (path_html == NULL)
+  {
+    path_html = path;
+    RetainPointer(path);	
+  }
   
-  gHtml = hHtml ? (GSString255Ptr)*hHtml : path;
-  path = hPath ? (GSString255Ptr)*hPath : path;
   
   // do ... while (false) to allow breaking.
   do
@@ -245,41 +252,36 @@ CREATE_BUFFER(m, q->workHandle);
   	err = BufferAppend(&m, _htmlHead, sizeof(_htmlHead) - 1);
   	if (err) break;
   	
-  	#undef xstr
-	#define xstr \
-	"<title>Index of %B</title>\r\n" \
-	"</head>\r\n" \
-	"<body>\r\n" \
-	"<h1>Index of %B</h1>\r\n"
 
-  	i = orca_sprintf(buffer, xstr, gHtml, gHtml);
+  	i = orca_sprintf(buffer,
+	  "<title>Index of %B</title>\r\n" \
+	  "</head>\r\n" \
+	  "<body>\r\n" \
+	  "<h1>Index of %B</h1>\r\n",  	 
+  	  path_html, path_html);
 
   	err = BufferAppend(&m, buffer, i);
   	if (err) break;
   	
- 
-	   
+
 	// if we're jailed and at the root, no parent directory
 	if (path->length > 1)
 	{
 	  Word i, j;
-	  i = j = path->length;
+	  i = j = path_uri->length;
 	  i -= 2; // -1 to convert o 0-index, -1 to skip trailing /
-	  while (path->text[i] != '/') i--;
-	  path->length = i + 1;
+	  while (path_uri->text[i] != '/') i--;
+	  path_uri->length = i + 1;
 	
 	  i = orca_sprintf(buffer,
 	    "<p><a href=\"%B\">Parent Directory</a></p>\r\n",
-	    path);
+	    path_uri);
 	
   	  err = BufferAppend(&m, buffer, i);
   	  if (err) break;
 	
-	  path->length = j;
+	  path_uri->length = j;
 	}
-	
-	if (hHtml) DisposeHandle(hHtml);
-    hHtml = NULL;
     
 
     #undef xstr
@@ -297,6 +299,10 @@ CREATE_BUFFER(m, q->workHandle);
 
     for(;;)
 	{
+	void *file_uri;
+	void *file_html;
+	Word alloc = 0;
+		
 	  GetDirEntryGS(&DirDCB);
 	  if (_toolErr) break;
 	
@@ -304,15 +310,19 @@ CREATE_BUFFER(m, q->workHandle);
 	    && (fDirHidden == false))
 	    continue;
 	
-	    
-	  hUrl = MangleName(&vName.bufString);
-	  hHtml = MacRoman2HTML(&vName.bufString);
-	  if (hUrl) HLock(hUrl);
-	  if (hHtml) HLock(hHtml);
-	
-	  gUrl = hUrl ? (GSString255Ptr)*hUrl : &vName.bufString;
-	  gHtml = hHtml ? (GSString255Ptr)*hHtml : &vName.bufString;
-	
+	  file_uri = MangleName(&vName.bufString);
+	  file_html = MacRoman2HTML(&vName.bufString);
+	  
+	  if (file_uri == NULL)
+	  {
+	    file_uri = &vName.bufString; 
+	  }
+	  else alloc |= 0x0001;
+	  if (file_html == NULL)
+	  {
+	    file_html = &vName.bufString;
+	  }	
+	  else alloc |= 0x0002;
 	
 	  // folder -- no size, include trailing /
 	  if (DirDCB.fileType == 0x0f)
@@ -323,7 +333,7 @@ CREATE_BUFFER(m, q->workHandle);
 	          "<td align=\"right\"> &mdash; </td>"
 	          "<td> Folder </td><td></td>"
 	        "</tr>\r\n",
-	        path, gUrl, gHtml);
+	        path_uri, file_uri, file_html);
 	  }
 	  else
 	  {
@@ -357,10 +367,10 @@ CREATE_BUFFER(m, q->workHandle);
 	          "<td> %b </td>"
 	          "<td><a href=\"%B%B?applesingle\">AppleSingle</a></td>"
 		      "</tr>\r\n",
-		      path, gUrl, gHtml,
+		      path_uri, file_uri, file_html,
 	          (Word)size,
 		      fType,
-	          path, gUrl);
+	          path_uri, file_uri);
 	    }
 	    else
 	    {
@@ -370,16 +380,15 @@ CREATE_BUFFER(m, q->workHandle);
 	            "<td align=\"right\"> %uK </td>"
 	            "<td> %b </td> <td></td>"
 		        "</tr>\r\n",
-		        path, gUrl, gHtml,
+		        path_uri, file_uri, file_html,
 	            (Word)size,
 		        fType);
 	     }
 	   }
 	
 	
-	   if (hUrl) DisposeHandle(hUrl);
-	   if (hHtml) DisposeHandle(hHtml);
-	   
+	   if (alloc & 0x01) DisposePointer(file_uri);
+	   if (alloc & 0x02) DisposePointer(file_html);	   
 	   
 	  	err = BufferAppend(&m, buffer, i);
 	    if (err) break;
@@ -395,9 +404,9 @@ CREATE_BUFFER(m, q->workHandle);
   } while (false);
 
   
-  if (hPath) DisposeHandle(hPath);
-  if (hHtml) DisposeHandle(hHtml);
-  if (hUrl) DisposeHandle(hUrl);
+  ReleasePointer(path_html);
+  ReleasePointer(path_uri);
+
   
   if (err) return ProcessError(500, q);
 
@@ -419,9 +428,8 @@ Word ListVolumes(struct qEntry *q)
 Word i;
 Word d;
 
-Handle hUrl, hHtml;
-GSString255Ptr gUrl, gHtml;
 Word err;
+
 
 CREATE_BUFFER(m, q->workHandle);
 
@@ -471,7 +479,11 @@ CREATE_BUFFER(m, q->workHandle);
 	
 	
 	for (d = 1; ; d++)
-  	{
+  	{	
+  	void *dev_uri;
+	void *dev_html;
+	Word alloc = 0;
+  		
       DInfoDCB.devNum = d;
       DInfoGS(&DInfoDCB);
       if (_toolErr) break;
@@ -488,14 +500,20 @@ CREATE_BUFFER(m, q->workHandle);
       // convert first char from ':' --> '/'
       vName.bufString.text[0] = '/';
 
-      hUrl = MangleName(&vName.bufString);
-      hHtml = MacRoman2HTML(&vName.bufString);
+      dev_uri = MangleName(&vName.bufString);
+      dev_html = MacRoman2HTML(&vName.bufString);
 
-      if (hUrl) HLock(hUrl);
-      if (hHtml) HLock(hHtml);
+	  if (dev_uri == NULL)
+	  {
+	    dev_uri = &vName.bufString;
+	  }
+	  else alloc |= 0x0001;
 
-      gUrl = hUrl ? (GSString255Ptr)*hUrl : &vName.bufString;
-      gHtml = hHtml ? (GSString255Ptr)*hHtml : &vName.bufString;
+	  if (dev_html == NULL)
+	  {
+	    dev_html = &vName.bufString;
+	  }
+	  else alloc |= 0x0002;
 
 
       i = orca_sprintf(buffer,
@@ -504,12 +522,11 @@ CREATE_BUFFER(m, q->workHandle);
         "<td align=\"right\"> &mdash; </td>"
         "<td> Folder </td>"
         "</tr>\r\n",
-        gUrl, gHtml);
+        dev_uri, dev_html);
 
 
-       if (hUrl) DisposeHandle(hUrl);
-       if (hHtml) DisposeHandle(hHtml);
-
+	  if (alloc & 0x0001) DisposePointer(dev_uri);
+	  if (alloc & 0x0002) DisposePointer(dev_html);
 
   	   err = BufferAppend(&m, buffer, i);
 	   if (err) break;

@@ -1,24 +1,20 @@
 #pragma noroot
 #pragma optimize -1
 #pragma lint -1
-
-#include <Memory.h>
+#pragma debug 0x8000
 
 #include <ctype.h>
-
-
-extern Word MyID;
+#include "pointer.h"
 
 // returns:
 //-1 on error
 //0 if no mangling needed
 // valid handle otherwise.
-Handle MangleName(const GSString255 *gstr)
+GSString255Ptr MangleName(const GSString255 *gstr)
 {
 Word i, j;
 char c;
 Word extra;
-Handle h;
 GSString255Ptr dest;
 
   extra = 0;
@@ -37,10 +33,8 @@ GSString255Ptr dest;
   }
   if (!extra) return NULL;
 
-  h = NewHandle(gstr->length + 3 + extra, MyID | 0x0e00, attrLocked, NULL);
-  if (_toolErr) return (Handle)0; //-1;
-
-  dest = (GSString255Ptr)*h;
+  dest = (GSString255Ptr)NewPointer(gstr->length + 3 + extra);
+  if (!dest) return NULL;
 
   i = j = 0;
   while ( i < gstr->length)
@@ -72,7 +66,7 @@ GSString255Ptr dest;
   dest->text[j] = 0; // make a cstring
   dest->length = j;
 
-  return h;
+  return dest;
 }
 
 
@@ -229,12 +223,11 @@ struct ConvTable
 //-1 on error
 //0 if no conversion needed
 // valid handle otherwise.
-Handle MacRoman2HTML(const GSString255 *gstr)
+GSString255Ptr MacRoman2HTML(const GSString255 *gstr)
 {
 Word i, j;
 char c;
 Word extra;
-Handle h;
 GSString255Ptr dest;
 
   extra = 0;
@@ -257,11 +250,10 @@ GSString255Ptr dest;
   }
   if (!extra) return NULL;
 
-  h = NewHandle(gstr->length + 3 + extra, MyID | 0x0e00, attrLocked, NULL);
-  if (_toolErr) return (Handle)0; //-1;
-
-  dest = (GSString255Ptr)*h;
-
+  dest = (GSString255Ptr)NewPointer(gstr->length + 3 + extra);
+  if (!dest) return NULL;
+  
+  
   i = j = 0;
   while ( i < gstr->length)
   {
@@ -324,7 +316,7 @@ GSString255Ptr dest;
   dest->text[j] = 0; // make a cstring
   dest->length = j;
 
-  return h;
+  return dest;
 }
 
 
@@ -333,12 +325,11 @@ GSString255Ptr dest;
 //-1 on error
 //0 if no conversion needed
 // valid handle otherwise.
-Handle MacRoman2UTF8(const GSString255 *gstr)
+GSString255Ptr MacRoman2UTF8(const GSString255 *gstr)
 {
 Word i, j;
 char c;
 Word extra;
-Handle h;
 GSString255Ptr dest;
 Word utf;
 
@@ -355,10 +346,8 @@ Word utf;
   }
   if (!extra) return NULL;
 
-  h = NewHandle(gstr->length + 3 + extra, MyID | 0x0e00, attrLocked, NULL);
-  if (_toolErr) return (Handle)0; //-1;
-
-  dest = (GSString255Ptr)*h;
+  dest = (GSString255Ptr)NewPointer(gstr->length + 3 + extra);
+  if (!dest) return NULL;
 
   i = j = 0;
   while ( i < gstr->length)
@@ -384,7 +373,5 @@ Word utf;
   dest->text[j] = 0; // make a cstring
   dest->length = j;
 
-  return h;
+  return dest;
 }
-
-

@@ -7,19 +7,17 @@ CFLAGS += -I /usr/local/include/
 
 OBJS	= httpnda.o tools.o server.o error.o file.o time.o \
  mime.o config.o ctrl.o toolbox.o header.o log.o \
- mangle.o ftype.o applesingle.o utils.o kmalloc.o \
+ mangle.o ftype.o applesingle.o utils.o pointer.o \
  globals.o methods.o headers.o  \
  put.o propfind.o options.o mkcol.o \
  tcp.o membuffer.o
 
 ROBJS = http.r errors.r
 
-
 silverplatter: $(OBJS) $(ROBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $@
 	catrez -d $@ $(ROBJS)
 	chtyp -t nda $@
-
 
 config.o: config.c config.h toolbox.h
 error.o: error.c server.h
@@ -30,7 +28,6 @@ server.o: server.c server.h httpnda.h config.h
 toolbox.o: toolbox.c toolbox.h
 tools.o: tools.c httpnda.h
 applesingle.o: applesingle.c applesingle.h server.h
-kmalloc.o: kmalloc.c kmalloc.h
 put.o: put.c config.h server.h
 globals.o: globals.c globals.h
 
@@ -40,6 +37,7 @@ mkcol.o: mkcol.c server.h
 membuffer.o: membuffer.c membuffer.h
 
 tcp.o: tcp.c
+pointer.o: pointer.asm
 
 # resource files
 http.r: http.rez rez.h
@@ -51,9 +49,9 @@ errors.r: errors.rez html/err400.html html/err403.html \
 methods.o: methods.txt
 	dfa -f omf -o $@ methods methods.txt
 
+
 headers.o: headers.txt
 	dfa -f omf -o $@ headers headers.txt
-
 
 clean:
 	$(RM) *.o *.root *.r

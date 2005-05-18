@@ -26,7 +26,7 @@
 #include "rez.h"
 #include "toolbox.h"
 
-#include "kmalloc.h"
+#include "pointer.h"
 #include "globals.h"
 
 extern int orca_sprintf(char *, const char *, ...);
@@ -222,7 +222,7 @@ Word header;
       while ((c = cp[i]) && !isspace(c)) i++;
       if (!i) return;
 
-      host = kmalloc(i + 3);
+      host = NewPointer(i + 3);
       if (host)
       {
 	q->host = host;
@@ -297,7 +297,7 @@ Word cmd = -1;
 
   if (len)
   {
-    path = kmalloc(len + 3);
+    path = NewPointer(len + 3);
     if (!path) return;
 
     q->pathname = path;
@@ -338,7 +338,7 @@ Word cmd = -1;
 
       len = fRoot->length + path->length;
 
-      fullpath = kmalloc(len + 3);
+      fullpath = NewPointer(len + 3);
 
       if (fullpath)
       {
@@ -352,13 +352,8 @@ Word cmd = -1;
     }
     else
     {
-      GSString255Ptr fullpath;
-      fullpath = kmalloc(len + 3);
-      if (fullpath)
-      {
-        q->fullpath = fullpath;
-        BlockMove((Pointer)path, (Pointer)fullpath, len + 3);
-      }
+      q->fullpath = path;
+      RetainPointer(path);
     }
   } // if (len)
 
@@ -408,24 +403,24 @@ Word CloseDCB[2];
   // new fangled pointers.
   if (q->request)
   {
-    kfree(q->request);
+    DisposePointer(q->request);
     q->request = NULL;
   }
   if (q->host)
   {
-    kfree(q->host);
+    DisposePointer(q->host);
     q->host = NULL;
   }
 
   if (q->pathname)
   {
-    kfree(q->pathname);
+    ReleasePointer(q->pathname);
     q->pathname = NULL;
   }
 
   if (q->fullpath)
   {
-    kfree(q->fullpath);
+    ReleasePointer(q->fullpath);
     q->fullpath = NULL;
   }
 
@@ -470,7 +465,7 @@ Word StartServer(void)
   fActive = 0;
   fUsed = 0;
 
-  kmstartup(MyID | 0x0f00);
+  PointerStartUp(MyID | 0x0f00);
 
   memset(queue, 0, sizeof(queue));
 
@@ -557,8 +552,6 @@ Word CloseDCB[2];
 
   FlagHTTP = false;
   Ipid = 0;
-
-  kmshutdown();
 
   #undef xstr
   #define xstr "Server stopped\r"
@@ -765,8 +758,9 @@ Word oldPrefs;
               GSString255Ptr req;
 
               Word i = GetHandleSize(h);
+
               ScanMethod(cp, q);
-              req = kmalloc(2 + i);
+              req = NewPointer(2 + i);
 
               if (req)
               {

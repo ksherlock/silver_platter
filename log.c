@@ -10,7 +10,7 @@
 #include <window.h>
 
 #include "config.h"
-#include "kmalloc.h"
+#include "pointer.h"
 
 
 extern int orca_sprintf(char *, const char *, ...);
@@ -40,7 +40,7 @@ TimeRec tr;
 
     i = fLogDir->length;
 
-    gstr = kmalloc(i + 17);
+    gstr = NewPointer(i + 17);
     if (gstr == NULL) return 0;
 
     i = orca_sprintf(gstr->text, "%B/www%04u%02u%02u.txt",
@@ -74,7 +74,7 @@ TimeRec tr;
       SPositionDCB.displacement = 0;
       SetMarkGS(&SPositionDCB);
     }
-    kfree(gstr);
+    DisposePointer(gstr);
   }
   return fd;
 }
