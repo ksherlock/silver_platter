@@ -160,6 +160,8 @@ RetainPointer	start Memory
 ptr  LongWord
     EndParms
 
+	BeginStack
+
 	lda <ptr
 	ora <ptr+2
 	beq exit
@@ -197,6 +199,8 @@ ReleasePointer	start Memory
     BegParms
 ptr  LongWord
     EndParms
+
+	BeginStack
 
 	lda <ptr
 	ora <ptr+2
