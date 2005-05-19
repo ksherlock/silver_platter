@@ -441,7 +441,7 @@ resource rVersion (1) {
 
 
 #define ConfigWindowWidth 300
-#define ConfigWindowHeight 122
+#define ConfigWindowHeight 124
 
 
 resource rWindParam1 (rConfigWindow) {
