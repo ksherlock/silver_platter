@@ -10,10 +10,15 @@
 //-1 on error
 //0 if no mangling needed
 // valid handle otherwise.
-GSString255Ptr MangleName(const GSString255 *gstr)
+
+// rfc 1738:  everything except 
+// a-zA-Z$-_.+!*'(),/?:@=&
+// must be converted to %xx entities
+// i also convert & for xhtml compatability. 
+GSString255Ptr EncodeURL(const GSString255 *gstr)
 {
 Word i, j;
-char c;
+Word c;
 Word extra;
 GSString255Ptr dest;
 
@@ -21,15 +26,26 @@ GSString255Ptr dest;
   for (i = 0; i < gstr->length; i++)
   {
     c = gstr->text[i];
-    if (c == '%'
-      || c == '"'
-      || c == '\''
-      || c == ' '
-      || c == '>'
-      || c == '<'
-      || c == '?'
-      || c & 0x80
-      || !isprint(c)) extra += 2;
+    if (isalnum(c)
+    	|| c == '$'
+    	|| c == '-'
+    	|| c == '_'
+    	|| c == '.'
+    	|| c == '+'
+    	|| c == '!'
+    	|| c == '*'
+    	|| c == '\''
+    	|| c == '('
+    	|| c == ')'
+    	|| c == ','
+    	|| c == '/'
+		|| c == '?'
+		|| c == ':'
+		|| c == '@'
+		|| c == '='
+    	) continue;
+    
+	extra += 2;
   }
   if (!extra) return NULL;
 
@@ -40,15 +56,29 @@ GSString255Ptr dest;
   while ( i < gstr->length)
   {
     c = gstr->text[i++];
-    if (c == '%'
-      || c == '"'
-      || c == '\''
-      || c == ' '
-      || c == '>'
-      || c == '<'
-      || c == '?'
-      || c & 0x80
-      || !isprint(c))
+    
+    if (isalnum(c)
+    	|| c == '$'
+    	|| c == '-'
+    	|| c == '_'
+    	|| c == '.'
+    	|| c == '+'
+    	|| c == '!'
+    	|| c == '*'
+    	|| c == '\''
+    	|| c == '('
+    	|| c == ')'
+    	|| c == ','
+    	|| c == '/'
+		|| c == '?'
+		|| c == ':'
+		|| c == '@'
+		|| c == '='
+		)
+    {
+    	dest->text[j++] = c;
+    }
+	else
     {
       Word x;
 
@@ -61,7 +91,6 @@ GSString255Ptr dest;
       dest->text[j++] = "0123456789abcdef"[x];
 
     }
-    else dest->text[j++] = c;
   }
   dest->text[j] = 0; // make a cstring
   dest->length = j;
@@ -226,7 +255,7 @@ struct ConvTable
 GSString255Ptr MacRoman2HTML(const GSString255 *gstr)
 {
 Word i, j;
-char c;
+Word c;
 Word extra;
 GSString255Ptr dest;
 
@@ -328,7 +357,7 @@ GSString255Ptr dest;
 GSString255Ptr MacRoman2UTF8(const GSString255 *gstr)
 {
 Word i, j;
-char c;
+Word c;
 Word extra;
 GSString255Ptr dest;
 Word utf;

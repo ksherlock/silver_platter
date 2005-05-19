@@ -25,7 +25,7 @@ extern int orca_sprintf(char *, const char *, ...);
 extern const char *GetMimeString(GSString255Ptr, Word, LongWord);
 
 extern void * MacRoman2HTML(const GSString255 *gstr);
-extern void * MangleName(const GSString255 *gstr);
+extern void * EncodeURL(const GSString255 *gstr);
 
 
 extern Word MyID;
@@ -70,7 +70,7 @@ GSString255Ptr path;
 
   path = q->pathname;
 
-  path_uri = MangleName(path);
+  path_uri = EncodeURL(path);
   if (path_uri == NULL)
   {
     path_uri = path;
@@ -232,7 +232,7 @@ CREATE_BUFFER(m, q->workHandle);
   SetHandleSize(0, q->workHandle);
   
   
-  path_uri = (GSString255Ptr)MangleName(path);
+  path_uri = (GSString255Ptr)EncodeURL(path);
   path_html = (GSString255Ptr)MacRoman2HTML(path);
   if (path_uri == NULL)
   {
@@ -310,7 +310,7 @@ CREATE_BUFFER(m, q->workHandle);
 	    && (fDirHidden == false))
 	    continue;
 	
-	  file_uri = MangleName(&vName.bufString);
+	  file_uri = EncodeURL(&vName.bufString);
 	  file_html = MacRoman2HTML(&vName.bufString);
 	  
 	  if (file_uri == NULL)
@@ -500,7 +500,7 @@ CREATE_BUFFER(m, q->workHandle);
       // convert first char from ':' --> '/'
       vName.bufString.text[0] = '/';
 
-      dev_uri = MangleName(&vName.bufString);
+      dev_uri = EncodeURL(&vName.bufString);
       dev_html = MacRoman2HTML(&vName.bufString);
 
 	  if (dev_uri == NULL)

@@ -11,6 +11,7 @@
 #include "globals.h"
 #include "MemBuffer.h"
 #include "config.h"
+#include "pointer.h"
 
 extern int orca_sprintf(char *, const char *, ...);
 
@@ -20,131 +21,173 @@ extern void tiTimeRec2GMTString(TimeRecPtr t, char *str);
 extern const char *GetMimeString(GSString255Ptr, Word, LongWord);
 
 
-const char *BaseName(GSString255Ptr path)
-{
-Word i = path->length;
+GSString255Ptr MacRoman2UTF8(GSString255Ptr);
+GSString255Ptr EncodeURL(GSString255Ptr);
 
-  for (i = path->length - 1; i; i--)
+
+static GSString255Ptr EmptyName = (GSString255Ptr)"\x00\x00";
+
+
+GSString255Ptr BaseName(GSString255Ptr path)
+{
+Word i;
+Word len;
+
+GSString255Ptr str;
+
+  for (len = i = path->length; i; i--)
   {
-    if (path->text[i] == '/') return path->text + i + 1;
+    if (path->text[i - 1] == '/')
+    {
+		len = len - i;
+    	str = (GSString255Ptr)NewPointer(3 + len);
+    	if (str)
+    	{
+    		str->length = len;
+    		TCPIPPtrToPtr(path->text + i, str->text, len);
+    		str->text[len] = 0; 
+    	}
+    	return str;
+    }
   }
-  return "";
+  return NULL;
 }
 
 
-
-//  add XML for one entry.  if base, then no name will be sent.
-Word AddEntry(
-  MemBuffer *m,
-  GSString255Ptr path,  // path of the item
-  FileInfoRecGS *info,  // data on the item
-  Word child)          // true if subitem in a collection.
+static Word AddFile(MemBuffer *m, 
+	GSString255Ptr path_uri, 
+	GSString255Ptr file_uri, 
+	GSString255Ptr file_utf,
+	FileInfoRecGS *info, Word root)
 {
 Word i;
-Word err;
 static char buffer32[32];
+Word err;
 
-Word isdir;
+	if (root)
+	{
+		i = orca_sprintf(buffer,
+      	"<D:response>\r\n"
+      	"<D:href>%B</D:href>\r\n",
+      	path_uri);		
+	}
+	else
+	{
+		i = orca_sprintf(buffer,
+      	"<D:response>\r\n"
+      	"<D:href>%B/%B</D:href>\r\n",
+      	path_uri, file_uri);
+	}
+	err = BufferAppend(m, buffer, i);
+	if (err) return 500;
 
-  isdir = info ? (info->fileType == 0x0f) : true;
+	#undef xstr
+	#define xstr "<D:propstat>\r\n<D:prop>\r\n"
+	
+	err = BufferAppend(m, xstr, sizeof(xstr) - 1);
+	if (err) return 500;
 
-  if (child && info)
-  {
-    i = orca_sprintf(buffer,
-      "<D:response>\r\n"
-      "<D:href>%B/%B%s</D:href>\r\n",
-      path, info->pathname, isdir ? "/" : "");
-  }
-  else
-  {
-    i = orca_sprintf(buffer,
-      "<D:response>\r\n"
-      "<D:href>%B%s</D:href>\r\n",
-      path, isdir ? "/" : "");
-  }
-  err = BufferAppend(m, buffer, i);
-  if (err) return err;
-
-  #undef xstr
-  #define xstr "<D:propstat>\r\n<D:prop>\r\n"
-
-  err = BufferAppend(m, xstr, sizeof(xstr) - 1);
-  if (err) return err;
-
-  // creationDate....
-
-  if (info)
-  {
     tiTimeRec2ISO8601(&info->createDateTime, buffer32);
 
     i = orca_sprintf(buffer, "<D:creationdate>%b</D:creationdate>\r\n", buffer32);
     err = BufferAppend(m, buffer, i);
-    if (err) return err;
-  }
+    if (err) return 500;
 
-  if (child || isdir == false)
-  {
+
     tiTimeRec2GMTString(&info->modDateTime, buffer32);
 
     i = orca_sprintf(buffer,
       "<D:displayname><![CDATA[%B]]></D:displayname>\r\n"
-      "<D:getlastmodified>%b</D:getlastmodified>\r\n",
-      info->pathname,
-      buffer32);
+      "<D:getlastmodified>%b</D:getlastmodified>\r\n"
+      "<D:getcontentlength>%lu</D:getcontentlength>\r\n"
+      "<D:getcontenttype>%s</D:getcontenttype>\r\n"
+      "<D:resourcetype />\r\n",
+      file_utf,
+      buffer32,
+      info->eof,
+      GetMimeString(file_utf, info->fileType, info->auxType));
 
       err = BufferAppend(m, buffer, i);
-      if (err) return err;
+      if (err) return 500;
 
-      if (isdir)
-      {
-        #undef xstr
-        #define xstr \
-          "<D:resourcetype><D:collection /></D:resourcetype>\r\n"
-
-        err = BufferAppend(m, xstr, sizeof(xstr) - 1);
-        if (err) return err;
-
-      }
-      else
-      {
-        i = orca_sprintf(buffer,
-          "<D:getcontentlength>%lu</D:getcontentlength>\r\n"
-          "<D:getcontenttype>%s</D:getcontenttype>\r\n"
-          "<D:resourcetype />\r\n",
-          info->eof,
-          GetMimeString(info->pathname, info->fileType, info->auxType));
-
-        err = BufferAppend(m, buffer, i);
-        if (err) return err;
-      }
-  }
-  else
-  {
-    #undef xstr
-    #define xstr \
-      "<D:displayname><![CDATA[]]></D:displayname>\r\n" \
-      "<D:resourcetype><D:collection /></D:resourcetype>\r\n"
-
-    err = BufferAppend(m, xstr, sizeof(xstr) - 1);
-    if (err) return err;
-  }
-
-  #undef xstr
-  #define xstr \
+  	#undef xstr
+  	#define xstr \
     "<D:source></D:source>\r\n" \
     "<D:supportedlock></D:supportedlock>\r\n" \
     "</D:prop>\r\n" \
     "<D:status>HTTP/1.1 200 OK</D:status>\r\n" \
     "</D:propstat>\r\n" \
-    "</D:response>\r\n" \
+    "</D:response>\r\n" 
 
-  err = BufferAppend(m, xstr, sizeof(xstr) - 1);
-  if (err) return err;
+	err = BufferAppend(m, xstr, sizeof(xstr) - 1);
+	if (err) return err;
 
-  //
-  return 0;
 
+
+	return 0;
 }
+
+
+static Word AddFolder(MemBuffer *m, 
+	GSString255Ptr path_uri, 
+	GSString255Ptr file_uri, 
+	GSString255Ptr file_utf,
+	Word root)		// if this is the first folder of a collection.
+{
+Word i;
+Word err;
+
+	if (root)
+	{
+		i = orca_sprintf(buffer,
+	      "<D:response>\r\n"
+	      "<D:href>%B/</D:href>\r\n",
+	      path_uri);		
+		
+	}
+	else
+	{
+		i = orca_sprintf(buffer,
+	      "<D:response>\r\n"
+	      "<D:href>%B/%B/</D:href>\r\n",
+	      path_uri, file_uri);
+	}
+  
+	err = BufferAppend(m, buffer, i);
+	if (err) return 500;	
+	
+  #undef xstr
+  #define xstr "<D:propstat>\r\n<D:prop>\r\n"
+
+  	err = BufferAppend(m, xstr, sizeof(xstr) - 1);
+  	if (err) return 500;	
+	
+	
+    i = orca_sprintf(buffer,
+      "<D:displayname><![CDATA[%B]]></D:displayname>\r\n",
+      file_utf);	
+	
+
+	err = BufferAppend(m, buffer, i);
+	if (err) return 500;
+	
+	#undef xstr
+    #define xstr \
+	"<D:resourcetype><D:collection /></D:resourcetype>\r\n" \
+	"<D:source></D:source>\r\n" \
+    "<D:supportedlock></D:supportedlock>\r\n" \
+    "</D:prop>\r\n" \
+    "<D:status>HTTP/1.1 200 OK</D:status>\r\n" \
+    "</D:propstat>\r\n" \
+    "</D:response>\r\n"
+	
+
+	err = BufferAppend(m, xstr, sizeof(xstr) - 1);
+	if (err) return 500;
+	
+	return 0;
+}
+
 
 
 static ResultBuf32 dName = {36};
@@ -154,7 +197,6 @@ static DInfoRecGS DInfoDCB = {3, 0, &dName};
 static VolumeRecGS VolumeDCB = {6, &dName.bufString, &vName};
 static DirEntryRecGS DirDCB = {14, 0, 0, 1, 1, &vName};
 
-#if 0
 static Word ListVolumes(struct qEntry *q)
 {
 Word err;
@@ -172,19 +214,24 @@ CREATE_BUFFER(m, q->workHandle);
   err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
   if (err) return ProcessError(500,q);
 
+  err = AddFolder(&m, EmptyName, EmptyName, EmptyName,true);
   
-  err = AddEntry(&m, (GSString255Ptr)"\x00\x00", "/", NULL, true);
-  if (err) return ProcessError(500,q);
+  if (err) return ProcessError(err,q);
       
 
   if (q->depth != 0)
   {
-    Word i;
+    Word d;
     Word len;
-    for(i = 0; ; i++)
+    for(d = 1; ; d++)
     {
+	GSString255Ptr dev_uri;
+	GSString255Ptr dev_utf;
+	GSString255Ptr file_utf;
+	Word alloc = 0;
 
-      DInfoDCB.devNum = i;
+
+      DInfoDCB.devNum = d;
       DInfoGS(&DInfoDCB);
       if (_toolErr) break;
       if (DInfoDCB.characteristics & 0x80 == 0) continue;
@@ -198,14 +245,30 @@ CREATE_BUFFER(m, q->workHandle);
 
       // convert first char from ':' --> '/'
       vName.bufString.text[0] = '/';
-
-      err = AddEntry(&m, (GSString255Ptr)"\x00\x00", vName.bufString, NULL, false);
+      
+      
+      dev_uri = EncodeURL(&vName.bufString);
+      dev_utf = MacRoman2UTF8(&vName.bufString);
+      
+      if (dev_uri) alloc |= 0x0001;
+      else dev_uri = &vName.bufString;
+      
+      if (dev_utf) alloc |= 0x0002;
+      else dev_utf =  &vName.bufString;
+      
+      file_utf = BaseName(dev_utf);
+	  err = AddFolder(&m, dev_uri, EmptyName, file_utf,true);
+	  
+	  if (alloc & 0x0001) ReleasePointer(dev_uri);
+	  if (alloc & 0x0002) ReleasePointer(dev_utf);
+	  if (file_utf) ReleasePointer(file_utf);
+	  
       if (err) return ProcessError(500,q);
                   
     }
   }
 
-
+  #undef xstr
   #define xstr "</D:multistatus>\r\n"
 
   err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
@@ -223,7 +286,6 @@ CREATE_BUFFER(m, q->workHandle);
 
 }
 
-#endif
 
 
 
@@ -236,6 +298,10 @@ LongWord size;
 Word i;
 GSString255Ptr path;
 
+GSString255Ptr path_utf;
+GSString255Ptr path_uri;
+
+
 Word err;
 static char buffer32[32];
 
@@ -246,13 +312,11 @@ CREATE_BUFFER(m, q->workHandle);
 
   path = q->fullpath;
 
-#if 0
-  // todo -- if / do a volume listing.
+
   if (path->length == 1)
   {
     return ListVolumes(q);
   }
-#endif
 
 
   InfoDCB.pCount = 12;
@@ -286,69 +350,127 @@ CREATE_BUFFER(m, q->workHandle);
     }
   }
 
+  err = 0;
   
-
-
-  // start with the header...
-
-#undef xstr
-#define xstr \
-  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" \
-  "<D:multistatus xmlns:D=\"DAV:\">\r\n" 
-
-  err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
-  if (err) return ProcessError(500,q);
-
-  // send the info for the file in question.
-  err = AddEntry(&m, q->pathname, &InfoDCB, false);
-  if (err) return ProcessError(500,q);
-
-  if ((InfoDCB.fileType == 0x0f) && (q->depth != 0))
+  path_utf = MacRoman2UTF8(path);
+  if (path_utf == NULL)
   {
-
-    OpenDCB.pCount = 15;
-    OpenDCB.pathname = path;
-    OpenDCB.requestAccess = readEnable;
-    OpenDCB.resourceNumber = 0;
-    OpenDCB.optionList = NULL;
-    OpenGS(&OpenDCB);
-    if (_toolErr)
-    {
-      return ProcessError(403, q);
-    }
-    q->fd = OpenDCB.refNum;
-
-    DirDCB.refNum = OpenDCB.refNum;
-
-    for(;;)
-    {
-      GetDirEntryGS(&DirDCB);
-      if (_toolErr) break;
-      
-      // check for hidden files
-      if ((DirDCB.access & 0x0004) 
-        && (fDirHidden == false))
-        continue;
-
-      InfoDCB.fileType = DirDCB.fileType;
-      InfoDCB.auxType = DirDCB.auxType;
-      InfoDCB.createDateTime = DirDCB.createDateTime;
-      InfoDCB.modDateTime = DirDCB.modDateTime;
-      InfoDCB.eof = DirDCB.eof;
-      InfoDCB.pathname = &vName.bufString;
-
-      err = AddEntry(&m, q->pathname, &InfoDCB, true);
-      if (err) return ProcessError(500,q);
-    }
+  	path_utf = path;
+  	RetainPointer(path);
   }
+ 
+  path_uri = EncodeURL(path);
+  if (path_uri == NULL)
+  {
+  	path_uri = path;
+  	RetainPointer(path);
+  } 
+ 
+  
+  do  // allows breakage.
+  {
+	
+	  // start with the header...
+	
+	#undef xstr
+	#define xstr \
+	  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" \
+	  "<D:multistatus xmlns:D=\"DAV:\">\r\n" 
+	
+	  err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
+	  if (err) break;
+	
 
-
-  // finish with the trailer.
-  #undef xstr
-  #define xstr "</D:multistatus>\r\n"
-
-  err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
-  if (err) return ProcessError(500,q);
+	  if (InfoDCB.fileType == 0x0f)
+	  {
+	  	AddFolder(&m, path_uri, EmptyName, EmptyName, true);
+	  	if (err) break;
+	    if (q->depth != 0)
+		  {
+		
+		    OpenDCB.pCount = 15;
+		    OpenDCB.pathname = path;
+		    OpenDCB.requestAccess = readEnable;
+		    OpenDCB.resourceNumber = 0;
+		    OpenDCB.optionList = NULL;
+		    OpenGS(&OpenDCB);
+		    if (_toolErr)
+		    {
+		    	err = 403;
+		    	break;
+		    }
+		    q->fd = OpenDCB.refNum;
+		
+		    DirDCB.refNum = OpenDCB.refNum;
+		
+		    for(;;)
+		    {
+		    Word alloc = 0;
+		    GSString255Ptr file_utf;
+		    GSString255Ptr file_uri;	
+		    
+		      GetDirEntryGS(&DirDCB);
+		      if (_toolErr) break;
+		      
+		      // check for hidden files
+		      if ((DirDCB.access & 0x0004) 
+		        && (fDirHidden == false))
+		        continue;
+		        
+		        
+		      file_uri = EncodeURL(&vName.bufString);
+			  if (file_uri) alloc |= 0x0001;
+			  else file_uri = &vName.bufString;
+	
+			  file_utf = MacRoman2UTF8(&vName.bufString);
+			  if (file_utf) alloc |= 0x0002;
+			  else file_utf = &vName.bufString;  
+		        
+		
+			  if (DirDCB.fileType == 0x0f)
+			  {
+			  	err = AddFolder(&m, path_uri, file_uri, file_utf, false);
+			  }
+			  else
+			  {
+		      	InfoDCB.fileType = DirDCB.fileType;
+		      	InfoDCB.auxType = DirDCB.auxType;
+		      	InfoDCB.createDateTime = DirDCB.createDateTime;
+		      	InfoDCB.modDateTime = DirDCB.modDateTime;
+		      	InfoDCB.eof = DirDCB.eof;
+		
+				err = AddFile(&m, path_uri, file_uri, file_utf, &InfoDCB, false);
+			  }
+		      
+		      if (alloc & 0x0001) ReleasePointer(file_uri);
+		      if (alloc & 0x0002) ReleasePointer(file_utf);
+		      
+		      if (err) break;
+		    }
+		    if (err) break;
+		  }	    
+	  }
+	  else
+	  {
+	  	GSString255Ptr file_utf = BaseName(path_utf);	
+	  	err = AddFile(&m, path_uri, EmptyName, file_utf, &InfoDCB, true);
+	  	ReleasePointer(file_utf);
+	  }
+	  if (err) break;
+	
+	  // finish with the trailer.
+	  #undef xstr
+	  #define xstr "</D:multistatus>\r\n"
+	
+	  err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
+	  if (err) break;
+	  
+  } while (false);
+  
+  ReleasePointer(path_uri);
+  ReleasePointer(path_utf);
+  
+  if (err) return ProcessError(err,q);
 
   SendHeader(q, 207, m.used, NULL, "text/xml", true);
 
