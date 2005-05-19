@@ -40,7 +40,7 @@ TimeRec tr;
 
     i = fLogDir->length;
 
-    gstr = NewPointer(i + 17);
+    gstr = NewPointer(i + 17 +2); // + 2 for the length field.
     if (gstr == NULL) return 0;
 
     i = orca_sprintf(gstr->text, "%B/www%04u%02u%02u.txt",
