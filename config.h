@@ -26,6 +26,7 @@ extern Word fAppleSingle;
 extern Word fDir;
 extern Word fDirHidden;
 extern Word fDirAppleShare;
+extern Word fDirRemovable;
 
 Word LoadConfig(Word);
 void UnloadConfig(void);

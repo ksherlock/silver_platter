@@ -609,14 +609,12 @@ resource rControlList(Ctrl_PU_2)
 {
 	{
 		CtrlDir,	// Virtual Directory?
-		Ctrl_AS_Stat,
-		Ctrl_AS_Never,
-		Ctrl_AS_Always,
-		Ctrl_AS_Forked,
 		CtrlDirHidden,
 		CtrlDirAppleShare,
+		CtrlDirRemovable,
 	}
 };
+
 
 resource rControlTemplate (CtrlDir) {
 	CtrlDir,
@@ -633,66 +631,9 @@ resource rControlTemplate (CtrlDir) {
 };
 
 
-resource rControlTemplate (Ctrl_AS_Stat) {
-	Ctrl_AS_Stat,
-	{32, 10, 42, ConfigWindowWidth - 10},
-	statTextControl {
-		 {	/* optional Fields */
-			fBlastText,
-			0x1002,
-			0x0,
-			Ctrl_AS_Stat,
-			0,
-			leftJust
-		}
-	}
-};
-
-
-
-resource rControlTemplate (Ctrl_AS_Never, nocrossbank) {
-       Ctrl_AS_Never,              // ID
-       {44, 10,  0,  0},	// rect
-
-       RadioControl {{
-               $0000,		// flag
-               $1002,		// moreFlags
-               $00000000,	// refCon
-               Ctrl_AS_Never,	// title Ref
-               0		// initial value  (on)
-       }};
-};
-
-resource rControlTemplate (Ctrl_AS_Always, nocrossbank) {
-       Ctrl_AS_Always,              // ID
-       {56, 10,  0,  0},	// rect
-
-       RadioControl {{
-               $0000,		// flag
-               $1002,		// moreFlags
-               $00000000,	// refCon
-               Ctrl_AS_Always,	// title Ref
-               0		// initial value  (on)
-       }};
-};
-
-
-resource rControlTemplate (Ctrl_AS_Forked, nocrossbank) {
-       Ctrl_AS_Forked,              // ID
-       {68, 10,  0,  0},	// rect
-
-       RadioControl {{
-               $0000,		// flag
-               $1002,		// moreFlags
-               $00000000,	// refCon
-               Ctrl_AS_Forked,	// title Ref
-               0		// initial value  (on)
-       }};
-};
-
 resource rControlTemplate (CtrlDirHidden) {
 	CtrlDirHidden,
-	{80, 10, 0, 0},
+	{32, 10, 0, 0},
 	CheckControl {
 		 {	/* optional Fields */
 			0x0,
@@ -706,13 +647,27 @@ resource rControlTemplate (CtrlDirHidden) {
 
 resource rControlTemplate (CtrlDirAppleShare) {
 	CtrlDirAppleShare,
-	{92, 10, 0, 0},
+	{44, 10, 0, 0},
 	CheckControl {
 		 {	/* optional Fields */
 			0x0,
 			0x1002,
 			0x0,
 			CtrlDirAppleShare,
+			0
+		}
+	}
+};
+
+resource rControlTemplate (CtrlDirRemovable) {
+	CtrlDirRemovable,
+	{56, 10, 0, 0},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlDirRemovable,
 			0
 		}
 	}
@@ -835,6 +790,73 @@ resource rControlTemplate (CtrlLog) {
 
 
 
+// AppleSingle
+resource rControlList(Ctrl_PU_5)
+{
+	{
+		Ctrl_AS_Stat,
+		Ctrl_AS_Never,
+		Ctrl_AS_Always,
+		Ctrl_AS_Forked,
+	}
+};
+
+resource rControlTemplate (Ctrl_AS_Stat) {
+	Ctrl_AS_Stat,
+	{20, 10, 30, ConfigWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText,
+			0x1002,
+			0x0,
+			Ctrl_AS_Stat,
+			0,
+			leftJust
+		}
+	}
+};
+
+
+
+resource rControlTemplate (Ctrl_AS_Never, nocrossbank) {
+       Ctrl_AS_Never,              // ID
+       {32, 10,  0,  0},	// rect
+
+       RadioControl {{
+               $0000,		// flag
+               $1002,		// moreFlags
+               $00000000,	// refCon
+               Ctrl_AS_Never,	// title Ref
+               0		// initial value  (on)
+       }};
+};
+
+resource rControlTemplate (Ctrl_AS_Always, nocrossbank) {
+       Ctrl_AS_Always,              // ID
+       {44, 10,  0,  0},	// rect
+
+       RadioControl {{
+               $0000,		// flag
+               $1002,		// moreFlags
+               $00000000,	// refCon
+               Ctrl_AS_Always,	// title Ref
+               0		// initial value  (on)
+       }};
+};
+
+
+resource rControlTemplate (Ctrl_AS_Forked, nocrossbank) {
+       Ctrl_AS_Forked,              // ID
+       {56, 10,  0,  0},	// rect
+
+       RadioControl {{
+               $0000,		// flag
+               $1002,		// moreFlags
+               $00000000,	// refCon
+               Ctrl_AS_Forked,	// title Ref
+               0		// initial value  (on)
+       }};
+};
 
 //
 
@@ -876,6 +898,7 @@ resource rMenu (CtrlPopUp, nocrossbank){
 	Ctrl_PU_2,
 	Ctrl_PU_3,
 	Ctrl_PU_4,
+	Ctrl_PU_5,
     };
 };
 
@@ -912,13 +935,21 @@ resource rMenuItem (Ctrl_PU_4, nocrossbank) {
        Ctrl_PU_4           // itemTitleRef
 };
 
+resource rMenuItem (Ctrl_PU_5, nocrossbank) {
+       Ctrl_PU_5,                  // itemID
+       "","",                  // itemChar, itemAltChar
+       NIL,                    // itemCheck
+       $8000,                  // itemFlag
+       Ctrl_PU_5           // itemTitleRef
+};
+
 
 resource rPstring(CtrlPopUp, nocrossbank){""};
 resource rPstring(Ctrl_PU_1, nocrossbank){"General"};
 resource rPstring(Ctrl_PU_2, nocrossbank){"Directories"};
 resource rPstring(Ctrl_PU_3, nocrossbank){"Uploads"};
 resource rPstring(Ctrl_PU_4, nocrossbank){"Logging"};
-                                           
+resource rPstring(Ctrl_PU_5, nocrossbank){"AppleSingle"};                                         
 
 
  
@@ -998,6 +1029,10 @@ resource rPString (CtrlDirHidden) {
 };
 resource rPString (CtrlDirAppleShare) {
 	"Show AppleShare Volumes"
+};
+
+resource rPString (CtrlDirRemovable) {
+	"Show Removable Volumes"
 };
 
 

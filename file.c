@@ -19,6 +19,9 @@
 #include "pointer.h"
 #include "MemBuffer.h"
 
+#define	dcRemovable		0x0002
+#define dcBlockDevice	0x0080
+
 extern int orca_sprintf(char *, const char *, ...);
 
 
@@ -487,7 +490,11 @@ CREATE_BUFFER(m, q->workHandle);
       DInfoDCB.devNum = d;
       DInfoGS(&DInfoDCB);
       if (_toolErr) break;
-      if (DInfoDCB.characteristics & 0x80 == 0) continue;
+      if (DInfoDCB.characteristics & dcBlockDevice == 0) continue;
+      
+      if ((DInfoDCB.characteristics & dcRemovable)
+      	&& (fDirRemovable == false))
+        continue;
 
       VolumeGS(&VolumeDCB);
       if (_toolErr) continue;

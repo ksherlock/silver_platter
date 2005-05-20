@@ -24,6 +24,7 @@
 #define Ctrl_PU_2	rConfigWindow + 103
 #define Ctrl_PU_3	rConfigWindow + 104
 #define Ctrl_PU_4	rConfigWindow + 105
+#define Ctrl_PU_5	rConfigWindow + 106
 
 
 #define CtrlPathStat	rConfigWindow + 1
@@ -53,6 +54,7 @@
 
 #define CtrlDirHidden	rConfigWindow + 22
 #define CtrlDirAppleShare	rConfigWindow + 23
+#define CtrlDirRemovable	rConfigWindow + 24
 
 
 #define CtrlAbout	rAboutWindow + 1

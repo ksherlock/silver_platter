@@ -20,6 +20,9 @@
 
 extern int orca_sprintf(char *, const char *, ...);
 
+#define SCREEN_COUNT 5	// number of config screens.
+
+
 Word fAbort;
 Word fJail;
 Word fPort;
@@ -37,6 +40,7 @@ Word fPutMkdir;
 Word fDir;
 Word fDirHidden;
 Word fDirAppleShare;
+Word fDirRemovable;
 
 
 Word fLog;
@@ -63,6 +67,7 @@ static char *NameAppleSingle = "\pAppleSingle";
 static char *NameDir = "\pVirtual Directories";
 static char *NameDirHidden = "\pShow Hidden Files";
 static char *NameDirAppleShare = "\pShow AppleShare";
+static char *NameDirRemovable = "\pShow Removable";
 
 
 static char *NamePut ="\pPut";
@@ -222,6 +227,7 @@ static CreateRecGS CreateDCB = {4, (GSString255Ptr)&folderPath, 0xe3, 0x0f, 0};
   fDir = LoadWord(NameDir, true);
   fDirHidden = LoadWord(NameDirHidden, false);
   fDirAppleShare = LoadWord(NameDirAppleShare, false);
+  fDirRemovable = LoadWord(NameDirRemovable, false);
 
 
   fPut = LoadWord(NamePut, false);
@@ -281,7 +287,7 @@ void UnloadConfig(void)
 
 
 
-static Handle screens[4];
+static Handle screens[SCREEN_COUNT];
 static Word current;
 
 void LoadControls(WindowPtr win, Word value)
@@ -359,8 +365,8 @@ void LoadControls(WindowPtr win, Word value)
         SetCtlValueByID(fDir, win, CtrlDir);
         SetCtlValueByID(fDirHidden, win, CtrlDirHidden);
         SetCtlValueByID(fDirAppleShare, win, CtrlDirAppleShare);
+        SetCtlValueByID(fDirRemovable, win, CtrlDirRemovable);
 
-        SetCtlValueByID(1, win, Ctrl_AS_Never + fAppleSingle);
 
         break;
 
@@ -383,6 +389,11 @@ void LoadControls(WindowPtr win, Word value)
 	else SetCtlTextByID(win, CtrlLogStat, 1, (Ref)"");
 
         break;
+        
+       // apple single
+       case Ctrl_PU_5:
+         SetCtlValueByID(1, win, Ctrl_AS_Never + fAppleSingle);
+         break;
       }
     }
   }
@@ -442,10 +453,9 @@ Word i;
   CenterWindow(win);
 
   current = -1;
-  screens[0] = NULL;
-  screens[1] = NULL;
-  screens[2] = NULL;
-  screens[3] = NULL;
+  for (i = 0; i < SCREEN_COUNT; i++)
+  	screens[i] = NULL;
+
 
   LoadControls(win, Ctrl_PU_1);
 
@@ -611,14 +621,12 @@ Word i;
       fDir = GetCtlValueByID(win, CtrlDir);
       fDirHidden = GetCtlValueByID(win, CtrlDirHidden);
       fDirAppleShare = GetCtlValueByID(win, CtrlDirAppleShare);
+      fDirRemovable = GetCtlValueByID(win, CtrlDirRemovable);
       
-      fAppleSingle = FindRadioButton(win,0);
-
       SetConfigValue(1, NameDir, &fDir, sizeof(Word));
       SetConfigValue(1, NameDirHidden, &fDirHidden, sizeof(Word));
       SetConfigValue(1, NameDirAppleShare, &fDirAppleShare, sizeof(Word));
-
-      SetConfigValue(1, NameAppleSingle, &fAppleSingle, sizeof(Word));
+      SetConfigValue(1, NameDirRemovable, &fDirRemovable, sizeof(Word));
     }
 
     if (screens[2])
@@ -650,6 +658,11 @@ Word i;
       SetConfigValue(1, NameLog, &fLog, sizeof(Word));
 
     }
+    if (screens[4])
+    {
+   		fAppleSingle = FindRadioButton(win,0);
+   		SetConfigValue(1, NameAppleSingle, &fAppleSingle, sizeof(Word));
+    }
 
 
     //SetConfigValue(1, NameMTU, &fMTU, sizeof(Word));
@@ -663,8 +676,6 @@ Word i;
 
   CloseWindow(win);                             
 
-  if (screens[0]) DisposeHandle(screens[0]);
-  if (screens[1]) DisposeHandle(screens[1]);
-  if (screens[2]) DisposeHandle(screens[2]);
-  if (screens[3]) DisposeHandle(screens[3]);
+  for (i = 0; i < SCREEN_COUNT; i++)
+  	if (screens[i]) DisposeHandle(screens[i]);
 }
