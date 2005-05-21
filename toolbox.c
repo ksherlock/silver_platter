@@ -1,9 +1,12 @@
 #pragma optimize -1
 #pragma lint -1
 #pragma noroot
+#pragma debug 0x8000
 
+#include <control.h>
 #include <dialog.h>
 #include <gsos.h>
+#include <LineEdit.h>
 #include <Memory.h>
 #include <quickdraw.h>
 #include <stdfile.h>
@@ -24,10 +27,10 @@ struct ItemTemplate {
 #endif
 
 #define Width640 320
-#define Height640 109 + 6
+#define Height640 128
 
 #define Width320  270
-#define Height320 109 + 6
+#define Height320 128
 
 
 // -- 320 --
@@ -164,7 +167,7 @@ static ItemTemplate Folder320 =
 	12,			// itemID
 	{ Height320 + 10, 0, 0, 0 },	// itemRect
 	buttonItem,		// itemType
-	"\pNew Folder",		// itemDescr
+	"\pNew Folder\xc9",		// itemDescr
 	0,			// itemValue
 	0,			// itemFlag
 	NULL			// itemColor
@@ -173,10 +176,35 @@ static ItemTemplate Folder320 =
 
 
 // -- 640 --
+
+
+static ItemTemplate Disks640 =
+{
+	4,			// itemID
+	{ 25, 204, 38, Width640 - 10 },	// itemRect
+	buttonItem,		// itemType
+	"\pDisks",		// itemDescr
+	0,			// itemValue
+	0,			// itemFlag
+	NULL			// itemColor
+};
+
+static ItemTemplate Folder640 =
+{
+	12,			// itemID
+	{ 41, 204, 54, Width640 - 10 },	// itemRect
+	buttonItem,		// itemType
+	"\pNew Folder\xc9",		// itemDescr
+	0,			// itemValue
+	0,			// itemFlag
+	NULL			// itemColor
+};
+
+
 static ItemTemplate Save640 =
 {
 	1,			// itemID
-	{ 43, 204, 55, 310 },	// itemRect
+	{ 59, 204, 72, Width640 - 10 },	// itemRect
 	buttonItem,		// itemType
 	"\pSelect",		// itemDescr
 	0,			// itemValue
@@ -187,7 +215,7 @@ static ItemTemplate Save640 =
 static ItemTemplate Open640 =
 {
 	2,			// itemID
-	{ 61, 204, 73, 310 },	// itemRect
+	{ 77, 204, 90, Width640 - 10 },	// itemRect
 	buttonItem,		// itemType
 	"\pOpen",		// itemDescr
 	0,			// itemValue
@@ -195,11 +223,10 @@ static ItemTemplate Open640 =
 	NULL			// itemColor
 };
 
-
 static ItemTemplate Close640 =
 {
 	3,			// itemID
-	{ 79, 204, 91, 310 },	// itemRect
+	{ 93, 204, 106, Width640 - 10 },	// itemRect
 	buttonItem,		// itemType
 	"\pClose",		// itemDescr
 	0,			// itemValue
@@ -207,22 +234,12 @@ static ItemTemplate Close640 =
 	NULL			// itemColor
 };
 
-static ItemTemplate Disks640 =
-{
-	4,			// itemID
-	{ 25, 204, 37, 310 },	// itemRect
-	buttonItem,		// itemType
-	"\pDisks",		// itemDescr
-	0,			// itemValue
-	0,			// itemFlag
-	NULL			// itemColor
-};
 
 
 static ItemTemplate Cancel640 =
 {
 	5,			// itemID
-	{ 97, 204, 109, 310 },	// itemRect
+	{ 109, 204, 122, Width640 - 10 },	// itemRect
 	buttonItem,		// itemType
 	"\pCancel",		// itemDescr
 	0,			// itemValue
@@ -245,7 +262,7 @@ static ItemTemplate Scroll640 =
 static ItemTemplate Files640 =
 {
 	8,			// itemID
-	{ 25, 10, 109, 170 },	// itemRect
+	{ 25, 10, 122, 170 },	// itemRect
 	userItem | itemDisable, // itemType
 	NULL,		// itemDescr
 	0,			// itemValue
@@ -300,17 +317,6 @@ static ItemTemplate Free640 =
 };
 
 
-static ItemTemplate Folder640 =
-{
-	12,			// itemID
-	//{ 29, 204, 41, 310 },	// itemRect
-	{ Height640 + 10, 0, 0, 0 },	// itemRect
-	buttonItem,		// itemType
-	"\pNew Folder",		// itemDescr
-	0,			// itemValue
-	0,			// itemFlag
-	NULL			// itemColor
-};
 
 
 
@@ -319,7 +325,7 @@ struct sfdlg
 	Rect bRect;
 	Word vFlag;
 	LongWord refCon;
-	ItemTemplate *items[13];
+	ItemTemplate *items[14];
 };
 
 static struct sfdlg dlg640 =
@@ -340,6 +346,7 @@ static struct sfdlg dlg640 =
 		&Edit640,
 		&Free640,
 		&Folder640,
+		//&Folder640,
 		NULL
 	}
 };
@@ -363,11 +370,171 @@ static struct sfdlg dlg320 =
 		&Edit320,
 		&Free320,
 		&Folder320,
+		//&Folder320,
 		NULL
 	}
 };
 
 static Word fSuccess;
+
+static char folderName[32];
+
+
+
+static StaticTextTemplate ctrl_stat =
+{
+	{
+		8,
+		4,
+		{ 6, 15, 16, 320 },
+		0x81000000,
+		0x0000,
+		0x3000,
+		0,
+	},
+	#define xstr "Name of folder to create?"
+	(Ref)xstr,
+	sizeof(xstr) - 1,
+	0	
+};
+
+static LineEditTemplate ctrl_le = 
+{
+	{
+		8,
+		1,
+		{19, 15, 32, 320 },
+		0x83000000,
+		0x0000,
+		0x7000,
+		0,
+	},
+	31,
+	NULL,
+	0
+};
+
+static SimpleButtonTemplate ctrl_create = 
+{
+	{
+		9,
+		2,
+		{36, 200, 49, 300 },
+		0x80000000,
+		0x0001,
+		0x3000,
+		0,
+	},
+	(Ref)"\pCreate",
+	NULL,
+	{
+		0x0d, 0x0d, 0, 0
+	}	
+};
+
+
+static SimpleButtonTemplate ctrl_cancel = 
+{
+	{
+		9,
+		3,
+		{36, 30, 49, 130 },
+		0x80000000,
+		0x0000,
+		0x3000,
+		0,
+	},
+	(Ref)"\pCancel",
+	NULL,
+	{
+		0x1b, 0x1b, 0, 0
+	}	
+};
+
+
+
+static LongWord controls[] =
+{
+	(LongWord)&ctrl_le,
+	(LongWord)&ctrl_create,
+	(LongWord)&ctrl_cancel,
+	(LongWord)&ctrl_stat,
+	0
+};
+
+static WindParam1  windowTemp =
+{
+	0x50,
+	0x0020,			// frame fVis
+	NULL,			// title
+	NULL,			// ref
+	{0, 0, 0, 0},
+	NULL,
+	0, 0,			// origin
+	0, 0,			// data size
+	0, 0,			// max size
+	0, 0,			// scroll size
+	0, 0,			// page size
+	0,			// info refcon
+	0,			// info height
+	NULL,			// frame def proc
+	NULL,			// info def proc
+	NULL,			// content def proc
+	{35, 285, 92, 620}, 	//position
+	(WindowPtr)0xffffffff,		// plane
+	(Long)controls,
+	3					// PtrToPtr
+};
+
+static Word GetFolder(void)
+{
+WindowPtr w;
+GrafPortPtr oldPort;
+Word ret = 0;
+
+static EventRecord event;
+
+Word done;
+	
+	event.wmTaskMask = 0x001f0004;
+	
+	oldPort = GetPort();
+	w = NewWindow2(NULL, NULL, NULL, NULL, 
+	  refIsPointer, (Long)&windowTemp, 0x800e);
+
+	if (_toolErr) return 0;
+	SetPort(w);
+
+	//NewControl2(w, 3, (Ref)&controls);
+	
+	SetLETextByID(w, 1, (StringPtr)"\pNew.Folder");	
+	
+	for (done = false; !done; )
+	{
+		Word control;
+		
+		control = (Word)DoModalWindow(&event, NULL, NULL, NULL, 0x0008);
+		if (control == 2)
+		{
+			
+			GetLETextByID(w, 1, (StringPtr)folderName);
+			
+			ret = 1;
+			done = true;
+		}
+		else if (control == 3)
+		{
+			ret = 0;
+			done = true;	
+		}
+	}
+	
+	CloseWindow(w);
+	
+	SetPort(oldPort);
+	return ret;
+}
+
 
 #pragma databank 1
 static pascal HitTest(DialogPtr dialog, Word *itemPtr)
@@ -379,7 +546,15 @@ Word item;
     *itemPtr = 5; // cancel
     fSuccess = 1;
   }
-  else if (item == 10 || item == 12)
+  else if (item == 12)
+  {
+  	if (GetFolder())
+  	{
+  		SetIText(dialog, 10, folderName); 
+  	}
+  	else *itemPtr = 0;
+  }
+  else if (item == 10)
   {
     *itemPtr = 0;
   }
