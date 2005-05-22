@@ -15,7 +15,7 @@ Word ipid = q->ipid;
 
 
   #undef xstr
-  #define xstr "DAV: 1,2\r\n"
+  #define xstr "DAV: 1\r\n"
   TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
 
   #undef xstr

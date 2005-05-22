@@ -38,7 +38,7 @@ struct ItemTemplate {
 static ItemTemplate Save320 =
 {
 	1,			// itemID
-	{ 43, 165, 55, 265 },	// itemRect
+	{ 59, 165, 72, 265 },	// itemRect
 	buttonItem,		// itemType
 	"\pSelect",		// itemDescr
 	0,			// itemValue
@@ -49,7 +49,7 @@ static ItemTemplate Save320 =
 static ItemTemplate Open320 =
 {
 	2,			// itemID
-	{ 61, 165, 73, 265 },	// itemRect
+	{ 77, 165, 90, 265 },	// itemRect
 	buttonItem,		// itemType
 	"\pOpen",		// itemDescr
 	0,			// itemValue
@@ -61,7 +61,7 @@ static ItemTemplate Open320 =
 static ItemTemplate Close320 =
 {
 	3,			// itemID
-	{ 79, 165, 91, 265 },	// itemRect
+	{ 93, 165, 106, 265 },	// itemRect
 	buttonItem,		// itemType
 	"\pClose",		// itemDescr
 	0,			// itemValue
@@ -72,7 +72,7 @@ static ItemTemplate Close320 =
 static ItemTemplate Disks320 =
 {
 	4,			// itemID
-	{ 25, 165, 37, 265 },	// itemRect
+	{ 25, 165, 38, 265 },	// itemRect
 	buttonItem,		// itemType
 	"\pDisks",		// itemDescr
 	0,			// itemValue
@@ -84,7 +84,7 @@ static ItemTemplate Disks320 =
 static ItemTemplate Cancel320 =
 {
 	5,			// itemID
-	{ 97, 165, 109, 265 },	// itemRect
+	{ 109, 165, 122, 265 },	// itemRect
 	buttonItem,		// itemType
 	"\pCancel",		// itemDescr
 	0,			// itemValue
@@ -107,7 +107,7 @@ static ItemTemplate Scroll320 =
 static ItemTemplate Files320 =
 {
 	8,			// itemID
-	{ 25, 5, 109, 160 - 17 },	// itemRect
+	{ 25, 5, 122, 160 - 17 },	// itemRect
 	userItem | itemDisable, // itemType
 	NULL,		// itemDescr
 	0,			// itemValue
@@ -165,7 +165,7 @@ static ItemTemplate Free320 =
 static ItemTemplate Folder320 =
 {
 	12,			// itemID
-	{ Height320 + 10, 0, 0, 0 },	// itemRect
+	{ 41, 165, 54, 265 },	// itemRect
 	buttonItem,		// itemType
 	"\pNew Folder\xc9",		// itemDescr
 	0,			// itemValue
@@ -381,7 +381,7 @@ static char folderName[32];
 
 
 
-static StaticTextTemplate ctrl_stat =
+static StaticTextTemplate ctrl_stat640 =
 {
 	{
 		8,
@@ -398,7 +398,7 @@ static StaticTextTemplate ctrl_stat =
 	0	
 };
 
-static LineEditTemplate ctrl_le = 
+static LineEditTemplate ctrl_le640 = 
 {
 	{
 		8,
@@ -414,7 +414,7 @@ static LineEditTemplate ctrl_le =
 	0
 };
 
-static SimpleButtonTemplate ctrl_create = 
+static SimpleButtonTemplate ctrl_create640 = 
 {
 	{
 		9,
@@ -433,7 +433,7 @@ static SimpleButtonTemplate ctrl_create =
 };
 
 
-static SimpleButtonTemplate ctrl_cancel = 
+static SimpleButtonTemplate ctrl_cancel640 = 
 {
 	{
 		9,
@@ -453,16 +453,16 @@ static SimpleButtonTemplate ctrl_cancel =
 
 
 
-static LongWord controls[] =
+static LongWord controls640[] =
 {
-	(LongWord)&ctrl_le,
-	(LongWord)&ctrl_create,
-	(LongWord)&ctrl_cancel,
-	(LongWord)&ctrl_stat,
+	(LongWord)&ctrl_le640,
+	(LongWord)&ctrl_create640,
+	(LongWord)&ctrl_cancel640,
+	(LongWord)&ctrl_stat640,
 	0
 };
 
-static WindParam1  windowTemp =
+static WindParam1  windowTemp640 =
 {
 	0x50,
 	0x0020,			// frame fVis
@@ -482,9 +482,120 @@ static WindParam1  windowTemp =
 	NULL,			// content def proc
 	{35, 285, 92, 620}, 	//position
 	(WindowPtr)0xffffffff,		// plane
-	(Long)controls,
+	(Long)controls640,
 	3					// PtrToPtr
 };
+
+
+//--- 320 mode
+
+static StaticTextTemplate ctrl_stat320 =
+{
+	{
+		8,
+		4,
+		{ 6, 8, 16, 160 },
+		0x81000000,
+		0x0000,
+		0x3000,
+		0,
+	},
+        #undef xstr
+	#define xstr "Name of folder?"
+	(Ref)xstr,
+	sizeof(xstr) - 1,
+	0	
+};
+
+static LineEditTemplate ctrl_le320 = 
+{
+	{
+		8,
+		1,
+		{19, 8, 32, 160 },
+		0x83000000,
+		0x0000,
+		0x7000,
+		0,
+	},
+	31,
+	NULL,
+	0
+};
+
+static SimpleButtonTemplate ctrl_create320 = 
+{
+	{
+		9,
+		2,
+		{36, 90, 49, 150 },
+		0x80000000,
+		0x0001,
+		0x3000,
+		0,
+	},
+	(Ref)"\pCreate",
+	NULL,
+	{
+		0x0d, 0x0d, 0, 0
+	}	
+};
+
+
+static SimpleButtonTemplate ctrl_cancel320 = 
+{
+	{
+		9,
+		3,
+		{36, 15, 49, 75 },
+		0x80000000,
+		0x0000,
+		0x3000,
+		0,
+	},
+	(Ref)"\pCancel",
+	NULL,
+	{
+		0x1b, 0x1b, 0, 0
+	}	
+};
+
+
+
+
+static LongWord controls320[] =
+{
+	(LongWord)&ctrl_le320,
+	(LongWord)&ctrl_create320,
+	(LongWord)&ctrl_cancel320,
+	(LongWord)&ctrl_stat320,
+	0
+};
+
+static WindParam1  windowTemp320 =
+{
+	0x50,
+	0x0020,			// frame fVis
+	NULL,			// title
+	NULL,			// ref
+	{0, 0, 0, 0},
+	NULL,
+	0, 0,			// origin
+	0, 0,			// data size
+	0, 0,			// max size
+	0, 0,			// scroll size
+	0, 0,			// page size
+	0,			// info refcon
+	0,			// info height
+	NULL,			// frame def proc
+	NULL,			// info def proc
+	NULL,			// content def proc
+	{35, 142, 92, 310}, 	//position
+	(WindowPtr)0xffffffff,		// plane
+	(Long)controls320,
+	3					// PtrToPtr
+};
+
 
 static Word GetFolder(void)
 {
@@ -500,7 +611,9 @@ Word done;
 	
 	oldPort = GetPort();
 	w = NewWindow2(NULL, NULL, NULL, NULL, 
-	  refIsPointer, (Long)&windowTemp, 0x800e);
+	  refIsPointer, 
+	  GetMasterSCB() & 0x80 ? (Long)&windowTemp640 : (Long)&windowTemp320,
+	  0x800e);
 
 	if (_toolErr) return 0;
 	SetPort(w);
