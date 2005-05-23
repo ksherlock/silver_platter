@@ -19,7 +19,7 @@
 #include "pointer.h"
 #include "MemBuffer.h"
 
-#define	dcRemovable		0x0002
+#define	dcRemovable		0x0004
 #define dcBlockDevice	0x0080
 
 extern int orca_sprintf(char *, const char *, ...);

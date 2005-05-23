@@ -22,11 +22,12 @@
 Word ProcessMkcol(struct qEntry *q)
 {
 	
-  CreateDCB.pCount = 4;
+  CreateDCB.pCount = 5;
   CreateDCB.pathname = q->fullpath;
+  CreateDCB.access = 0xc3;
   CreateDCB.fileType = 0x000f;
   CreateDCB.auxType = 0;
-  CreateDCB.access = 0xe3;
+  CreateDCB.storageType = directoryFile;
   
   CreateGS(&CreateDCB);
   

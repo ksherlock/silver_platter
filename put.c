@@ -73,11 +73,12 @@ Word j;
 Word length;
 
 
-  CreateDCB.pCount = 4;
+  CreateDCB.pCount = 5;
   CreateDCB.pathname = path;
+  CreateDCB.access = 0xc3;
   CreateDCB.fileType = 0x000f;
   CreateDCB.auxType = 0;
-  CreateDCB.access = 0xe3;
+  CreateDCB.storageType = directoryFile;
 
   InfoDCB.pCount = 4;
   InfoDCB.pathname = path;
@@ -104,7 +105,7 @@ Word length;
     GetFileInfo(&InfoDCB);
     if (_toolErr == 0)
     {
-      if (InfoDCB.fileType != 0x000f) break;
+      if (InfoDCB.storageType != directoryFile) break;
       continue;
     }
 
@@ -159,7 +160,7 @@ Word i;
   CreateDCB.pathname = q->fullpath;
   CreateDCB.fileType = q->flags & FLAG_TEXT ? 4 : 6;
   CreateDCB.auxType = 0;
-  CreateDCB.access = 0xe3;
+  CreateDCB.access = 0xc3;
   CreateGS(&CreateDCB);
   if (_toolErr) return ProcessError(501, q);
 
