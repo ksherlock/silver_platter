@@ -56,10 +56,12 @@ TimeRec modDateTime;
 Word subtotal;
 Word numEntries;
 
+Word asingle = (q->moreFlags == CGI_APPLESINGLE);
+
   total = 0;
   numEntries = 0;
-
-  if (q->command = CMD_GET)
+  
+  if (q->command == CMD_GET)
   {
     OpenDCB.pCount = 15;
     OpenDCB.pathname = q->fullpath;
@@ -164,7 +166,7 @@ Word numEntries;
     }
   }
 
-  if (eof)
+  if (eof && asingle)
   {
     total += eof + sizeof(ASEntry);
     subtotal += sizeof(ASEntry);
@@ -178,7 +180,8 @@ Word numEntries;
   }                     
 
 
-  SendHeader(q, 200, total, &modDateTime, "application/applesingle", true);
+  SendHeader(q, 200, total, &modDateTime, 
+    asingle ? "application/applesingle" : "applications/appledouble", true);
 
   // need to send out the header data....
   if (q->command == CMD_GET)
@@ -201,7 +204,7 @@ Word numEntries;
 
     // sigh... I should give orca/c native ntohs support for constants.
 
-    header.magicNum = swap32(AS_MAGIC_NUMBER);
+    header.magicNum = swap32(asingle ? AS_MAGIC_NUMBER : AD_MAGIC_NUMBER);
     header.versionNum = swap32(AS_VERSION_NUMBER);
     header.numEntries = swap16(numEntries);
 
@@ -241,7 +244,7 @@ Word numEntries;
     }
 
     // Data fork
-    if (eof)
+    if (eof && asingle)
     {
       entry.entryID = swap32(AS_DATA_FORK);
       entry.entryOffset = swap32(offset);
@@ -300,7 +303,9 @@ Word numEntries;
     // data and resource forks will be sent in server.c
     // unless they're empty...
     q->state = STATE_ASINGLE_1;
-    if (eof == 0)
+    if (resourceEOF == 0) q->state = STATE_WRITE;  // no rfork.
+    
+    if ((eof == 0) || (asingle == 0))
     {
       q->state = STATE_ASINGLE_2;
       if (resourceEOF == 0) q->state = STATE_CLOSE;

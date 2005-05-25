@@ -8,7 +8,7 @@ CFLAGS += -I /usr/local/include/
 OBJS	= httpnda.o tools.o server.o error.o file.o time.o \
  mime.o config.o ctrl.o toolbox.o header.o log.o \
  mangle.o ftype.o applesingle.o utils.o pointer.o \
- globals.o methods.o headers.o  \
+ globals.o methods.o headers.o  string.o \
  put.o propfind.o options.o mkcol.o \
  tcp.o membuffer.o
 
@@ -35,6 +35,7 @@ propfind.o: propfind.c server.h
 options.o: options.c server.h
 mkcol.o: mkcol.c server.h
 membuffer.o: membuffer.c membuffer.h
+string.o: string.c server.h
 
 tcp.o: tcp.c
 pointer.o: pointer.asm

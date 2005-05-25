@@ -14,7 +14,8 @@ enum
 enum
 {
   CGI_APPLESINGLE = 1,		// convert file to apple single
-  CGI_HTML			// convert file to html
+  CGI_APPLEDOUBLE,			// convert file's resource fork.
+  CGI_HTML					// convert file to html
 };
 
 
