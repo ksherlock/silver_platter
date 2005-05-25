@@ -283,12 +283,11 @@ CREATE_BUFFER(m, q->workHandle);
   if (err) return ProcessError(500,q);
 
 
-  SendHeader(q, 207, m.used, NULL, "text/xml", NULL, true);
-
-
-  // todo - write function that will break up, handle chunking, etc.
-  TCPIPWriteTCP(q->ipid, *m.h, m.used, false, false);
-
+  SendHeader(q, 207, m.used, NULL, "text/xml", NULL, 0);
+  
+  WriteData(q, *m.h, m.used);
+  WriteData(q, NULL, 0);
+  
   q->state = STATE_CLOSE;
   return 207;
 
@@ -480,7 +479,7 @@ CREATE_BUFFER(m, q->workHandle);
   
   if (err) return ProcessError(err,q);
 
-  SendHeader(q, 207, m.used, NULL, "text/xml", NULL, true);
+  SendHeader(q, 207, m.used, NULL, "text/xml", NULL, 0);
 
   WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);

@@ -46,6 +46,7 @@ GSString255Ptr host;
 	SendHeader(q, 200, len, NULL, "text/xml", NULL, 0);
 	
 	WriteData(q, buffer, len);
+	WriteData(q, NULL, 0);
 	
 	q->state = STATE_CLOSE;
 	return 200;

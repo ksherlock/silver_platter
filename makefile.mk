@@ -9,7 +9,7 @@ OBJS	= httpnda.o tools.o server.o error.o file.o time.o \
  mime.o config.o ctrl.o toolbox.o header.o log.o \
  mangle.o ftype.o applesingle.o utils.o pointer.o \
  globals.o methods.o headers.o  string.o \
- put.o propfind.o options.o mkcol.o \
+ put.o propfind.o options.o mkcol.o lock.o \
  tcp.o membuffer.o
 
 ROBJS = http.r errors.r
@@ -36,6 +36,7 @@ options.o: options.c server.h
 mkcol.o: mkcol.c server.h
 membuffer.o: membuffer.c membuffer.h
 string.o: string.c server.h
+lock.o: lock.c server.h
 
 tcp.o: tcp.c
 pointer.o: pointer.asm
