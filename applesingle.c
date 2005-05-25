@@ -181,7 +181,7 @@ Word asingle = (q->moreFlags == CGI_APPLESINGLE);
 
 
   SendHeader(q, 200, total, &modDateTime, 
-    asingle ? "application/applesingle" : "applications/appledouble", true);
+    asingle ? "application/applesingle" : "applications/appledouble", NULL, 0);
 
   // need to send out the header data....
   if (q->command == CMD_GET)

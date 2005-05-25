@@ -11,20 +11,12 @@ Word ProcessOptions(struct qEntry *q)
 {
 Word ipid = q->ipid;
 
-  SendHeader(q, 200, 0, NULL, NULL, false);
 
-
-  #undef xstr
-  #define xstr "DAV: 1,2\r\n"
-  TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
-
-  #undef xstr
-  #define xstr "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND, MKCOL\r\n"
-  TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
-
-
-  TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
-
+  #define xstr \
+  "DAV: 1,2\r\n" \
+  "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND, MKCOL\r\n"
+  
+  SendHeader(q, 200, 0, NULL, NULL, xstr, sizeof(xstr) - 1);
 
   q->state = STATE_CLOSE;
   return 200;

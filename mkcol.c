@@ -33,7 +33,7 @@ Word ProcessMkcol(struct qEntry *q)
   
   if (_toolErr) return ProcessError(409, q);
   
-  SendHeader(q, 201, 0, NULL, NULL, true);
+  SendHeader(q, 201, 0, NULL, NULL, NULL, 0);
   
   q->state = STATE_CLOSE;
   return 201;

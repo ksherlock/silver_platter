@@ -109,18 +109,15 @@ GSString255Ptr path;
 	if (err) return ProcessError(500, q);
   }
 
-
-  SendHeader(q, 301, q->command == CMD_HEAD ? (LongWord)-1 : m.used,
-    NULL, "text/html", false);
-
+  i = 0;
   if (q->host)
   {
     i = orca_sprintf(buffer, "Location: http://%B%B%B\r\n",
       q->host, path_uri, append);
-    TCPIPWriteTCP(ipid, buffer, i, false, false);
   }
-  if (q->version >= 0x0100)
-    TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
+  
+  SendHeader(q, 301, q->command == CMD_HEAD ? (LongWord)-1 : m.used,
+    NULL, "text/html", buffer, i);
 
 
   ReleasePointer(path_uri);
@@ -224,7 +221,7 @@ CREATE_BUFFER(m, q->workHandle);
   }
   if (q->command == CMD_HEAD)
   {
-    SendHeader(q, 200, -1, NULL, "text/html", true);
+    SendHeader(q, 200, -1, NULL, "text/html", NULL, 0);
     return 200;
   }
 
@@ -413,7 +410,7 @@ CREATE_BUFFER(m, q->workHandle);
   
   if (err) return ProcessError(500, q);
 
-  SendHeader(q, 200, m.used, NULL, "text/html", true);
+  SendHeader(q, 200, m.used, NULL, "text/html", NULL, 0);
 
   WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);
@@ -444,7 +441,7 @@ CREATE_BUFFER(m, q->workHandle);
   }
   if (q->command == CMD_HEAD)
   {
-    SendHeader(q, 200, -1, NULL, "text/html", true);
+    SendHeader(q, 200, -1, NULL, "text/html", NULL, 0);
     return 200;
   }
 
@@ -550,7 +547,7 @@ CREATE_BUFFER(m, q->workHandle);
   if (err) return ProcessError(500, q);
 
 
-  SendHeader(q, 200, m.used, NULL, "text/html", true);
+  SendHeader(q, 200, m.used, NULL, "text/html", NULL, 0);
 
   WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);
@@ -647,7 +644,7 @@ Word ipid;
   SendHeader(q, 200,
     eof,
     &modDateTime,
-    GetMimeString(path, fileType, auxType), true);
+    GetMimeString(path, fileType, auxType), NULL, 0);
 
   if (q->command == CMD_GET)
   {

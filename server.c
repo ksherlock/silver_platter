@@ -30,7 +30,10 @@ extern int orca_sprintf(char *, const char *, ...);
 
 extern Word ProcessPropfind(struct qEntry *q);
 extern Word ProcessOptions(struct qEntry *q);
-extern Word ProcessMkcol(struct qEntry *q);      
+extern Word ProcessMkcol(struct qEntry *q);
+extern Word ProcessLock(struct qEntry *q);
+extern Word ProcessUnlock(struct qEntry *q);
+
 
 extern Word ReadData(struct qEntry *, void *, Word);
 
@@ -577,10 +580,15 @@ Word oldPrefs;
             case CMD_MKCOL:
               terr = ProcessMkcol(q);
               break;
+            
+            case CMD_LOCK:
+            	terr = ProcessLock(q);
+            	break;
+            case CMD_UNLOCK:
+            	terr = ProcessUnlock(q);
+            	break;
   
 	    case CMD_PROPPATCH:
-	    case CMD_LOCK:
-	    case CMD_UNLOCK:
 	    case CMD_COPY:
 	    case CMD_MOVE:
             case 0xffff:
@@ -672,7 +680,7 @@ Word oldPrefs;
         if ((q->version > 0x0009) && (!q->contentlength))
         {
           SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 ,
-            0, NULL, NULL, true);
+            0, NULL, NULL, NULL, 0);
           q->state = STATE_CLOSE;
         } // q->contentlength.
       }

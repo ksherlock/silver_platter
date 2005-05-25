@@ -90,7 +90,7 @@ Word ProcessFile(struct qEntry *);
 Word ProcessPut(struct qEntry *);
 
 void SendHeader(struct qEntry *q, Word status, LongWord size,
-  const TimeRec * modTime, const char *mimeString, Boolean term);
+  const TimeRec * modTime, const char *mimeString, const char *extra, Word);
 
 Word AppleSingle(struct qEntry *);
 

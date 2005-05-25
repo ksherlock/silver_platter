@@ -68,19 +68,14 @@ char *cp;
     cp = *h;
   }
 
-  if (q->version >= 0x0100)
-  {
-    SendHeader(q, error, len, NULL, "text/html", false);
+  i = 0;
+  #define xstr \
+  "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND, MKCOL\r\n"
+  if ((error == 405) || (error == 501))
+    i = sizeof(xstr) -1;
+  
 
-    if (error == 405 || error == 501)
-    {
-      #undef xstr
-      #define xstr "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND, MKCOL\r\n"
-      TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
-    }
-
-    TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
-  }
+  SendHeader(q, error, len, NULL, "text/html", xstr, i);
 
 
   if (q->command != CMD_HEAD)

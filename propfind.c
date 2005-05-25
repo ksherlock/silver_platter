@@ -283,7 +283,7 @@ CREATE_BUFFER(m, q->workHandle);
   if (err) return ProcessError(500,q);
 
 
-  SendHeader(q, 207, m.used, NULL, "text/xml", true);
+  SendHeader(q, 207, m.used, NULL, "text/xml", NULL, true);
 
 
   // todo - write function that will break up, handle chunking, etc.
@@ -480,7 +480,7 @@ CREATE_BUFFER(m, q->workHandle);
   
   if (err) return ProcessError(err,q);
 
-  SendHeader(q, 207, m.used, NULL, "text/xml", true);
+  SendHeader(q, 207, m.used, NULL, "text/xml", NULL, true);
 
   WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);

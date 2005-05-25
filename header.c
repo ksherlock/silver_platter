@@ -21,9 +21,9 @@ extern Word logfd;
 extern void tiTimeRec2GMTString(const TimeRec *, char *);
 
 void SendHeader(struct qEntry *q, Word status, LongWord size,
-  const TimeRec * modTime, const char *mimeString, Boolean term)
+  const TimeRec * modTime, const char *mimeString, const char *extra, word extralen)
 {
-
+static char buffer[128];
 
 Word ipid = q->ipid;
 Word flags = q->flags;
@@ -124,7 +124,9 @@ Word i;
       i = orca_sprintf(buffer, "Content-Type: %s\r\n", mimeString);
       TCPIPWriteTCP(ipid, buffer, i, false, false);
     }
-    //                                    
-    if (term) TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
+    //
+    if (extralen) 
+      TCPIPWriteTCP(ipid, extra, extralen, false, false);                                    
+    TCPIPWriteTCP(ipid, "\r\n", 2, false, false);
   }
 }
