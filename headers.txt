@@ -4,6 +4,7 @@
 "Keep-Alive:" 1
 "Connection: keep-alive" 1
 "Connection: close" 2
+"Connection: TE, close" 2
 "Host:" 3
 "Content-Length:" 4
 "Content-Type:" 5
