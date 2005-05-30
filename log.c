@@ -30,7 +30,9 @@ Word fd = 0;
 GSString255Ptr gstr;
 Word i;
 TimeRec tr;
+Word oldPrefs;
 
+  oldPrefs = DoSysPrefs(0xffff, 0x6000);
 
   // :wwwyyyymmdd.txt
   if (fLog && fLogDir)
@@ -40,7 +42,7 @@ TimeRec tr;
 
     i = fLogDir->length;
 
-    gstr = NewPointer(i + 17 +2); // + 2 for the length field.
+    gstr = NewPointer(i + 17 + 2); // + 2 for length
     if (gstr == NULL) return 0;
 
     i = orca_sprintf(gstr->text, "%B/www%04u%02u%02u.txt",
@@ -76,6 +78,9 @@ TimeRec tr;
     }
     DisposePointer(gstr);
   }
+
+  DoSysPrefs(0xffff, oldPrefs);
+
   return fd;
 }
 

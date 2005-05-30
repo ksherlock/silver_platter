@@ -673,14 +673,17 @@ Word oldPrefs;
 
 	  if (_toolErr)
           {
+            #ifdef DEBUG
+            i = orca_sprintf(buffer, "WriteGS(%B): %04x\r",
+              q->fullpath, _toolErr);
+            InsertString(i, buffer);
+            #endif
             ProcessError(500,q);
             break;
           }
         }
         if ((q->version > 0x0009) && (!q->contentlength))
         {
-          SendHeader(q, q->flags & FLAG_CREATE ? 201 : 204 ,
-            0, NULL, NULL, NULL, 0);
           q->state = STATE_CLOSE;
         } // q->contentlength.
       }

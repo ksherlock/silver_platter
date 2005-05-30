@@ -14,6 +14,12 @@
 #include "globals.h"
 
 
+extern int orca_sprintf(char *, const char *, ...);
+extern void InsertString(Word, const char *);
+
+
+#define DEBUG 1
+
 // normalizes CR, LF, and CRLF to a CR.
 // returns new length of data.
 Word ConvertCRLF(char *data, Word length)
@@ -128,9 +134,15 @@ Word length;
 Word ProcessPut(struct qEntry *q)
 {
 Word i;
+Word create = false;
+Word err;
+SetPositionRecGS eofDCB;
+Word res = (q->moreFlags == CGI_APPLEDOUBLE);
+
 
   q->flags &= ~FLAG_KA;
 
+  // error out if PUT is not allowed.
   if (fPut == 0)
     return ProcessError(403,q);
 
@@ -141,38 +153,112 @@ Word i;
     MakeDirs(q->fullpath);
   }
 
-  //
 
-  q->flags |= FLAG_CREATE;
+  // if the file exists and fOverwrite == false,
+  // error out unless the fork is 0.
 
-  if (fPutOverwrite)
+  InfoDCB.pCount = 12;
+  InfoDCB.pathname =q->fullpath;
+  InfoDCB.optionList = NULL;
+  GetFileInfoGS(&InfoDCB);
+
+  if (_toolErr)
   {
-    DestroyDCB.pCount = 1;
-    DestroyDCB.pathname = q->fullpath;
-    DestroyGS(&DestroyDCB);
-    if (_toolErr == 0) q->flags &= ~FLAG_CREATE;
-    else if (_toolErr != fileNotFound)
-      return ProcessError(403,q);
+    if (_toolErr == fileNotFound)
+    {
+      CreateDCB.pCount = 4;
+      CreateDCB.pathname = q->fullpath;
+      CreateDCB.fileType = q->flags & FLAG_TEXT ? 4 : 6;
+      CreateDCB.auxType = 0;
+      CreateDCB.access = 0xc3;
+      if (res)
+      {
+        CreateDCB.storageType = extendedFile;
+        CreateDCB.pCount = 5;
+      }
+      CreateGS(&CreateDCB);
+      create = true;
+      if (_toolErr)
+      {
+	#ifdef DEBUG
+	  InsertString(
+            orca_sprintf(buffer, "CreateGS(%B): $%04x\r", q->fullpath, _toolErr),
+            buffer);
+	#endif
+      }
+    }
+  }
+  if (_toolErr) return ProcessError(501, q);
+   
+
+  else if (!fPutOverwrite)
+  {
+    LongWord eof;
+    eof = res ? InfoDCB.resourceEOF : InfoDCB.eof;
+    if (eof != 0) return ProcessError(403, q);
   }
 
+  // if writing to a resoruce fork, we may need to create the fork.
+  if (res && !create && (InfoDCB.storageType != extendedFile))
+  {
+    CreateDCB.pCount = 5;
+    CreateDCB.pathname = q->fullpath;
+    CreateDCB.fileType = 0;
+    CreateDCB.auxType = 0;
+    CreateDCB.access = 0;
+    CreateDCB.storageType = 0x8000 | extendedFile;
+    CreateGS(&CreateDCB);
+    if (_toolErr)
+    {
+      #ifdef DEBUG
+	InsertString(
+          orca_sprintf(buffer, "CreateGS(%B): $%04x\r", q->fullpath, _toolErr),
+          buffer);
+      #endif
+      return ProcessError(501, q);
+    }
+    create = true;
+  }
 
-  CreateDCB.pCount = 4;
-  CreateDCB.pathname = q->fullpath;
-  CreateDCB.fileType = q->flags & FLAG_TEXT ? 4 : 6;
-  CreateDCB.auxType = 0;
-  CreateDCB.access = 0xc3;
-  CreateGS(&CreateDCB);
-  if (_toolErr) return ProcessError(501, q);
 
   OpenDCB.pCount = 15;
   OpenDCB.pathname = q->fullpath;
   OpenDCB.requestAccess = writeEnable;
-  OpenDCB.resourceNumber = 0;
+  OpenDCB.resourceNumber = res ? 1 : 0;
   OpenDCB.optionList = NULL;
   OpenGS(&OpenDCB);
-  if (_toolErr) return ProcessError(501, q);
+  if (_toolErr)
+  {
+    #ifdef DEBUG
+      InsertString(
+        orca_sprintf(buffer, "OpenGS(%B): $%04x\r", q->fullpath, _toolErr),
+        buffer);
+    #endif
+    return ProcessError(501, q);
+  }
 
   q->fd = OpenDCB.refNum;
+
+  // if overwriting, we may need to truncate.
+  if (!create)
+  {
+    eofDCB.pCount = 3;
+    eofDCB.refNum = OpenDCB.refNum;
+    eofDCB.base = startPlus;
+    eofDCB.displacement = 0;
+    SetEOFGS(&eofDCB);
+    if (_toolErr)
+    {
+      #ifdef DEBUG
+	InsertString(
+          orca_sprintf(buffer, "SetEOFGS(%B): $%04x\r", q->fullpath, _toolErr),
+          buffer);
+      #endif
+      return ProcessError(501, q);
+    }
+  }
+
+  SendHeader(q, create ? 201 : 204, 0, NULL, NULL, NULL, 0);
 
   q->state = STATE_PUT;
   return 204;
