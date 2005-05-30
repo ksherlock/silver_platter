@@ -11,8 +11,8 @@
 #include <ctype.h>
 
 #include "server.h"
-#include "pointer.h"
 #include "config.h"
+#include "pointer.h"
 
 // dfa table for methods
 extern Word methods[];
@@ -45,6 +45,19 @@ Word len = g->length;
         g->length = i;
         return CGI_APPLESINGLE;
       }
+      if (!strcmp("?appledouble", &g->text[i]))
+      {
+        g->text[i] = 0;
+        g->length = i;
+        return CGI_APPLEDOUBLE;
+      }
+      if (!strcmp("?macbinary", &g->text[i]))
+      {
+        g->text[i] = 0;
+        g->length = i;
+        return CGI_MACBINARY;
+      }
+      
       if (!strcmp("?html", &g->text[i]))
       {
         g->text[i] = 0;
@@ -55,8 +68,7 @@ Word len = g->length;
   }
   // check for ._<name>
   // at this point, i will be 0 or a pointer to the /.
-  // if i == 2, there wouldn't be room for '/._' + name.
-  if (i < 3) return 0;
+  if (len - i < 4) return;
   
   if ((g->text[i + 1] == '.') && (g->text[i + 2] == '_'))
   {
@@ -72,7 +84,6 @@ Word len = g->length;
   
   return 0;
 }
-
 
 
 // scan for headers we recognize.
