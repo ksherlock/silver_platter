@@ -21,26 +21,16 @@ Word MacBinary(struct qEntry *q)
 static struct MB_1_Header header;
 Longword size;
 static Word optionData[25 + 2];
+GSString255Ptr path;
+Word i;
+Word len;
+Word j;
 
-	
+	if (InfoDCB.fileType == 0x0f) return ProcessError(400, q);
 	
 	if (q->command == CMD_HEAD)
-	{
-		InfoDCB.pCount = 12;
-    	InfoDCB.pathname = q->fullpath;
-    	InfoDCB.optionList = NULL;
-		GetFileInfoGS(&InfoDCB);
-
-		if (_toolErr) return ProcessError(404, q);
-		if (InfoDCB.fileType == 0x0f) return ProcessError(400, q);
-		
-		// file data is NULL-padded to 128 bytes.
-		
-		size = ((InfoDCB.eof + 127) & 0xffffff80)
-			+ ((InfoDCB.resourceEOF + 127) & 0xffffff80)
-			+ 128;
-			
-		SendHeader(q, 200, size, &InfoDCB.modDateTime, 
+	{				
+		SendHeader(q, 200, -1L, &InfoDCB.modDateTime, 
 		"application/x-macbinary", NULL, 0);
 		
 		q->state = STATE_CLOSE;
@@ -52,6 +42,18 @@ static Word optionData[25 + 2];
 	
 	
 	memset(&header, 0, sizeof(struct MB_1_Header));
+	
+	// copy the name over
+	path = q->fullpath;
+	
+	len = path->length;
+	for (i = len; i; i--)
+	{
+		if (path->text[i - 1] == '/') break;	
+	}
+	header.nameLength = len - i;
+	for (j = 0;i < len; i++)
+		header.name[j++] = path->text[i];
 	
     OpenDCB.pCount = 15;
     OpenDCB.pathname = q->fullpath;
@@ -66,11 +68,9 @@ static Word optionData[25 + 2];
       return ProcessError(404, q);
 
     q->fd = OpenDCB.refNum;
-    
-    if (OpenDCB.fileType == 0x0f) return ProcessError(400, q);
-    
-    header->dataLength = swap32(OpenDCB.eof);
-    header->resourceLength = swap32(OpenDCB.resourceEOF);
+        
+    header.dataLength = swap32(OpenDCB.eof);
+    header.resourceLength = swap32(OpenDCB.resourceEOF);
     
   if (optionData[1] >= 10)
   {
@@ -82,10 +82,10 @@ static Word optionData[25 + 2];
       || fileSysID == hfsFSID
       || fileSysID == appleShareFSID)
     {
-    	lw = (LongWord *)optionData[3];
-    	header.fileType = swap32(*lw);
-    	lw = (LongWord *)optionData[5];
-    	header.fileCreator = swap32(*lw);
+    	lw = (LongWord *)&optionData[3];
+    	header.fileType = *lw;
+    	lw = (LongWord *)&optionData[5];
+    	header.fileCreator = *lw;
     }
   }    
 

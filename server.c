@@ -34,6 +34,7 @@ extern Word ProcessMkcol(struct qEntry *q);
 extern Word ProcessLock(struct qEntry *q);
 extern Word ProcessUnlock(struct qEntry *q);
 
+extern Word MacBinary(struct qEntry *q);
 
 extern Word ReadData(struct qEntry *, void *, Word);
 
@@ -556,13 +557,35 @@ Word oldPrefs;
               terr = ProcessOptions(q);
               break;
 
-            case CMD_GET:
+            
             case CMD_HEAD:
+                if (q->version < 0x0100)
+    			{
+      				terr = ProcessError(400, q);
+      				break;                 
+    			}
+            case CMD_GET:
+            
+				InfoDCB.pCount = 12;
+				InfoDCB.pathname = q->fullpath;
+				InfoDCB.optionList = NULL;
+				GetFileInfoGS(&InfoDCB);
+				
+				if (_toolErr)
+				{
+					terr = ProcessError(400, q);
+					break;	
+				}
+            
+            
               switch (q->moreFlags)
               {
               case CGI_APPLESINGLE:
               case CGI_APPLEDOUBLE:
                 terr = AppleSingle(q);
+                break;
+              case CGI_MACBINARY:
+                terr = MacBinary(q);
                 break;
               default:
                 terr = ProcessFile(q);
@@ -607,18 +630,34 @@ Word oldPrefs;
     case STATE_ASINGLE_1:  // apple single, data fork
     case STATE_ASINGLE_2:  // apple single, resource fork
       {
+      	Word count;
+      	
         IODCB.pCount = 4;
         IODCB.refNum = q->state == STATE_ASINGLE_2 ? q->rfd : q->fd;
         IODCB.dataBuffer = buffer;
         IODCB.requestCount = 4096;
         ReadGS(&IODCB);
+        
+        count = (Word)IODCB.transferCount;
+        
         if ((terr = _toolErr) == 0)
         {
-          WriteData(q, buffer, (Word)IODCB.transferCount);
+        	// macbinary is padded to 128 bytes.
+          if (q->moreFlags == CGI_MACBINARY)
+          {
+          	i = count & 0x7f;
+          	
+          	if (count)
+          	{
+          		memset(buffer + count, 0, 128 - i);
+          		count += 128 - i;
+          	}
+          }
+          WriteData(q, buffer, count);
 
           #ifdef DEBUG
           i = orca_sprintf(buffer, "TCPIPWriteTCP(%d) [%d bytes sent]\r",
-            ipid, (Word)IODCB.transferCount);
+            ipid, count);
           InsertString(i, buffer);
           #endif
         }                                   

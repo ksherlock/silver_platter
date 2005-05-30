@@ -3,25 +3,24 @@
 #pragma noroot
 #pragma lint -1
 #pragma optimize -1
+#pragma debug 0x8000
 
 #include <Memory.h>
 #include <Resources.h>
 
+#include <gsos.h>
 #include <tcpip.h>
 #include <timetool.h>
 
 #include "server.h"
 #include "config.h"
 
+#include "http.h"
+
+
 extern int orca_sprintf(char *, const char *, ...);
 
-#define is_info(e)		(e >= 100 && e < 200)
-#define is_success(e)		(e >= 200 && e < 300)
-#define is_redirect(e)		(e >= 300 && e < 400)
-#define is_client_error(e)	(e >= 400 && e < 500)
-#define is_server_error(e)	(e >= 500 && e < 600)
 
-#define is_error(e)		(e >= 400 && e < 600)
            
 
 static char tiBuffer[38];
@@ -40,6 +39,7 @@ static char defaultErr[] =
 "to complete your request.</p>"
 "</body>\r"
 "</html>\r";
+
 
 Word ProcessError(Word error, struct qEntry *q)
 {
@@ -88,4 +88,35 @@ char *cp;
   q->state = STATE_CLOSE;
 
   return error;
+}
+
+
+
+/* remap a gs/os error to a HTTP error */
+Word RemapError(Word e)
+{
+Word err;
+
+	switch(e)
+	{
+	case devNotFound:
+	case pathNotFound:
+	case volNotFound:
+		err = RC_CONFLICT;
+		break;
+	case fileNotFound:
+		err = RC_NOT_FOUND;
+		break;
+	case volumeFull:
+	case volDirFull:
+		err = RC_INSUFFICIENT_STORAGE;
+		break;
+	case invalidAccess:
+		err = RC_FORBIDDEN;
+		break;
+	default:
+		err = RC_INTERNAL_SERVER_ERROR;
+	}
+	
+	return err;
 }

@@ -607,28 +607,10 @@ Word ipid;
   }
   else if (q->command == CMD_HEAD)
   {
-    if (q->version < 0x0100)
-    {
-      return ProcessError(400, q);                 
-    }
-
-    InfoDCB.pCount = 12;
-    InfoDCB.pathname = path;
-    InfoDCB.optionList = NULL;
-    GetFileInfoGS(&InfoDCB);
-    if (_toolErr)
-    {
-      return ProcessError(404, q);                 
-    }
-
     eof = InfoDCB.eof;
     fileType = InfoDCB.fileType;
     auxType = InfoDCB.auxType;
     modDateTime = InfoDCB.modDateTime;
-  }
-  else
-  {
-    return ProcessError(405, q); // not allowed.   
   }
 
   // if it's a folder, try listing the directory.
