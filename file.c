@@ -30,6 +30,9 @@ extern const char *GetMimeString(GSString255Ptr, Word, LongWord);
 extern void * MacRoman2HTML(const GSString255 *gstr);
 extern void * EncodeURL(const GSString255 *gstr);
 
+extern Word MacBinary(struct qEntry *q);
+extern Word AppleSingle(struct qEntry *q);
+
 
 extern Word MyID;
 
@@ -586,56 +589,76 @@ Word ipid;
       return ListVolumes(q);
   }
 
-  if (q->command == CMD_GET)
-  {
-    OpenDCB.pCount = 15;
-    OpenDCB.pathname = path;
-    OpenDCB.requestAccess = readEnable;
-    OpenDCB.resourceNumber = 0;
-    OpenDCB.optionList = NULL;
-    OpenGS(&OpenDCB);
-    if (_toolErr)
-    {
-      return ProcessError(404, q);
-    }
-    q->fd = OpenDCB.refNum;
+       
+	InfoDCB.pCount = 12;
+	InfoDCB.pathname = q->fullpath;
+	InfoDCB.optionList = NULL;
+	GetFileInfoGS(&InfoDCB);
+				
+	if (_toolErr)
+	{
+		return ProcessError(400, q);			
+	}
+	     
+	switch (q->moreFlags)
+	{
+	case CGI_APPLESINGLE:
+	case CGI_APPLEDOUBLE:
+		return AppleSingle(q);
+		break;
+	case CGI_MACBINARY:
+		return MacBinary(q);
+		break;
+	}
+	
+	
+	if (q->command == CMD_HEAD)
+	{
+		eof = InfoDCB.eof;
+		fileType = InfoDCB.fileType;
+		auxType = InfoDCB.auxType;
+		modDateTime = InfoDCB.modDateTime;
+		
+		q->state = STATE_CLOSE;
+	}
+	else
+	{
+		OpenDCB.pCount = 15;
+		OpenDCB.pathname = path;
+		OpenDCB.requestAccess = readEnable;
+		OpenDCB.resourceNumber = 0;
+		OpenDCB.optionList = NULL;
+		OpenGS(&OpenDCB);
+		if (_toolErr)
+		{
+			return ProcessError(404, q);
+		}
+		q->fd = OpenDCB.refNum;
+		
+		eof = OpenDCB.eof;
+		fileType = OpenDCB.fileType;
+		auxType = OpenDCB.auxType;
+		modDateTime = OpenDCB.modDateTime;
+		
+		q->state = STATE_WRITE;
+	}
 
-    eof = OpenDCB.eof;
-    fileType = OpenDCB.fileType;
-    auxType = OpenDCB.auxType;
-    modDateTime = OpenDCB.modDateTime;
-  }
-  else if (q->command == CMD_HEAD)
-  {
-    eof = InfoDCB.eof;
-    fileType = InfoDCB.fileType;
-    auxType = InfoDCB.auxType;
-    modDateTime = InfoDCB.modDateTime;
-  }
+	
+	// if it's a folder, try listing the directory.
+	if (fileType == 0x0f) // directory -- special case.
+	{
+		if (path->text[path->length - 1] != '/')
+		{
+			return Redirect(q, (GSString255Ptr)"\x01\x00/");
+		}
+		return ListDirectory(q);
+	}
 
-  // if it's a folder, try listing the directory.
-  if (fileType == 0x0f) // directory -- special case.
-  {
-    if (path->text[path->length - 1] != '/')
-    {
-      return Redirect(q, (GSString255Ptr)"\x01\x00/");
-    }
-    return ListDirectory(q);
-  }
-
-  SendHeader(q, 200,
-    eof,
-    &modDateTime,
-    GetMimeString(path, fileType, auxType), NULL, 0);
-
-  if (q->command == CMD_GET)
-  {
-    q->state = STATE_WRITE;
-  }
-  else
-  {
-    q->state = STATE_CLOSE;
-  }
-  // actual writing takes place in server.c
-  return 200;
+	SendHeader(q, 200,
+		eof,
+		&modDateTime,
+		GetMimeString(path, fileType, auxType), NULL, 0);
+	
+	// actual writing takes place in server.c
+	return 200;
 }

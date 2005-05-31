@@ -34,8 +34,6 @@ extern Word ProcessMkcol(struct qEntry *q);
 extern Word ProcessLock(struct qEntry *q);
 extern Word ProcessUnlock(struct qEntry *q);
 
-extern Word MacBinary(struct qEntry *q);
-
 extern Word ReadData(struct qEntry *, void *, Word);
 
 
@@ -559,38 +557,9 @@ Word oldPrefs;
 
             
             case CMD_HEAD:
-                if (q->version < 0x0100)
-    			{
-      				terr = ProcessError(400, q);
-      				break;                 
-    			}
             case CMD_GET:
-            
-				InfoDCB.pCount = 12;
-				InfoDCB.pathname = q->fullpath;
-				InfoDCB.optionList = NULL;
-				GetFileInfoGS(&InfoDCB);
-				
-				if (_toolErr)
-				{
-					terr = ProcessError(400, q);
-					break;	
-				}
-            
-            
-              switch (q->moreFlags)
-              {
-              case CGI_APPLESINGLE:
-              case CGI_APPLEDOUBLE:
-                terr = AppleSingle(q);
-                break;
-              case CGI_MACBINARY:
-                terr = MacBinary(q);
-                break;
-              default:
-                terr = ProcessFile(q);
-              }
-              break;
+            	terr = ProcessFile(q);
+            	break;            
 
             case CMD_PUT:
               terr = ProcessPut(q);

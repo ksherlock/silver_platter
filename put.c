@@ -162,9 +162,9 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
   InfoDCB.optionList = NULL;
   GetFileInfoGS(&InfoDCB);
 
-  if (_toolErr)
+  if (err = _toolErr)
   {
-    if (_toolErr == fileNotFound)
+    if (err == fileNotFound)
     {
       CreateDCB.pCount = 4;
       CreateDCB.pathname = q->fullpath;
@@ -178,20 +178,28 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
       }
       CreateGS(&CreateDCB);
       create = true;
-      if (_toolErr)
+      if (err = _toolErr)
       {
 	#ifdef DEBUG
 	  InsertString(
-            orca_sprintf(buffer, "CreateGS(%B): $%04x\r", q->fullpath, _toolErr),
+            orca_sprintf(buffer, "CreateGS(%B): $%04x\r", q->fullpath, err),
             buffer);
 	#endif
       }
     }
+    else
+    {
+	#ifdef DEBUG
+	  InsertString(
+            orca_sprintf(buffer, "GetFileInfoGS(%B): $%04x\r", q->fullpath, err),
+            buffer);
+	#endif    	
+    }
   }
-  if (_toolErr) return ProcessError(501, q);
+  if (err) return ProcessError(500, q);
    
 
-  else if (!fPutOverwrite)
+  if (!fPutOverwrite)
   {
     LongWord eof;
     eof = res ? InfoDCB.resourceEOF : InfoDCB.eof;
@@ -234,7 +242,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
         orca_sprintf(buffer, "OpenGS(%B): $%04x\r", q->fullpath, _toolErr),
         buffer);
     #endif
-    return ProcessError(501, q);
+    return ProcessError(500, q);
   }
 
   q->fd = OpenDCB.refNum;
@@ -254,7 +262,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
           orca_sprintf(buffer, "SetEOFGS(%B): $%04x\r", q->fullpath, _toolErr),
           buffer);
       #endif
-      return ProcessError(501, q);
+      return ProcessError(500, q);
     }
   }
 
