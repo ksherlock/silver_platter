@@ -597,7 +597,7 @@ Word ipid;
 				
 	if (_toolErr)
 	{
-		return ProcessError(400, q);			
+		return ProcessError(404, q);			
 	}
 	     
 	switch (q->moreFlags)
