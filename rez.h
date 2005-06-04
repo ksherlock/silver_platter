@@ -48,13 +48,20 @@
 #define CtrlPutOverwrite	rConfigWindow + 17
 
 #define Ctrl_AS_Stat	rConfigWindow + 18
-#define Ctrl_AS_Never	rConfigWindow + 19
-#define Ctrl_AS_Always	rConfigWindow + 20
-#define Ctrl_AS_Forked	rConfigWindow + 21
+#define Ctrl_AD_Stat	rConfigWindow + 19
+#define Ctrl_MB_Stat	rConfigWindow + 20
+#define Ctrl_AS			rConfigWindow + 21
+#define Ctrl_AD			rConfigWindow + 22
+#define Ctrl_MB			rConfigWindow + 23
 
-#define CtrlDirHidden	rConfigWindow + 22
-#define CtrlDirAppleShare	rConfigWindow + 23
-#define CtrlDirRemovable	rConfigWindow + 24
+#define EncapMenu		rConfigWindow + 24
+#define EncapNever		rConfigWindow + 25
+#define EncapAlways		rConfigWindow + 26
+#define EncapForked		rConfigWindow + 27
+
+#define CtrlDirHidden	rConfigWindow + 28
+#define CtrlDirAppleShare	rConfigWindow + 29
+#define CtrlDirRemovable	rConfigWindow + 30
 
 
 #define CtrlAbout	rAboutWindow + 1

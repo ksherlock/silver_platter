@@ -794,12 +794,119 @@ resource rControlTemplate (CtrlLog) {
 resource rControlList(Ctrl_PU_5)
 {
 	{
+		Ctrl_AS,
+		Ctrl_AD,
+		Ctrl_MB,
+
 		Ctrl_AS_Stat,
-		Ctrl_AS_Never,
-		Ctrl_AS_Always,
-		Ctrl_AS_Forked,
+		Ctrl_AD_Stat,
+		Ctrl_MB_Stat,
 	}
 };
+
+
+resource rControlTemplate (Ctrl_AS, nocrossbank) {
+       Ctrl_AS,		// ID
+       {31, 16,  0,  0},	// rect
+       popUpControl {{
+               $0072,		// flag
+               $1082,		// moreFlags
+               $00000000,	// refCon
+               $0000,		// titleWidth
+               Ctrl_AS,	// menuRef
+               EncapNever,	// initialValue
+               0		// colorTableRef
+       }};
+};
+
+resource rControlTemplate (Ctrl_AD, nocrossbank) {
+       Ctrl_AD,		// ID
+       {55, 16,  0,  0},	// rect
+       popUpControl {{
+               $0072,		// flag
+               $1082,		// moreFlags
+               $00000000,	// refCon
+               $0000,		// titleWidth
+               Ctrl_AD,	// menuRef
+               EncapNever,	// initialValue
+               0		// colorTableRef
+       }};
+};
+
+resource rControlTemplate (Ctrl_MB, nocrossbank) {
+       Ctrl_MB,		// ID
+       {79, 16,  0,  0},	// rect
+       popUpControl {{
+               $0072,		// flag
+               $1082,		// moreFlags
+               $00000000,	// refCon
+               $0000,		// titleWidth
+               Ctrl_MB,	// menuRef
+               EncapNever,	// initialValue
+               0		// colorTableRef
+       }};
+};
+
+
+resource rMenu (Ctrl_AS, nocrossbank){
+    Ctrl_AS,
+    0xA000,
+    Ctrl_AS,
+    {
+    	EncapAlways,
+    	EncapNever,
+    	EncapForked,
+    };
+};
+
+
+resource rMenu (Ctrl_AD, nocrossbank){
+    Ctrl_AD,
+    0xA000,
+    Ctrl_AD,
+    {
+    	EncapAlways,
+    	EncapNever,
+    	EncapForked,
+    };
+};
+
+resource rMenu (Ctrl_MB, nocrossbank){
+    Ctrl_MB,
+    0xA000,
+    Ctrl_MB,
+    {
+    	EncapAlways,
+    	EncapNever,
+    	EncapForked,
+    };
+};
+
+
+
+resource rMenuItem (EncapAlways, nocrossbank) {
+       EncapAlways,                  // itemID
+       "","",                  // itemChar, itemAltChar
+       NIL,                    // itemCheck
+       $8000,                  // itemFlag
+       EncapAlways           // itemTitleRef
+};
+
+resource rMenuItem (EncapNever, nocrossbank) {
+       EncapNever,                  // itemID
+       "","",                  // itemChar, itemAltChar
+       NIL,                    // itemCheck
+       $8000,                  // itemFlag
+       EncapNever           // itemTitleRef
+};
+resource rMenuItem (EncapForked, nocrossbank) {
+       EncapForked,                  // itemID
+       "","",                  // itemChar, itemAltChar
+       NIL,                    // itemCheck
+       $8000,                  // itemFlag
+       EncapForked           // itemTitleRef
+};
+
 
 resource rControlTemplate (Ctrl_AS_Stat) {
 	Ctrl_AS_Stat,
@@ -817,46 +924,36 @@ resource rControlTemplate (Ctrl_AS_Stat) {
 };
 
 
-
-resource rControlTemplate (Ctrl_AS_Never, nocrossbank) {
-       Ctrl_AS_Never,              // ID
-       {32, 10,  0,  0},	// rect
-
-       RadioControl {{
-               $0000,		// flag
-               $1002,		// moreFlags
-               $00000000,	// refCon
-               Ctrl_AS_Never,	// title Ref
-               0		// initial value  (on)
-       }};
+resource rControlTemplate (Ctrl_AD_Stat) {
+	Ctrl_AD_Stat,
+	{44, 10, 54, ConfigWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText,
+			0x1002,
+			0x0,
+			Ctrl_AD_Stat,
+			0,
+			leftJust
+		}
+	}
 };
 
-resource rControlTemplate (Ctrl_AS_Always, nocrossbank) {
-       Ctrl_AS_Always,              // ID
-       {44, 10,  0,  0},	// rect
-
-       RadioControl {{
-               $0000,		// flag
-               $1002,		// moreFlags
-               $00000000,	// refCon
-               Ctrl_AS_Always,	// title Ref
-               0		// initial value  (on)
-       }};
+resource rControlTemplate (Ctrl_MB_Stat) {
+	Ctrl_MB_Stat,
+	{68, 10, 78, ConfigWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			fBlastText,
+			0x1002,
+			0x0,
+			Ctrl_MB_Stat,
+			0,
+			leftJust
+		}
+	}
 };
 
-
-resource rControlTemplate (Ctrl_AS_Forked, nocrossbank) {
-       Ctrl_AS_Forked,              // ID
-       {56, 10,  0,  0},	// rect
-
-       RadioControl {{
-               $0000,		// flag
-               $1002,		// moreFlags
-               $00000000,	// refCon
-               Ctrl_AS_Forked,	// title Ref
-               0		// initial value  (on)
-       }};
-};
 
 //
 
@@ -949,9 +1046,16 @@ resource rPstring(Ctrl_PU_1, nocrossbank){"General"};
 resource rPstring(Ctrl_PU_2, nocrossbank){"Directories"};
 resource rPstring(Ctrl_PU_3, nocrossbank){"Uploads"};
 resource rPstring(Ctrl_PU_4, nocrossbank){"Logging"};
-resource rPstring(Ctrl_PU_5, nocrossbank){"AppleSingle"};                                         
+resource rPstring(Ctrl_PU_5, nocrossbank){"Encapsulation"};                                         
 
-
+resource rPstring(Ctrl_AS, nocrossbank){""};
+resource rPstring(Ctrl_AD, nocrossbank){""};
+resource rPstring(Ctrl_MB, nocrossbank){""};
+ 
+resource rPstring(EncapAlways, nocrossbank){"Always"};
+resource rPstring(EncapNever, nocrossbank){"Never"};
+resource rPstring(EncapForked, nocrossbank){"Forked Files"};
+ 
  
 
 resource rControlTemplate (CtrlCancel) {
@@ -1036,20 +1140,6 @@ resource rPString (CtrlDirRemovable) {
 };
 
 
-resource rPString (Ctrl_AS_Never) {
-	"Never"
-};
-
-resource rPString (Ctrl_AS_Always) {
-	"Always"
-};
-
-resource rPString (Ctrl_AS_Forked) {
-	"Forked Files Only"
-};
-
-
-
 resource rPString (CtrlPut) {
 	"Enable Uploads"
 };
@@ -1094,10 +1184,16 @@ resource rTextForLETextBox2 (CtrlLogStat) {
 };
 
 resource rTextForLETextBox2 (Ctrl_AS_Stat) {
-	"List AppleSingle Files"
+	"Show AppleSingle"
 };
 
+resource rTextForLETextBox2 (Ctrl_AD_Stat) {
+	"Show AppleDouble"
+};
 
+resource rTextForLETextBox2 (Ctrl_MB_Stat) {
+	"Show MacBinary"
+};
 
 
 resource rTextForLETextBox2 (CtrlCount) {

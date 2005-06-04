@@ -30,6 +30,8 @@ Word fTeach;
 Word fMTU;
 
 Word fAppleSingle;
+Word fAppleDouble;
+Word fMacBinary;
 
 // PUT
 Word fPut;
@@ -63,6 +65,8 @@ static char *NameMTU = "\pMTU";
 static char *NameLog = "\pLog";
 static char *NameLogDir = "\pLog Directory";
 static char *NameAppleSingle = "\pAppleSingle";
+static char *NameAppleDouble = "\pAppleDouble";
+static char *NameMacBinary = "\pMacBinary";
 
 static char *NameDir = "\pVirtual Directories";
 static char *NameDirHidden = "\pShow Hidden Files";
@@ -218,7 +222,11 @@ static CreateRecGS CreateDCB = {4, (GSString255Ptr)&folderPath, 0xe3, 0x0f, 0};
 
   fAbort = LoadWord(NameAbort, true);
   fPort = LoadWord(NamePort, 80);
+  
   fAppleSingle = LoadWord(NameAppleSingle, 0);
+  fAppleDouble = LoadWord(NameAppleDouble, 0);
+  fMacBinary = LoadWord(NameMacBinary, 0);
+
   fJail = LoadWord(NameJail, false);
   fLog = LoadWord(NameLog, false);
   fTeach = LoadWord(NameTeach, false);
@@ -390,9 +398,11 @@ void LoadControls(WindowPtr win, Word value)
 
         break;
         
-       // apple single
+       // apple single/double/macbinary
        case Ctrl_PU_5:
-         SetCtlValueByID(1, win, Ctrl_AS_Never + fAppleSingle);
+         SetCtlValueByID(EncapNever + fAppleSingle, win, Ctrl_AS);
+         SetCtlValueByID(EncapNever + fAppleDouble, win, Ctrl_AD);
+         SetCtlValueByID(EncapNever + fMacBinary, win, Ctrl_MB);
          break;
       }
     }
@@ -660,8 +670,13 @@ Word i;
     }
     if (screens[4])
     {
-   		fAppleSingle = FindRadioButton(win,0);
+   		fAppleSingle = GetCtlValueByID(win, Ctrl_AS) - (EncapNever);
+   		fAppleDouble = GetCtlValueByID(win, Ctrl_AD) - (EncapNever);
+   		fMacBinary = GetCtlValueByID(win, Ctrl_MB) - (EncapNever);
+   		
    		SetConfigValue(1, NameAppleSingle, &fAppleSingle, sizeof(Word));
+   		SetConfigValue(1, NameAppleDouble, &fAppleDouble, sizeof(Word));
+   		SetConfigValue(1, NameMacBinary, &fMacBinary, sizeof(Word));
     }
 
 
