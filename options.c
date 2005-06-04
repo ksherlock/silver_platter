@@ -13,7 +13,8 @@ Word ipid = q->ipid;
 
 
   #define xstr \
-  "DAV: 1,2\r\n" \
+  "AcceptRanges: none\r\n" \
+  "DAV: 1, 2\r\n" \
   "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND, MKCOL\r\n"
   
   SendHeader(q, 200, 0, NULL, NULL, xstr, sizeof(xstr) - 1);

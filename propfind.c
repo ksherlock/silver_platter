@@ -7,6 +7,10 @@
 #include <memory.h>
 #include <tcpip.h>
 
+#include <timetool.h>
+#include <misctool.h>
+
+
 #include "server.h"
 #include "globals.h"
 #include "MemBuffer.h"
@@ -26,11 +30,15 @@ extern const char *GetMimeString(GSString255Ptr, Word, LongWord);
 
 
 GSString255Ptr MacRoman2UTF8(GSString255Ptr);
+GSString255Ptr MacRoman2HTML(GSString255Ptr);
 GSString255Ptr EncodeURL(GSString255Ptr);
 
 
 static GSString255Ptr EmptyName = (GSString255Ptr)"\x00\x00";
+static GSString255Ptr SlashName = (GSString255Ptr)"\x01\x00/";
 
+
+static char buffer32[32];                      
 
 GSString255Ptr BaseName(GSString255Ptr path)
 {
@@ -65,7 +73,6 @@ static Word AddFile(MemBuffer *m,
 	FileInfoRecGS *info, Word root)
 {
 Word i;
-static char buffer32[32];
 Word err;
 
 	if (root)
@@ -101,7 +108,7 @@ Word err;
     tiTimeRec2GMTString(&info->modDateTime, buffer32);
 
     i = orca_sprintf(buffer,
-      "<D:displayname><![CDATA[%B]]></D:displayname>\r\n"
+      "<D:displayname>%B</D:displayname>\r\n"
       "<D:getlastmodified>%b</D:getlastmodified>\r\n"
       "<D:getcontentlength>%lu</D:getcontentlength>\r\n"
       "<D:getcontenttype>%s</D:getcontenttype>\r\n"
@@ -116,8 +123,9 @@ Word err;
 
   	#undef xstr
   	#define xstr \
-    "<D:source></D:source>\r\n" \
-    "<D:supportedlock></D:supportedlock>\r\n" \
+    "<D:supportedlock />\r\n" \
+    "<D:iscollection>0</D:iscollection>\r\n" \
+    "<D:ishidden>0</D:ishidden>\r\n" \
     "</D:prop>\r\n" \
     "<D:status>HTTP/1.1 200 OK</D:status>\r\n" \
     "</D:propstat>\r\n" \
@@ -125,7 +133,6 @@ Word err;
 
 	err = BufferAppend(m, xstr, sizeof(xstr) - 1);
 	if (err) return err;
-
 
 
 	return 0;
@@ -136,6 +143,7 @@ static Word AddFolder(MemBuffer *m,
 	GSString255Ptr path_uri, 
 	GSString255Ptr file_uri, 
 	GSString255Ptr file_utf,
+        FileInfoRecGS *info,
 	Word root)		// if this is the first folder of a collection.
 {
 Word i;
@@ -168,18 +176,42 @@ Word err;
 	
 	
     i = orca_sprintf(buffer,
-      "<D:displayname><![CDATA[%B]]></D:displayname>\r\n",
+      "<D:displayname>%B</D:displayname>\r\n",
       file_utf);	
 	
 
 	err = BufferAppend(m, buffer, i);
 	if (err) return 500;
-	
+
+
+    if (info)
+    {
+      tiTimeRec2ISO8601(&info->createDateTime, buffer32);
+
+      i = orca_sprintf(buffer,
+	"<D:creationdate>%b</D:creationdate>\r\n",
+	buffer32);
+      err = BufferAppend(m, buffer, i);
+      if (err) return 500;
+    }
+    if (info)
+    {
+      tiTimeRec2GMTString(&info->modDateTime, buffer32);
+      i = orca_sprintf(buffer,
+	"<D:getlastmodified>%b</D:getlastmodified>\r\n",
+	buffer32);
+      err = BufferAppend(m, buffer, i);
+      if (err) return 500;
+    }                     
+
 	#undef xstr
     #define xstr \
 	"<D:resourcetype><D:collection /></D:resourcetype>\r\n" \
-	"<D:source></D:source>\r\n" \
-    "<D:supportedlock></D:supportedlock>\r\n" \
+    "<D:supportedlock />\r\n" \
+    "<D:getcontentlength>0</D:getcontentlength>\r\n" \
+    "<D:getcontenttype>application/octet-stream</D:getcontenttype>\r\n" \
+    "<D:iscollection>1</D:iscollection>\r\n" \
+    "<D:ishidden>0</D:ishidden>\r\n" \
     "</D:prop>\r\n" \
     "<D:status>HTTP/1.1 200 OK</D:status>\r\n" \
     "</D:propstat>\r\n" \
@@ -201,13 +233,42 @@ static DInfoRecGS DInfoDCB = {3, 0, &dName};
 static VolumeRecGS VolumeDCB = {6, &dName.bufString, &vName};
 static DirEntryRecGS DirDCB = {14, 0, 0, 1, 1, &vName};
 
+
+// todo -- cache volume list xml.
+
 static Word ListVolumes(struct qEntry *q)
 {
 Word err;
+
+LongWord secs;
+tiPrefRec tiPrefs;
+TimeRec tr;
+Word bram;
+
 CREATE_BUFFER(m, q->workHandle);
+
 
   HUnlock(q->workHandle);
   SetHandleSize(0, q->workHandle);
+
+
+  // volumes don't have create/modified dates, so use the current date/time.
+  tiPrefs.pCount = 3;
+  tiGetTimePrefs(&tiPrefs);
+
+  secs = ConvSeconds(getCurrTimeInSecs,0,0);
+  secs += tiPrefs.secOffset;
+
+  // adjust for dst.
+  bram = ReadBParam(0x5e);
+  if (bram & 0x0002 == 0)
+    secs += 3600;
+
+  ConvSeconds(secs2TimeRec, secs, (Pointer)&tr);
+                            
+  InfoDCB.createDateTime = tr;
+  InfoDCB.modDateTime = tr;
+
 
 
   #undef xstr
@@ -218,7 +279,7 @@ CREATE_BUFFER(m, q->workHandle);
   err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
   if (err) return ProcessError(500,q);
 
-  err = AddFolder(&m, EmptyName, EmptyName, EmptyName,true);
+  err = AddFolder(&m, EmptyName, EmptyName, SlashName, &InfoDCB, true);
   
   if (err) return ProcessError(err,q);
       
@@ -257,7 +318,8 @@ CREATE_BUFFER(m, q->workHandle);
       
       dev_uri = EncodeURL(&vName.bufString);
       dev_utf = MacRoman2UTF8(&vName.bufString);
-      
+      //dev_utf = MacRoman2HTML(&vName.bufString);
+
       if (dev_uri) alloc |= 0x0001;
       else dev_uri = &vName.bufString;
       
@@ -265,7 +327,7 @@ CREATE_BUFFER(m, q->workHandle);
       else dev_utf =  &vName.bufString;
       
       file_utf = BaseName(dev_utf);
-	  err = AddFolder(&m, dev_uri, EmptyName, file_utf,true);
+	  err = AddFolder(&m, dev_uri, EmptyName, file_utf, &InfoDCB, true);
 	  
 	  if (alloc & 0x0001) ReleasePointer(dev_uri);
 	  if (alloc & 0x0002) ReleasePointer(dev_utf);
@@ -284,13 +346,12 @@ CREATE_BUFFER(m, q->workHandle);
 
 
   SendHeader(q, 207, m.used, NULL, "text/xml", NULL, 0);
-  
+
   WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);
-  
+
   q->state = STATE_CLOSE;
   return 207;
-
 }
 
 
@@ -304,6 +365,8 @@ Word ProcessPropfind(struct qEntry *q)
 LongWord size;
 Word i;
 GSString255Ptr path;
+GSString255Ptr fullpath;
+
 
 GSString255Ptr path_utf;
 GSString255Ptr path_uri;
@@ -317,17 +380,18 @@ CREATE_BUFFER(m, q->workHandle);
   HUnlock(q->workHandle);
   SetHandleSize(0, q->workHandle);
 
-  path = q->fullpath;
+  path = q->pathname;
+  fullpath = q->fullpath;
 
 
-  if (path->length == 1)
+  if (fullpath->length == 1)
   {
     return ListVolumes(q);
   }
 
 
   InfoDCB.pCount = 12;
-  InfoDCB.pathname = path;
+  InfoDCB.pathname = fullpath;
   InfoDCB.optionList = NULL;
   GetFileInfoGS(&InfoDCB);
   if (_toolErr)
@@ -340,16 +404,6 @@ CREATE_BUFFER(m, q->workHandle);
 
   if (InfoDCB.fileType == 0x0f)
   {
-    GSString255Ptr path;
-    path = q->pathname;
-
-    i = path->length - 1;
-    if (path->text[i] == '/')
-    {
-      path->length = i;
-    }
-
-    path = q->fullpath;
     i = path->length - 1;
     if (path->text[i] == '/')
     {
@@ -360,6 +414,7 @@ CREATE_BUFFER(m, q->workHandle);
   err = 0;
   
   path_utf = MacRoman2UTF8(path);
+  //path_utf = MacRoman2HTML(path);
   if (path_utf == NULL)
   {
   	path_utf = path;
@@ -390,13 +445,13 @@ CREATE_BUFFER(m, q->workHandle);
 
 	  if (InfoDCB.fileType == 0x0f)
 	  {
-	  	AddFolder(&m, path_uri, EmptyName, EmptyName, true);
+	  	AddFolder(&m, path_uri, EmptyName, SlashName, &InfoDCB, true);
 	  	if (err) break;
 	    if (q->depth != 0)
 		  {
 		
 		    OpenDCB.pCount = 15;
-		    OpenDCB.pathname = path;
+		    OpenDCB.pathname = fullpath;
 		    OpenDCB.requestAccess = readEnable;
 		    OpenDCB.resourceNumber = 0;
 		    OpenDCB.optionList = NULL;
@@ -430,21 +485,23 @@ CREATE_BUFFER(m, q->workHandle);
 			  else file_uri = &vName.bufString;
 	
 			  file_utf = MacRoman2UTF8(&vName.bufString);
+			  //file_utf = MacRoman2HTML(&vName.bufString);
 			  if (file_utf) alloc |= 0x0002;
 			  else file_utf = &vName.bufString;  
 		        
 		
-			  if (DirDCB.fileType == 0x0f)
-			  {
-			  	err = AddFolder(&m, path_uri, file_uri, file_utf, false);
-			  }
-			  else
-			  {
 		      	InfoDCB.fileType = DirDCB.fileType;
 		      	InfoDCB.auxType = DirDCB.auxType;
 		      	InfoDCB.createDateTime = DirDCB.createDateTime;
 		      	InfoDCB.modDateTime = DirDCB.modDateTime;
 		      	InfoDCB.eof = DirDCB.eof;
+
+			  if (DirDCB.fileType == 0x0f)
+			  {
+			  	err = AddFolder(&m, path_uri, file_uri, file_utf, &InfoDCB, false);
+			  }
+			  else
+			  {
 		
 				err = AddFile(&m, path_uri, file_uri, file_utf, &InfoDCB, false);
 			  }

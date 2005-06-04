@@ -20,7 +20,6 @@ TimeRec tr;
   tiGetTimePrefs(&tiPrefs);
 
   secs = ConvSeconds(TimeRec2Secs, 0, (Pointer)t);
-
   secs += tiPrefs.secOffset;
 
   ConvSeconds(secs2TimeRec, secs, (Pointer)&tr);
