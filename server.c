@@ -616,7 +616,7 @@ Word oldPrefs;
           {
           	i = count & 0x7f;
           	
-          	if (count)
+          	if (i)
           	{
           		memset(buffer + count, 0, 128 - i);
           		count += 128 - i;
