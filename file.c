@@ -6,6 +6,7 @@
 #pragma noroot
 #pragma lint -1
 #pragma optimize -1
+#pragma debug 0x8000
 
 #include <Memory.h>
 
@@ -292,7 +293,7 @@ CREATE_BUFFER(m, q->workHandle);
 	"<table border=\"0\" cellspacing=\"2\" cellpadding=\"2\">\r\n" \
 	"<thead align=\"left\">\r\n" \
 	"<tr>\r\n" \
-	"<th>Name</th><th>Size</th><th>Kind</th><th></th>\r\n" \
+	"<th>Name</th><th>Size</th><th>Kind</th><th></th><th></th><th></th>\r\n" \
 	"</tr>\r\n" \
 	"</thead>\r\n" \
 	"<tbody>\r\n"
@@ -332,11 +333,11 @@ CREATE_BUFFER(m, q->workHandle);
 	  {
 	    i = orca_sprintf(buffer,
 	        "<tr>"
-	          "<td><a href=\"%B%B/\">%B/</a></td>"
+	          "<td><a href=\"%B/\">%B/</a></td>"
 	          "<td align=\"right\"> &mdash; </td>"
-	          "<td> Folder </td><td></td>"
+	          "<td colspan=\"4\"> Folder </td>"
 	        "</tr>\r\n",
-	        path_uri, file_uri, file_html);
+	        file_uri, file_html);
 	  }
 	  else
 	  {
@@ -348,45 +349,64 @@ CREATE_BUFFER(m, q->workHandle);
 	    size += 1023;
 	    size >>= 10;  // convert to K.
 	
-	    switch(fAppleSingle)
-	    {
-	    case 0:
-	      as = false;
-	      break;
-	    case 1:
-	      as = true;
-	      break;
-	   case 2:
-	     as = (DirDCB.flags & 0x8000);
-	     break;
-	    }
 	
-	    if (as)
-	    {
+		
 		i = orca_sprintf(buffer,
-		      "<tr>"
-	          "<td><a href=\"%B%B\">%B</a></td>"
-	          "<td align=\"right\"> %uK </td>"
-	          "<td> %b </td>"
-	          "<td><a href=\"%B%B?applesingle\">AppleSingle</a></td>"
-		      "</tr>\r\n",
-		      path_uri, file_uri, file_html,
-	          (Word)size,
-		      fType,
-	          path_uri, file_uri);
-	    }
-	    else
-	    {
-		  i = orca_sprintf(buffer,
-		        "<tr>"
-	            "<td><a href=\"%B%B\">%B</a></td>"
-	            "<td align=\"right\"> %uK </td>"
-	            "<td> %b </td> <td></td>"
-		        "</tr>\r\n",
-		        path_uri, file_uri, file_html,
-	            (Word)size,
-		        fType);
-	     }
+			"<tr>"
+			"<td><a href=\"%B\">%B</a></td>"
+			"<td align=\"right\"> %uK </td>"
+			"<td> %b </td>",
+			file_uri, file_html,
+			(Word)size,
+			fType);
+	
+
+		// applesingle...
+		as = fAppleSingle;
+		if ((as == 2) && (DirDCB.flags & 0x8000 == 0)) as = 0;
+
+		if (as)
+		{
+			i += orca_sprintf(buffer + i,
+			  "<td>"
+			  "<a href=\"%B?applesingle\">AppleSingle</a>"
+			  "</td>",
+			  file_uri);
+		}
+		else
+		i += orca_sprintf(buffer + i, "<td></td>");
+
+
+		// appledouble...
+		as = fAppleDouble;
+		if ((as == 2) && (DirDCB.flags & 0x8000 == 0)) as = 0;
+
+		if (as)
+		{
+			i += orca_sprintf(buffer + i,
+			  "<td>"
+			  "<a href=\"._%B\">AppleDouble</a>"
+			  "</td>",
+			  file_uri);
+		}
+		else
+		i += orca_sprintf(buffer + i, "<td></td>");
+		
+		// macbinary
+		as = fAppleDouble;
+		if ((as == 2) && (DirDCB.flags & 0x8000 == 0)) as = 0;
+
+		if (as)
+		{
+			i += orca_sprintf(buffer + i,
+			  "<td>"
+			  "<a href=\"%B?macbinary\">MacBinary</a>"
+			  "</td></tr>\r\n",
+			  file_uri);
+		}
+		else
+		i += orca_sprintf(buffer + i, "<td></td></tr>\r\n");		
+
 	   }
 	
 	
