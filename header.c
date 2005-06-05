@@ -1,6 +1,7 @@
 #pragma lint -1
 #pragma optimize -1
 #pragma noroot
+#pragma debug 0x8000
 
 #include <tcpip.h>
 #include <timetool.h>

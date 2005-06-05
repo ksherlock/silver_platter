@@ -1,6 +1,7 @@
 #pragma optimize -1
 #pragma noroot
 #pragma lint -1
+#pragma debug 0x8000
 
 #include <gsos.h>
 #include <memory.h>
