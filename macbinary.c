@@ -5,14 +5,18 @@
 
 
 #include <gsos.h>
+#include <misctool.h>
 #include <string.h>
 
 #include "server.h"
 #include "globals.h"
 #include "macbinary.h"
+#include "AppleSingle.h"
 
 extern pascal Word swap16(Word);
 extern pascal LongWord swap32(LongWord);
+
+extern pascal Word GetHFSInfo(GSString255Ptr, void *);
 
 
 
@@ -20,8 +24,8 @@ Word MacBinary(struct qEntry *q)
 {
 static struct MB_1_Header header;
 Longword size;
-static Word optionData[25 + 2];
 GSString255Ptr path;
+static ASFinderInfo finderData;
 Word i;
 Word len;
 Word j;
@@ -43,6 +47,8 @@ Word j;
 	
 	memset(&header, 0, sizeof(struct MB_1_Header));
 	
+
+
 	// copy the name over
 	path = q->fullpath;
 	
@@ -59,35 +65,31 @@ Word j;
     OpenDCB.pathname = q->fullpath;
     OpenDCB.requestAccess = readEnable;
     OpenDCB.resourceNumber = 0;
-    OpenDCB.optionList = (ResultBuf255Ptr)optionData;
-	
-	optionData[0] = 50 + 4;
+    OpenDCB.optionList = NULL;
 
     OpenGS(&OpenDCB);
-    if (_toolErr && _toolErr != buffTooSmall)
+    if (_toolErr)
       return ProcessError(404, q);
 
     q->fd = OpenDCB.refNum;
         
     header.dataLength = swap32(OpenDCB.eof);
     header.resourceLength = swap32(OpenDCB.resourceEOF);
-    
-  if (optionData[1] >= 10)
-  {
-    Word fileSysID;
-    LongWord *lw;
 
-    fileSysID = optionData[2];
-    if (fileSysID == proDOSFSID
-      || fileSysID == hfsFSID
-      || fileSysID == appleShareFSID)
-    {
-    	lw = (LongWord *)&optionData[3];
-    	header.fileType = *lw;
-    	lw = (LongWord *)&optionData[5];
-    	header.fileCreator = *lw;
-    }
-  }    
+    header.creationDate =
+          swap32(ConvSeconds(TimeRec2Secs, 0,
+            (Pointer)&OpenDCB.createDateTime));
+
+    header.modificationDate =
+          swap32(ConvSeconds(TimeRec2Secs, 0,
+            (Pointer)&OpenDCB.modDateTime));
+
+
+  if (GetHFSInfo(q->fullpath, &finderData) == 0)
+  {
+    header.fileType = finderData.fdType;
+    header.fileCreator = finderData.fdCreator;
+  }
 
   // if resource data, must open the fork now...
   if (OpenDCB.resourceEOF)

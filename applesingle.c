@@ -3,7 +3,6 @@
 #pragma optimize -1
 #pragma debug 0x8000
 
-
 #include <gsos.h>
 #include <misctool.h>
 #include <tcpip.h>
@@ -18,16 +17,8 @@ extern pascal LongWord swap32(LongWord);
 
 extern int orca_sprintf(char *, const char *, ...);
 
-struct optionData
-{
-  Word fileSysID;
-  LongWord fileType;
-  LongWord creator;
-  Word finderFlags;
-  LongWord iconLoc;
-  Word fileWindow;
-};
 
+extern pascal Word GetHFSInfo(GSString255Ptr, void *);
 
 
 // seconds corresponding to jan 1, 2000.
@@ -39,9 +30,9 @@ static ASHeader header;
 static ASFileDates dates;
 static ASEntry entry;
 static ASProdosInfo pInfo;
-static Word optionData[25 + 2];
 
-ASFinderInfo *fdInfo;
+ASFinderInfo finderData;
+Word fi = false;
 
 Word i;
 GSString255Ptr g;
@@ -82,9 +73,7 @@ Word asingle = (q->moreFlags == CGI_APPLESINGLE);
 	OpenDCB.pathname = q->fullpath;
 	OpenDCB.requestAccess = readEnable;
 	OpenDCB.resourceNumber = 0;
-	OpenDCB.optionList = (ResultBuf255Ptr)optionData;
-	
-	optionData[0] = 50 + 4;
+	OpenDCB.optionList = NULL;
 	
 	OpenGS(&OpenDCB);
 	if (_toolErr && _toolErr != buffTooSmall)
@@ -137,26 +126,12 @@ Word asingle = (q->moreFlags == CGI_APPLESINGLE);
 
   subtotal = total;  // amount we're sending now.
 
-  fdInfo = NULL;
-  // optionData[0] = buffersize
-  // optionData[1] = resultsize
-  // optionData[2] = fileSysID
-  // optionData[3..] = Mac finder data
-
-  if (optionData[1] >= sizeof(ASFinderInfo) + 2)
+  if (GetHFSInfo(q->fullpath, &finderData) == 0)
   {
-    Word fileSysID;
-
-    fileSysID = optionData[2];
-    if (fileSysID == proDOSFSID
-      || fileSysID == hfsFSID
-      || fileSysID == appleShareFSID)
-    {
-      fdInfo = (ASFinderInfo *)&optionData[3];
+      fi++;
       total += sizeof(ASFinderInfo) + sizeof(ASEntry);
       subtotal += sizeof(ASEntry);
       numEntries++;        
-    }
   }
 
   if (eof && asingle)
@@ -223,7 +198,7 @@ Word asingle = (q->moreFlags == CGI_APPLESINGLE);
 	offset += sizeof(ASFileDates);              
 	
 	// macintosh finder info
-	if (fdInfo)
+	if (fi)
 	{
 		entry.entryID = swap32(AS_FINDER_INFO);
 		entry.entryOffset = swap32(offset);
@@ -278,9 +253,9 @@ Word asingle = (q->moreFlags == CGI_APPLESINGLE);
 	TCPIPWriteTCP(ipid, (dataPtr)&dates, sizeof(ASFileDates), false, false);
 	
 	// macintosh finder info
-	if (fdInfo)
+	if (fi)
 	{
-		TCPIPWriteTCP(ipid, (dataPtr)fdInfo, sizeof(ASFinderInfo), false, false);
+		TCPIPWriteTCP(ipid, (dataPtr)&finderData, sizeof(ASFinderInfo), false, false);
 	}                       
 	
 	if (q->flags & FLAG_CHUNKED)
