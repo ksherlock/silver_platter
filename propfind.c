@@ -18,9 +18,6 @@
 #include "pointer.h"
 
 
-#define	dcRemovable		0x0004
-#define dcBlockDevice	0x0080
-
 extern int orca_sprintf(char *, const char *, ...);
 
 
@@ -33,9 +30,17 @@ GSString255Ptr MacRoman2UTF8(GSString255Ptr);
 GSString255Ptr MacRoman2HTML(GSString255Ptr);
 GSString255Ptr EncodeURL(GSString255Ptr);
 
+Word GetNextVolume(Word cookie, VolumeRecGS *VolumeDCB);
+
 
 static GSString255Ptr EmptyName = (GSString255Ptr)"\x00\x00";
 static GSString255Ptr SlashName = (GSString255Ptr)"\x01\x00/";
+
+
+static ResultBuf255 vName = {259};
+
+static VolumeRecGS VolumeDCB = {6, NULL, &vName};
+static DirEntryRecGS DirDCB = {14, 0, 0, 1, 1, &vName};
 
 
 static char buffer32[32];                      
@@ -226,14 +231,6 @@ Word err;
 
 
 
-static ResultBuf32 dName = {36};
-static ResultBuf255 vName = {259};
-
-static DInfoRecGS DInfoDCB = {3, 0, &dName};
-static VolumeRecGS VolumeDCB = {6, &dName.bufString, &vName};
-static DirEntryRecGS DirDCB = {14, 0, 0, 1, 1, &vName};
-
-
 // todo -- cache volume list xml.
 
 static Word ListVolumes(struct qEntry *q)
@@ -288,29 +285,13 @@ CREATE_BUFFER(m, q->workHandle);
   {
     Word d;
     Word len;
-    for(d = 1; ; d++)
+    d = 1;
+    while (d = GetNextVolume(d, &VolumeDCB))
     {
 	GSString255Ptr dev_uri;
 	GSString255Ptr dev_utf;
 	GSString255Ptr file_utf;
 	Word alloc = 0;
-
-
-      DInfoDCB.devNum = d;
-      DInfoGS(&DInfoDCB);
-      if (_toolErr) break;
-      if (DInfoDCB.characteristics & dcBlockDevice == 0) continue;
-      
-      if ((DInfoDCB.characteristics & dcRemovable)
-      	&& (fDirRemovable == false))
-        continue;
-
-      VolumeGS(&VolumeDCB);
-      if (_toolErr) continue;
-      
-      if ((VolumeDCB.fileSysID == appleShareFSID) 
-        && (fDirAppleShare == false))
-      	continue;
 
       // convert first char from ':' --> '/'
       vName.bufString.text[0] = '/';

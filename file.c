@@ -20,8 +20,6 @@
 #include "pointer.h"
 #include "MemBuffer.h"
 
-#define	dcRemovable		0x0004
-#define dcBlockDevice	0x0080
 
 extern int orca_sprintf(char *, const char *, ...);
 
@@ -35,16 +33,17 @@ extern Word MacBinary(struct qEntry *q);
 extern Word AppleSingle(struct qEntry *q);
 
 
+Word GetNextVolume(Word cookie, VolumeRecGS *VolumeDCB);
+
+
 extern Word MyID;
 
 
 /* process head/get */
 
-static ResultBuf32 dName = {36};
 static ResultBuf255 vName = {259};
 
-static DInfoRecGS DInfoDCB = {3, 0, &dName};
-static VolumeRecGS VolumeDCB = {6, &dName.bufString, &vName};
+static VolumeRecGS VolumeDCB = {6, NULL, &vName};
 static DirEntryRecGS DirDCB = {14, 0, 0, 1, 1, &vName};
 
 
@@ -501,29 +500,14 @@ CREATE_BUFFER(m, q->workHandle);
 	if (err) break;
 	
 	
-	for (d = 1; ; d++)
+        d = 1;
+        while (d = GetNextVolume(d, &VolumeDCB))
   	{	
   	void *dev_uri;
 	void *dev_html;
 	Word alloc = 0;
   		
-      DInfoDCB.devNum = d;
-      DInfoGS(&DInfoDCB);
-      if (_toolErr) break;
-      if (DInfoDCB.characteristics & dcBlockDevice == 0) continue;
-      
-      if ((DInfoDCB.characteristics & dcRemovable)
-      	&& (fDirRemovable == false))
-        continue;
 
-      VolumeGS(&VolumeDCB);
-      if (_toolErr) continue;
-    
-      if ((VolumeDCB.fileSysID == appleShareFSID) 
-        && (fDirAppleShare == false))
-        continue;
-      
-      
       // convert first char from ':' --> '/'
       vName.bufString.text[0] = '/';
 
