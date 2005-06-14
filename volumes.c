@@ -5,11 +5,76 @@
 
 
 #include <gsos.h>
+#include <ctype.h>
+
 #include "config.h"
 
 
 #define	dcRemovable		0x0004
 #define dcBlockDevice	0x0080
+
+
+// returns TRUE if path is/is in the system folder, false otherwise.
+Word IsSystemFolder(GSString255Ptr path)
+{
+static Word fSystem = false;
+static ResultBuf32 bootName = { 32 };
+static GetNameRecGS NameDCB= {1, &bootName};
+
+
+Word i;
+Word j;
+
+	if (fSystem == false)
+	{
+		GetBootVol(&nameDCB);
+		fSystem = true;
+		for (i = 0; i < bootName.bufString.length; i++)
+		{
+			Word c = bootName.bufString.text[i];
+			if (c == ':') c = '/';
+			else if (islower(c)) c = _toupper(c);
+			else continue;
+			
+			
+			bootName.bufString.text[i] = c;	
+		}
+	}
+	
+	
+	// 
+	if (path->length < (6 + bootName.bufString.length)) 
+		return false;
+		
+	// check if the volume matches.
+	
+	for (i = 0; i < bootName.bufString.length; i++)
+	{
+		Word c = bootName.bufString.text[i];
+		Word d = path->text[i];
+		if (islower(d)) d = _toupper(d);
+		
+		if (d != c) return false;	
+		
+	}
+	
+	// ok, it matched... now check for "system/
+	for (j = 0; j < 6; j++)
+	{
+		Word c;
+		
+		c = path->text[i + j];
+		if (islower(c)) c = _toupper(c);
+		
+		if (c != "SYSTEM"[j]) return false;
+	}
+	
+	if (path->length == (6 + i) return true;
+	if (path->length[i + 6] == '/') return true;
+	
+	return false; 
+	
+}
 
 
 /*

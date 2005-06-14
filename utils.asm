@@ -62,6 +62,8 @@ value  LongWord
 * pascal Word GetHFSInfo(GSString255Ptr, hfsInfo *)
 GETHFSINFO start
 
+	using OptionData
+
 	DefineStack
 
 err	Word
@@ -77,21 +79,6 @@ path	LongWord
 
 	BeginStack
 
-* struct optionData
-* {
-*   Word fileSysID;
-*   LongWord fileType;
-*   LongWord creator;
-*   Word finderFlags;
-*   LongWord iconLoc;
-*   Word fileWindow;
-* };
-
-
-oDataSize equ 2
-oFileSysID equ 4
-oFileType equ 6
-oCreator equ 10
 
 
 	stz <err
@@ -229,6 +216,71 @@ exit	anop
 	txa
 	rtl
 
+	end
+	
+	
+* pascal Word GetFSTID(path)
+GETFSTID	start
+
+	DefineStack
+
+	endlocals
+
+	FixStack
+
+	begparms
+path	LongWord
+	endparms
+
+	BeginStack
+
+	ldax <path
+	stax Info_path
+	
+	_GetFileInfo InfoDCB
+	ldx #-1
+	bcc ok
+	cmp #buffTooSmall
+	bne exit
+	
+	
+ok	anop
+	lda optionData+oDataSize
+	cmp #2
+	bcc exit
+	
+	ldx optionData+oFileSysID
+
+
+exit	anop
+
+
+	EndStack
+	
+	txa
+	rtl
+
+	end	
+	
+	
+
+OptionData	DATA
+
+* struct optionData
+* {
+*   Word fileSysID;
+*   LongWord fileType;
+*   LongWord creator;
+*   Word finderFlags;
+*   LongWord iconLoc;
+*   Word fileWindow;
+* };
+
+oDataSize gequ 2
+oFileSysID gequ 4
+oFileType gequ 6
+oCreator gequ 10
+
 
 optionData anop
 	dc i2'54'
@@ -245,3 +297,7 @@ Info_auxType	ds 4
 	ds 8
 	dc i4'optionData'
 	end
+
+
+
+
