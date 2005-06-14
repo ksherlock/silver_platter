@@ -18,8 +18,8 @@
 Word IsSystemFolder(GSString255Ptr path)
 {
 static Word fSystem = false;
-static ResultBuf32 bootName = { 32 };
-static GetNameRecGS NameDCB= {1, &bootName};
+static ResultBuf32 bootName = { 36 };
+static GetNameRecGS NameDCB= {1, (ResultBuf255Ptr)&bootName};
 
 
 Word i;
@@ -27,7 +27,7 @@ Word j;
 
 	if (fSystem == false)
 	{
-		GetBootVol(&nameDCB);
+		GetBootVol(&NameDCB);
 		fSystem = true;
 		for (i = 0; i < bootName.bufString.length; i++)
 		{
@@ -69,8 +69,8 @@ Word j;
 		if (c != "SYSTEM"[j]) return false;
 	}
 	
-	if (path->length == (6 + i) return true;
-	if (path->length[i + 6] == '/') return true;
+	if (path->length == 6 + i) return true;
+	if (path->text[i + 6] == '/') return true;
 	
 	return false; 
 	

@@ -20,44 +20,6 @@ extern void InsertString(Word, const char *);
 
 #define DEBUG 1
 
-// normalizes CR, LF, and CRLF to a CR.
-// returns new length of data.
-Word ConvertCRLF(char *data, Word length)
-{
-Word rlength = length;
-Word i;
-char c;
-
-  for (i = 0; length; length--, i++)
-  {
-    c = data[i];
-    // convert LF -> CR (unix standard).
-    if (c == 0x0a)
-    {
-      data[i] = 0x0d;
-      continue;
-    }
-
-    //
-    if (c == 0x0d)
-    {
-      if (length > 1)
-      {
-        length--;
-        i++;
-        c = data[i];
-        if (c == 0x0a) // convert CRLF to just CR
-        {
-          TCPIPPtrToPtr(data + i + 1 , data + i, length - 1);
-          rlength--;
-        }
-      }
-    }
-  }
-
-  return rlength;
-
-}
 
 Word NextSlash(const char *str)
 {

@@ -57,6 +57,79 @@ value  LongWord
 
 
 
+* returns new length
+* Word ConvertCRLF(char * data, Word length)
+ConvertCRLF start
+
+
+	DefineStack
+	
+offset	Word
+	endlocals
+
+	FixStack
+
+	begparms
+data	LongWord
+length	Word
+
+	endparms
+
+	BeginStack
+
+	ldy #0
+	stz <offset
+	ldx <length
+	beq exit
+	
+loop	anop
+	lda [<data],y
+	cmp #$0a0d
+	beq crlf
+	and #$00ff
+	cmp #$000a
+	bne store
+	lda #$000d
+store	anop
+	phy
+	ldy <offset
+	short m
+	sta [<data],y
+	long m
+	inc <offset
+	ply
+	iny
+	dex
+	beq exit
+	bra loop
+	
+	
+crlf	anop
+	lda #$000d
+	phy
+	short m
+	ldy <offset
+	sta [<data],y
+	long m
+	inc <offset
+	ply
+	iny
+	iny
+	dex
+	beq exit
+	dex
+	beq exit
+	bra loop
+
+exit	ldx <offset
+
+	EndStack
+	txa
+	rtl
+	end
+
+
+
 
 
 * pascal Word GetHFSInfo(GSString255Ptr, hfsInfo *)
@@ -222,6 +295,9 @@ exit	anop
 * pascal Word GetFSTID(path)
 GETFSTID	start
 
+	using OptionData
+
+
 	DefineStack
 
 	endlocals
@@ -237,7 +313,7 @@ path	LongWord
 	ldax <path
 	stax Info_path
 	
-	_GetFileInfo InfoDCB
+	_GetFileInfoGS InfoDCB
 	ldx #-1
 	bcc ok
 	cmp #buffTooSmall
@@ -264,7 +340,7 @@ exit	anop
 	
 	
 
-OptionData	DATA
+OptionData	PRIVDATA
 
 * struct optionData
 * {
