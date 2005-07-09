@@ -339,7 +339,7 @@ CREATE_BUFFER(m, q->workHandle);
 
 
 // this provides support for the WebDAV PROPFIND command.
-// an XML description of the resource will becreated and sent.
+// an XML description of the resource will be created and sent.
 
 Word ProcessPropfind(struct qEntry *q)
 {
@@ -357,6 +357,11 @@ Word err;
 static char buffer32[32];
 
 CREATE_BUFFER(m, q->workHandle);
+
+  if (fWebDav == false)
+  {
+    return ProcessError(405, q);	
+  }
 
   HUnlock(q->workHandle);
   SetHandleSize(0, q->workHandle);

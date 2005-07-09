@@ -6,6 +6,7 @@
 #include <types.h>
 
 #include "server.h"
+#include "config.h"
 
 int orca_sprintf(char *, const char *, ...);
 
@@ -16,6 +17,11 @@ Word ProcessLock(struct qEntry *q)
 {
 Word len;
 GSString255Ptr host;
+
+	if (fWebDav == false)
+	{
+		return ProcessError(405, q);
+	}
 
 	host = q->host;
 	if (host == NULL) host = (GSString255Ptr)"\x09\x00" "localhost";
@@ -56,6 +62,12 @@ GSString255Ptr host;
 // pretend to unlock a resource.
 Word ProcessUnlock(struct qEntry *q)
 {
+	
+	if (fWebDav == false)
+	{
+		return ProcessError(405, q);
+	}	
+	
   SendHeader(q, 204, 0, NULL, NULL, NULL, 0);
   
   q->state = STATE_CLOSE;

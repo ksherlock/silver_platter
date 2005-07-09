@@ -48,6 +48,7 @@ Handle h;
 Word ipid;
 Word len;
 char *cp;
+char *extra;
 
   ipid = q->ipid;
 
@@ -69,13 +70,30 @@ char *cp;
   }
 
   i = 0;
-  #define xstr \
-  "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND, MKCOL\r\n"
+  extra = NULL;
+
   if ((error == 405) || (error == 501))
-    i = sizeof(xstr) -1;
+  {
+    if (fWebDav)
+    {
+      #undef xstr
+      #define xstr \
+      "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND, MKCOL, LOCK, UNLOCK\r\n"
+      i = sizeof(xstr) -1;
+      extra = xstr;
+    }
+    else
+    {
+      #undef xstr
+      #define xstr \
+      "Allow: OPTIONS, GET, HEAD, PUT\r\n"
+      i = sizeof(xstr) -1;
+      extra = xstr;
+    }	
+  }
   
 
-  SendHeader(q, error, len, NULL, "text/html", xstr, i);
+  SendHeader(q, error, len, NULL, "text/html", extra, i);
 
 
   if (q->command != CMD_HEAD)

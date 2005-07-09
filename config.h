@@ -30,6 +30,8 @@ extern Word fDirHidden;
 extern Word fDirAppleShare;
 extern Word fDirRemovable;
 
+extern Word fWebDav;
+
 Word LoadConfig(Word);
 void UnloadConfig(void);
 void DoConfig(Word);

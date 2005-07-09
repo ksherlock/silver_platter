@@ -44,6 +44,8 @@ Word fDirHidden;
 Word fDirAppleShare;
 Word fDirRemovable;
 
+// Web DAV
+Word fWebDav;
 
 Word fLog;
 GSString255Ptr fLogDir;
@@ -78,7 +80,7 @@ static char *NamePut ="\pPut";
 static char *NamePutMkdir = "\pPut Mkdir";
 static char *NamePutOverwrite = "\pPut Overwrite";
 
-
+static char *NameWebDav = "\pWebDav";
 
 
 Handle RMLoadNamedResource2(Word rType, const char *name, LongWord *rID)
@@ -244,6 +246,7 @@ static CreateRecGS CreateDCB = {4, (GSString255Ptr)&folderPath, 0xe3, 0x0f, 0};
 
   fMTU = LoadWord(NameMTU, 512);
 
+  fWebDav = LoadWord(NameWebDav, false);
 //
 
   h = RMLoadNamedResource2(rC1InputString, (Ptr)NameRoot, &rID);

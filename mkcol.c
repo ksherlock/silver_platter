@@ -7,7 +7,7 @@
 
 #include "server.h"
 #include "globals.h"
-
+#include "config.h"
 
 
 // create a colection (aka directory)
@@ -21,6 +21,11 @@
 //
 Word ProcessMkcol(struct qEntry *q)
 {
+	
+  if (fWebDav == false)
+  {
+    return ProcessError(405, q);	
+  }
 	
   CreateDCB.pCount = 5;
   CreateDCB.pathname = q->fullpath;
