@@ -39,7 +39,7 @@ GSString255Ptr host;
 		      "</D:owner>\r\n"
 		      "<D:timeout>Infinite</D:timeout>\r\n"
 		      "<D:locktoken>\r\n"
-		        "<D:href>opaquelocktoken:%u\</D:href>\r\n"
+		        "<D:href>opaquelocktoken:%u</D:href>\r\n"
 		      "</D:locktoken>\r\n"
 		    "</D:activelock>\r\n"
 		  "</D:lockdiscovery>\r\n"
