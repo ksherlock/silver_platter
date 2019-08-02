@@ -1,5 +1,5 @@
 	case	off
-	copy /lang/orca/libraries/ainclude/e16.memory
+	copy 13/ainclude/e16.memory
 
 	mcopy M16.SmartStacks
 	mcopy pointer.mac	

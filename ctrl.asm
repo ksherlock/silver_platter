@@ -1,6 +1,6 @@
 	case off
 
-	copy /lang/orca/libraries/ainclude/e16.control
+	copy 13/ainclude/e16.control
 
 	mcopy M16.SmartStacks
 	mcopy ctrl.mac

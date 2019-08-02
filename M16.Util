@@ -1,0 +1,32 @@
+	macro
+&l	ldax &p
+&l	lda &p
+	lclc &c
+&c	amid &p,1,1
+	aif "&c"="#",.imm
+	ldx &p+2
+	mexit
+
+.imm
+&p	amid &p,2,l:&p-1
+	ldx #^&p
+	mend
+
+	macro
+&l	pstr &s
+&l	dc i1'L:&s'
+	dc c'&s'
+	mend
+
+	macro
+&l	stax &p
+&l	sta &p
+	stx &p+2
+	mend
+
+	macro
+&l	gstr &s
+&l	dc i2'L:&s'
+	dc c'&s'
+	mend
+  

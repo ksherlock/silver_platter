@@ -1,8 +1,8 @@
        case on
-	copy /lang/orca/libraries/ainclude/e16.gsos
-	mcopy /lang/orca/libraries/ainclude/m16.gsos
-	mcopy /usr/local/ainclude/m16.util
+	copy 13/ainclude/e16.gsos
+	mcopy 13/ainclude/m16.gsos
 
+	mcopy M16.util
 	mcopy M16.SmartStacks
 
 root   start
