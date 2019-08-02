@@ -1,7 +1,8 @@
 	case off
 
 	copy /lang/orca/libraries/ainclude/e16.control
-	mcopy /usr/local/ainclude/m16.SmartStacks
+
+	mcopy M16.SmartStacks
 	mcopy ctrl.mac
 
 root	start
