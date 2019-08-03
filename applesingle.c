@@ -61,7 +61,7 @@ Word asingle = (q->moreFlags == CGI_APPLESINGLE);
 	if (q->command == CMD_HEAD)
 	{
 		SendHeader(q, 200, -1L, &InfoDCB.modDateTime, 
-		asingle ? "application/applesingle" : "application/appledouble", 
+		asingle ? "application/applesingle" : "multipart/appledouble", 
 		NULL, 0);
 		
 		q->state = STATE_CLOSE;
@@ -149,7 +149,7 @@ Word asingle = (q->moreFlags == CGI_APPLESINGLE);
 
 
   SendHeader(q, 200, total, &modDateTime, 
-    asingle ? "application/applesingle" : "applications/appledouble", NULL, 0);
+    asingle ? "application/applesingle" : "multipart/appledouble", NULL, 0);
 
   // need to send out the header data....
 	

@@ -91,7 +91,9 @@ struct etable *e;
     break;
 
   case 0xe0:
-    if (auxType == 0x8000) mime = "application/x-BinaryII";
+    if (auxType == 0x0001) mime = "application/applefile";
+    else if (auxType == 0x0002) mime = "multipart/appledouble";
+    else if (auxType == 0x8000) mime = "application/x-BinaryII";
     else if (auxType == 0x8002) mime = "application/x-Shrinkit";
   }
   return mime;
