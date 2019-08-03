@@ -48,6 +48,7 @@
 #define RC_UNSUPPORTED_MEDIA_TYPE           415
 #define RC_REQUEST_RANGE_NOT_SATISFIABLE    416
 #define RC_EXPECTATION_FAILED               417
+#define RC_I_AM_A_TEAPOT                    418
 #define RC_MISDIRECTED REQUEST              421
 #define RC_UNPROCESSABLE_ENTITY             422
 #define RC_LOCKED                           423
@@ -70,11 +71,7 @@
 #define RC_NOT_EXTENDED                     510
 #define RC_NETWORK_AUTHENTICATION_REQUIRED  511
 
-/* unofficial */
-#define RC_I_AM_A_TEAPOT                    418
-#define RC_UNORDERED_COLLECTION             425
-#define RC_RETRY_WITH                       449
-#define RC_BANDWIDTH_LIMIT_EXCEEDED         509
+
 
 #define is_info(e)          (e >= 100 && e < 200)
 #define is_success(e)       (e >= 200 && e < 300)
