@@ -25,14 +25,16 @@ static struct etable ascii[] =
 
 static struct etable binary[] =
 {
+  { 3,	"bny",	"application/x-BinaryII"},
   { 3,	"bxy",	"application/x-BinaryII"},
-  { 4,	"gif",	"image/gif"},             
+  { 4,	"gif",	"image/gif"},
   { 4,	"jpeg",	"image/jpeg"},
   { 3,	"jpg",	"image/jpeg"},
   { 3,	"png",	"image/png"},
+  { 3,	"sdk",	"application/x-ShrinkIt"},
   { 3,	"shk",	"application/x-ShrinkIt"},
   { 4,	"tiff",	"image/tiff"},
-  { 0, NULL, NULL}         
+  { 0, NULL, NULL}
 };
 
 
