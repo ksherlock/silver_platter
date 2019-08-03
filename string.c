@@ -24,7 +24,7 @@ extern Word headers[];
 // <name>?html and
 // ._<name>
 //
-// the filename is updated and the  moreFlags value is returned.
+// the filename is updated and the moreFlags value is returned.
 //
 Word ScanCGI(GSString255Ptr g)
 {
@@ -72,17 +72,66 @@ Word len = g->length;
   
   if ((g->text[i + 1] == '.') && (g->text[i + 2] == '_'))
   {
-  	len -= 2;
-  	for (i++ ; i < len; i++)
-  	{
-  		g->text[i] = g->text[i + 2];
-  	}
-  	g->text[i] = 0;  // NULL terminate for convenience.
-  	g->length = len;
-  	return CGI_APPLEDOUBLE;	
+        len -= 2;
+        for (i++ ; i < len; i++)
+        {
+                g->text[i] = g->text[i + 2];
+        }
+        g->text[i] = 0;  // NULL terminate for convenience.
+        g->length = len;
+        return CGI_APPLEDOUBLE; 
   }
   
   return 0;
+}
+
+/* cp2 is lowercase */
+int cmptoken(const char *cp1, const char *cp2) {
+  unsigned a,b;
+  unsigned i;
+  for (i = 0; ; ++i) {
+    a = cp1[i];
+    b = cp2[i];
+    if (a == ',' || isspace(a)) a = 0;
+    if (a == 0 && b == 0) return 1;
+    if (!a || !b) return 0;
+    a = tolower(a);
+    if (a != b) return 0;
+  }
+}
+static void ScanConnection(char *cp, struct qEntry *q) {
+  /* process a connection header */
+  /* connection: keep-alive */
+  /* connection: close */
+  /* connection: upgrade, TE, keep-alive */
+
+  unsigned c;
+  unsigned i;
+
+  for (i = 0; ;) {
+
+    do {
+      c = cp[i++];
+    } while (c == ' ' || isspace(c));
+    if (!c) return;
+
+    if (c == 'c' && cmptoken(cp, 'close')) {
+      q->flags &= ~FLAG_KA;
+      return;
+    }
+    if (c == 'k' && cmptoken(cp, 'keep-alive')) {
+      q->flags |= FLAG_KA;
+      return;
+    }
+  }
+}
+
+static void ScanRange(char *cp, struct qEntry *q) {
+  /* process a Range: header */
+  /* expect bytes=\d+-\d+ (n1 to n2) */
+  /* bytes=-\d+ (last n bytes of file)*/
+  /* bytes=\d+- (n to eof) */
+  /* more complicated expressions are possible but not supported */
 }
 
 
@@ -105,12 +154,12 @@ Word header;
 
     switch(header)
     {
-    case 1: // Connection: keep-alive.
+    case 1: // Keep-Alive.
       q->flags |= FLAG_KA;
       break;
 
-    case 2: // Connection: close
-      q->flags &= ~FLAG_KA;
+    case 2: // Connection:
+      ScanConnection(cp, q);
       break;
 
     case 3: // Host:
@@ -124,10 +173,10 @@ Word header;
       host = NewPointer(i + 3);
       if (host)
       {
-	q->host = host;
-	host->length = i;
-	BlockMove(cp, host->text, i);
-	host->text[i] = 0;
+        q->host = host;
+        host->length = i;
+        BlockMove(cp, host->text, i);
+        host->text[i] = 0;
       }
       break;
 
@@ -151,9 +200,14 @@ Word header;
       if (isdigit(c = *cp)) q->depth = c - '0';
       else q->depth = -1;
       break;
+    case 7: // Range:
+      ScanRange(cp, q);
+      break;
     }                     
   }
 }
+
+
 
 // scan a request for the request and http version.
 void ScanMethod(char *cp, struct qEntry *q)
@@ -214,13 +268,13 @@ Word cmd = -1;
     {
       if ((c == '%') && isxdigit(path->text[i]) && isxdigit(path->text[i + 1]))
       {
-	Word a, b;
-	c = path->text[i++];
-	a = isdigit(c) ? c - '0' : _tolower(c) - 'a' + 10;
+        Word a, b;
+        c = path->text[i++];
+        a = isdigit(c) ? c - '0' : _tolower(c) - 'a' + 10;
 
-	c = path->text[i++];
-	b = isdigit(c) ? c - '0' : _tolower(c) - 'a' + 10;
-	c = a << 4 | b;
+        c = path->text[i++];
+        b = isdigit(c) ? c - '0' : _tolower(c) - 'a' + 10;
+        c = a << 4 | b;
       }
       path->text[j++] = c;
     }
