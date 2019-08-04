@@ -6,10 +6,11 @@
 #include <gsos.h>
 #include <memory.h>
 #include <tcpip.h>
-
-#include <timetool.h>
 #include <misctool.h>
 
+#include "timetool.h"
+
+#include <stdio.h>
 
 #include "server.h"
 #include "globals.h"
@@ -17,9 +18,7 @@
 #include "config.h"
 #include "pointer.h"
 
-
-extern int orca_sprintf(char *, const char *, ...);
-
+#define B(x) x->length, x->text
 
 extern void tiTimeRec2ISO8601(TimeRecPtr t, char *str);
 extern void tiTimeRec2GMTString(TimeRecPtr t, char *str);
@@ -82,17 +81,17 @@ Word err;
 
 	if (root)
 	{
-		i = orca_sprintf(buffer,
+		i = sprintf(buffer,
       	"<D:response>\r\n"
-      	"<D:href>%B</D:href>\r\n",
-      	path_uri);		
+      	"<D:href>%*.s</D:href>\r\n",
+      	B(path_uri));		
 	}
 	else
 	{
-		i = orca_sprintf(buffer,
+		i = sprintf(buffer,
       	"<D:response>\r\n"
-      	"<D:href>%B/%B</D:href>\r\n",
-      	path_uri, file_uri);
+      	"<D:href>%*.s/%*.s</D:href>\r\n",
+      	B(path_uri), B(file_uri));
 	}
 	err = BufferAppend(m, buffer, i);
 	if (err) return 500;
@@ -105,20 +104,20 @@ Word err;
 
     tiTimeRec2ISO8601(&info->createDateTime, buffer32);
 
-    i = orca_sprintf(buffer, "<D:creationdate>%b</D:creationdate>\r\n", buffer32);
+    i = sprintf(buffer, "<D:creationdate>%b</D:creationdate>\r\n", buffer32);
     err = BufferAppend(m, buffer, i);
     if (err) return 500;
 
 
     tiTimeRec2GMTString(&info->modDateTime, buffer32);
 
-    i = orca_sprintf(buffer,
-      "<D:displayname>%B</D:displayname>\r\n"
+    i = sprintf(buffer,
+      "<D:displayname>%*.s</D:displayname>\r\n"
       "<D:getlastmodified>%b</D:getlastmodified>\r\n"
       "<D:getcontentlength>%lu</D:getcontentlength>\r\n"
       "<D:getcontenttype>%s</D:getcontenttype>\r\n"
       "<D:resourcetype />\r\n",
-      file_utf,
+      B(file_utf),
       buffer32,
       info->eof,
       GetMimeString(file_utf, info->fileType, info->auxType));
@@ -156,18 +155,18 @@ Word err;
 
 	if (root)
 	{
-		i = orca_sprintf(buffer,
+		i = sprintf(buffer,
 	      "<D:response>\r\n"
-	      "<D:href>%B/</D:href>\r\n",
-	      path_uri);		
+	      "<D:href>%*.s/</D:href>\r\n",
+	      B(path_uri));		
 		
 	}
 	else
 	{
-		i = orca_sprintf(buffer,
+		i = sprintf(buffer,
 	      "<D:response>\r\n"
-	      "<D:href>%B/%B/</D:href>\r\n",
-	      path_uri, file_uri);
+	      "<D:href>%*.s/%*.s/</D:href>\r\n",
+	      B(path_uri), B(file_uri));
 	}
   
 	err = BufferAppend(m, buffer, i);
@@ -180,9 +179,9 @@ Word err;
   	if (err) return 500;	
 	
 	
-    i = orca_sprintf(buffer,
-      "<D:displayname>%B</D:displayname>\r\n",
-      file_utf);	
+    i = sprintf(buffer,
+      "<D:displayname>%*.s</D:displayname>\r\n",
+      B(file_utf));	
 	
 
 	err = BufferAppend(m, buffer, i);
@@ -193,7 +192,7 @@ Word err;
     {
       tiTimeRec2ISO8601(&info->createDateTime, buffer32);
 
-      i = orca_sprintf(buffer,
+      i = sprintf(buffer,
 	"<D:creationdate>%b</D:creationdate>\r\n",
 	buffer32);
       err = BufferAppend(m, buffer, i);
@@ -202,7 +201,7 @@ Word err;
     if (info)
     {
       tiTimeRec2GMTString(&info->modDateTime, buffer32);
-      i = orca_sprintf(buffer,
+      i = sprintf(buffer,
 	"<D:getlastmodified>%b</D:getlastmodified>\r\n",
 	buffer32);
       err = BufferAppend(m, buffer, i);

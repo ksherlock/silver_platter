@@ -5,10 +5,12 @@
 
 #include <types.h>
 
+#include <stdio.h>
+
 #include "server.h"
 #include "config.h"
 
-int orca_sprintf(char *, const char *, ...);
+#define B(x) x->length, x->text
 
 static Word lock = 0;
 
@@ -26,7 +28,7 @@ GSString255Ptr host;
 	host = q->host;
 	if (host == NULL) host = (GSString255Ptr)"\x09\x00" "localhost";
 
-	len = orca_sprintf(buffer,
+	len = sprintf(buffer,
 		"<?xml version=\"1.0\" encoding=\"utf-8\" ?>\r\n"
 		"<D:prop xmlns:D=\"DAV:\">\r\n"
 		  "<D:lockdiscovery>\r\n"
@@ -35,7 +37,7 @@ GSString255Ptr host;
 		      "<D:lockscope><D:exclusive/></D:lockscope>\r\n"
 		      "<D:depth>Infinity</D:depth>\r\n"
 		      "<D:owner>\r\n"
-		        "<D:href>http://%B%B</D:href>\r\n"
+		        "<D:href>http://%*.s%*.s</D:href>\r\n"
 		      "</D:owner>\r\n"
 		      "<D:timeout>Infinite</D:timeout>\r\n"
 		      "<D:locktoken>\r\n"
@@ -45,8 +47,8 @@ GSString255Ptr host;
 		  "</D:lockdiscovery>\r\n"
 		"</D:prop>\r\n",
 		
-		host,
-		q->pathname,
+		B(host),
+		B(q->pathname),
 		lock++);
 		
 	SendHeader(q, 200, len, NULL, "text/xml", NULL, 0);

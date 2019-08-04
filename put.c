@@ -9,12 +9,14 @@
 #include <misctool.h>
 #include <tcpip.h>
 
+#include <stdio.h>
+
 #include "server.h"
 #include "config.h"
 #include "globals.h"
 
+#define B(x) x->length, x->text
 
-extern int orca_sprintf(char *, const char *, ...);
 extern void InsertString(Word, const char *);
 
 
@@ -144,7 +146,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
       {
 	#ifdef DEBUG
 	  InsertString(
-            orca_sprintf(buffer, "CreateGS(%B): $%04x\r", q->fullpath, err),
+            sprintf(buffer, "CreateGS(%*.s): $%04x\r", B(q->fullpath), err),
             buffer);
 	#endif
       }
@@ -153,7 +155,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
     {
 	#ifdef DEBUG
 	  InsertString(
-            orca_sprintf(buffer, "GetFileInfoGS(%B): $%04x\r", q->fullpath, err),
+            sprintf(buffer, "GetFileInfoGS(%*.s): $%04x\r", B(q->fullpath), err),
             buffer);
 	#endif    	
     }
@@ -182,7 +184,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
     {
       #ifdef DEBUG
 	InsertString(
-          orca_sprintf(buffer, "CreateGS(%B): $%04x\r", q->fullpath, _toolErr),
+          sprintf(buffer, "CreateGS(%*.s): $%04x\r", B(q->fullpath), _toolErr),
           buffer);
       #endif
       return ProcessError(501, q);
@@ -201,7 +203,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
   {
     #ifdef DEBUG
       InsertString(
-        orca_sprintf(buffer, "OpenGS(%B): $%04x\r", q->fullpath, _toolErr),
+        sprintf(buffer, "OpenGS(%*.s): $%04x\r", B(q->fullpath), _toolErr),
         buffer);
     #endif
     return ProcessError(500, q);
@@ -221,7 +223,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
     {
       #ifdef DEBUG
 	InsertString(
-          orca_sprintf(buffer, "SetEOFGS(%B): $%04x\r", q->fullpath, _toolErr),
+          sprintf(buffer, "SetEOFGS(%*.s): $%04x\r", B(q->fullpath), _toolErr),
           buffer);
       #endif
       return ProcessError(500, q);

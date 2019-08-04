@@ -12,6 +12,9 @@
 
 #include <tcpip.h>
 #include <gsos.h>
+
+#include <stdio.h>
+
 #include "globals.h"
 
 #include "server.h"
@@ -20,9 +23,7 @@
 #include "pointer.h"
 #include "MemBuffer.h"
 
-
-extern int orca_sprintf(char *, const char *, ...);
-
+#define B(x) x->length, x->text
 
 extern const char *GetMimeString(GSString255Ptr, Word, LongWord);
 
@@ -64,7 +65,7 @@ Word Redirect(struct qEntry *q, GSString255Ptr append)
 {
 Word ipid = q->ipid;
 Word i;
-void *path_uri;
+GSString255Ptr path_uri;
 
 GSString255Ptr path;
 
@@ -104,10 +105,10 @@ GSString255Ptr path;
 	if (err) return ProcessError(500, q);
 
 #undef xstr
-#define xstr "<p>The document has moved <a href=\"%B%B\">here</a></p>\r\n" \
+#define xstr "<p>The document has moved <a href=\"%*.s%*.s\">here</a></p>\r\n" \
 "</body>\r\n</html>\r\n"
 
-    i = orca_sprintf(buffer, xstr, path_uri, append);
+    i = sprintf(buffer, xstr, B(path_uri), B(append));
 	err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
 	if (err) return ProcessError(500, q);
   }
@@ -115,8 +116,8 @@ GSString255Ptr path;
   i = 0;
   if (q->host)
   {
-    i = orca_sprintf(buffer, "Location: http://%B%B%B\r\n",
-      q->host, path_uri, append);
+    i = sprintf(buffer, "Location: http://%*.s%*.s%*.s\r\n",
+      B(q->host), B(path_uri), B(append));
   }
   
   SendHeader(q, 301, q->command == CMD_HEAD ? (LongWord)-1 : m.used,
@@ -256,12 +257,12 @@ CREATE_BUFFER(m, q->workHandle);
   	if (err) break;
   	
 
-  	i = orca_sprintf(buffer,
-	  "<title>Index of %B</title>\r\n" \
+  	i = sprintf(buffer,
+	  "<title>Index of %*.s</title>\r\n" \
 	  "</head>\r\n" \
 	  "<body>\r\n" \
-	  "<h1>Index of %B</h1>\r\n",  	 
-  	  path_html, path_html);
+	  "<h1>Index of %*.s</h1>\r\n",  	 
+  	  B(path_html), B(path_html));
 
   	err = BufferAppend(&m, buffer, i);
   	if (err) break;
@@ -276,9 +277,9 @@ CREATE_BUFFER(m, q->workHandle);
 	  while (path_uri->text[i] != '/') i--;
 	  path_uri->length = i + 1;
 	
-	  i = orca_sprintf(buffer,
-	    "<p><a href=\"%B\">Parent Directory</a></p>\r\n",
-	    path_uri);
+	  i = sprintf(buffer,
+	    "<p><a href=\"%*.s\">Parent Directory</a></p>\r\n",
+	    B(path_uri));
 	
   	  err = BufferAppend(&m, buffer, i);
   	  if (err) break;
@@ -302,8 +303,8 @@ CREATE_BUFFER(m, q->workHandle);
 
     for(;;)
 	{
-	void *file_uri;
-	void *file_html;
+	GSString255Ptr file_uri;
+	GSString255Ptr file_html;
 	Word alloc = 0;
 		
 	  GetDirEntryGS(&DirDCB);
@@ -330,13 +331,13 @@ CREATE_BUFFER(m, q->workHandle);
 	  // folder -- no size, include trailing /
 	  if (DirDCB.fileType == 0x0f)
 	  {
-	    i = orca_sprintf(buffer,
+	    i = sprintf(buffer,
 	        "<tr>"
-	          "<td><a href=\"%B/\">%B/</a></td>"
+	          "<td><a href=\"%*.s/\">%*.s/</a></td>"
 	          "<td align=\"right\"> &mdash; </td>"
 	          "<td colspan=\"4\"> Folder </td>"
 	        "</tr>\r\n",
-	        file_uri, file_html);
+	        B(file_uri), B(file_html));
 	  }
 	  else
 	  {
@@ -350,12 +351,12 @@ CREATE_BUFFER(m, q->workHandle);
 	
 	
 		
-		i = orca_sprintf(buffer,
+		i = sprintf(buffer,
 			"<tr>"
-			"<td><a href=\"%B\">%B</a></td>"
+			"<td><a href=\"%*.s\">%*.s</a></td>"
 			"<td align=\"right\"> %uK </td>"
 			"<td> %b </td>",
-			file_uri, file_html,
+			B(file_uri), B(file_html),
 			(Word)size,
 			fType);
 	
@@ -366,14 +367,14 @@ CREATE_BUFFER(m, q->workHandle);
 
 		if (as)
 		{
-			i += orca_sprintf(buffer + i,
+			i += sprintf(buffer + i,
 			  "<td>"
-			  "<a href=\"%B?applesingle\">AppleSingle</a>"
+			  "<a href=\"%*.s?applesingle\">AppleSingle</a>"
 			  "</td>",
-			  file_uri);
+			  B(file_uri));
 		}
 		else
-		i += orca_sprintf(buffer + i, "<td></td>");
+		i += sprintf(buffer + i, "<td></td>");
 
 
 		// appledouble...
@@ -382,14 +383,14 @@ CREATE_BUFFER(m, q->workHandle);
 
 		if (as)
 		{
-			i += orca_sprintf(buffer + i,
+			i += sprintf(buffer + i,
 			  "<td>"
-			  "<a href=\"._%B\">AppleDouble</a>"
+			  "<a href=\"._%*.s\">AppleDouble</a>"
 			  "</td>",
-			  file_uri);
+			  B(file_uri));
 		}
 		else
-		i += orca_sprintf(buffer + i, "<td></td>");
+		i += sprintf(buffer + i, "<td></td>");
 		
 		// macbinary
 		as = fAppleDouble;
@@ -397,14 +398,14 @@ CREATE_BUFFER(m, q->workHandle);
 
 		if (as)
 		{
-			i += orca_sprintf(buffer + i,
+			i += sprintf(buffer + i,
 			  "<td>"
-			  "<a href=\"%B?macbinary\">MacBinary</a>"
+			  "<a href=\"%*.s?macbinary\">MacBinary</a>"
 			  "</td></tr>\r\n",
-			  file_uri);
+			  B(file_uri));
 		}
 		else
-		i += orca_sprintf(buffer + i, "<td></td></tr>\r\n");		
+		i += sprintf(buffer + i, "<td></td></tr>\r\n");		
 
 	   }
 	
@@ -503,8 +504,8 @@ CREATE_BUFFER(m, q->workHandle);
         d = 1;
         while (d = GetNextVolume(d, &VolumeDCB))
   	{	
-  	void *dev_uri;
-	void *dev_html;
+  	GSString255Ptr dev_uri;
+	GSString255Ptr dev_html;
 	Word alloc = 0;
   		
 
@@ -527,13 +528,13 @@ CREATE_BUFFER(m, q->workHandle);
 	  else alloc |= 0x0002;
 
 
-      i = orca_sprintf(buffer,
+      i = sprintf(buffer,
         "<tr>"
-        "<td><a href=\"%B/\">%B/</a></td>"
+        "<td><a href=\"%*.s/\">%*.s/</a></td>"
         "<td align=\"right\"> &mdash; </td>"
         "<td> Folder </td>"
         "</tr>\r\n",
-        dev_uri, dev_html);
+        B(dev_uri), B(dev_html));
 
 
 	  if (alloc & 0x0001) DisposePointer(dev_uri);

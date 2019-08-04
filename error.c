@@ -18,10 +18,6 @@
 #include "http.h"
 
 
-extern int orca_sprintf(char *, const char *, ...);
-
-
-           
 
 static char tiBuffer[38];
 

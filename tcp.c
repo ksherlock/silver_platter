@@ -7,12 +7,11 @@
 #include <tcpip.h>
 #include <memory.h>
 
+#include <stdio.h>
+
 #include "server.h"
 #include "config.h"
 
-
-
-int orca_sprintf(char *, const char *, ...);
 
 
 #undef MIN
@@ -28,7 +27,7 @@ void WriteData(struct qEntry *q, const char *data, word length)
 	
   	if (q->flags & FLAG_CHUNKED)
   	{	
-  		i = orca_sprintf(buffer, "%x\r\n", length);
+  		i = sprintf(buffer, "%x\r\n", length);
   		TCPIPWriteTCP(ipid, buffer, i, false, false);	
   	}
   	

@@ -4,20 +4,42 @@
 #pragma debug 0x8000
 
 #include <tcpip.h>
-#include <timetool.h>
 #include <MiscTool.h>
+#include <gsos.h>
 
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "timetool.h"
 
 #include "server.h"
 #include "config.h"
-
-extern int orca_sprintf(char *, const char *, ...);
-extern int fdprintf(word, const char *, ...);
 
 static char tiBuffer[38];
 static char buffer16[16];
 
 extern Word logfd;
+
+int fdprintf(word refNum, const char *fmt, ...) {
+
+  static char buffer[256];
+  IORecGS dcb;
+  int size;
+  va_list ap;
+
+  va_start(ap, fmt);
+  size = vsnprintf(buffer, sizeof(buffer), fmt, ap);
+  va_end(ap);
+  if (size < 0 || size >= sizeof(buffer)-1) return -1;
+
+  dcb.pCount = 4;
+  dcb.refNum = refNum;
+  dcb.dataBuffer = buffer;
+  dcb.requestCount = size;
+  WriteGS(&dcb);
+  return size;
+}
+
 
 extern void tiTimeRec2GMTString(const TimeRec *, char *);
 
@@ -42,7 +64,7 @@ Word i;
   static char buffer6[6];
   static tiPrefRec ti;
 
-  char *req = q->request ? (char *)q->request : "\x00\x00";
+  GSString255Ptr req = q->request ? q->request : (GSString255Ptr)"\x00\x00";
   TimeRec tr;
 
 
@@ -57,28 +79,28 @@ Word i;
 
 
     if (size != -1)
-      fdprintf(logfd, "%b - - [%02u/%b/%04u:%02u:%02u:%02u %b] \"%B\" %u %lu\r",
+      fdprintf(logfd, "%b - - [%02u/%b/%04u:%02u:%02u:%02u %b] \"%.*s\" %u %lu\r",
         buffer16,
         tr.day + 1, months + (tr.month << 2), 1900 + tr.year,
         tr.hour, tr.minute, tr.second, buffer6,
-        req, status, size);
+        req->length, req->text, status, size);
     else
-      fdprintf(logfd, "%b - - [%02d/%b/%04u:%02u:%02u:%02u %b] \"%B\" %u -\r",
+      fdprintf(logfd, "%b - - [%02d/%b/%04u:%02u:%02u:%02u %b] \"%.*s\" %u -\r",
         buffer16,
         tr.day + 1, months + (tr.month << 2), 1900 + tr.year,
         tr.hour, tr.minute, tr.second, buffer6,
-        req, status);
+        req->length, req->text, status);
 
   }
 
 
   if (q->version >= 0x0100)
   {
-    i = orca_sprintf(buffer, "HTTP/1.1 %u\r\n", status);
+    i = sprintf(buffer, "HTTP/1.1 %u\r\n", status);
     TCPIPWriteTCP(ipid, buffer, i, false, false);
 
     tiToday2GMTString(tiBuffer);
-    i = orca_sprintf(buffer, "Date: %b\r\n", tiBuffer);
+    i = sprintf(buffer, "Date: %b\r\n", tiBuffer);
     TCPIPWriteTCP(ipid, buffer, i, false, false);
 
     #undef xstr
@@ -88,7 +110,7 @@ Word i;
     if (modTime)
     {
       tiTimeRec2GMTString(modTime, tiBuffer);
-      i = orca_sprintf(buffer, "Last-Modified: %b\r\n", tiBuffer);
+      i = sprintf(buffer, "Last-Modified: %b\r\n", tiBuffer);
       TCPIPWriteTCP(ipid, buffer, i, false, false);
     }
 
@@ -100,7 +122,7 @@ Word i;
     }
     else if (size != -1)
     {
-      i = orca_sprintf(buffer, "Content-Length: %lu\r\n", (LongWord)size);
+      i = sprintf(buffer, "Content-Length: %lu\r\n", (LongWord)size);
       TCPIPWriteTCP(ipid, buffer, i, false, false);
     }
 
@@ -122,7 +144,7 @@ Word i;
 
     if (mimeString)
     {
-      i = orca_sprintf(buffer, "Content-Type: %s\r\n", mimeString);
+      i = sprintf(buffer, "Content-Type: %s\r\n", mimeString);
       TCPIPWriteTCP(ipid, buffer, i, false, false);
     }
     //

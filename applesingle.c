@@ -6,7 +6,10 @@
 #include <gsos.h>
 #include <misctool.h>
 #include <tcpip.h>
-#include <timetool.h>
+
+#include <stdio.h>
+
+#include "timetool.h"
 
 #include "server.h"
 #include "applesingle.h"
@@ -14,9 +17,6 @@
 
 extern pascal Word swap16(Word);
 extern pascal LongWord swap32(LongWord);
-
-extern int orca_sprintf(char *, const char *, ...);
-
 
 extern pascal Word GetHFSInfo(GSString255Ptr, void *);
 
@@ -161,7 +161,7 @@ Word asingle = (q->moreFlags == CGI_APPLESINGLE);
 	
 	if (q->flags & FLAG_CHUNKED)
 	{
-		int i = orca_sprintf(buffer, "%x\r\n", subtotal);
+		int i = sprintf(buffer, "%x\r\n", subtotal);
 		TCPIPWriteTCP(ipid, buffer, i, false, false);
 	}
 	

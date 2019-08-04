@@ -16,6 +16,7 @@
 #include <tcpip.h>
 
 #include <string.h>
+#include <stdio.h>
 
 #include "httpnda.h"
 #include "server.h"
@@ -26,7 +27,8 @@
 #include "pointer.h"
 #include "globals.h"
 
-extern int orca_sprintf(char *, const char *, ...);
+#define B(x) x->length, x->text
+
 
 extern Word ProcessPropfind(struct qEntry *q);
 extern Word ProcessOptions(struct qEntry *q);
@@ -244,7 +246,7 @@ Word StartServer(void)
 #if DEBUG
   if (_toolErr)
       InsertString(
-        orca_sprintf(buffer, "TCPIPLogin -- %x\r", _toolErr),
+        sprintf(buffer, "TCPIPLogin -- %x\r", _toolErr),
         buffer);
 #endif
 
@@ -253,7 +255,7 @@ Word StartServer(void)
 #if DEBUG
   if (_toolErr)
       InsertString(
-        orca_sprintf(buffer, "TCPIPSetSourcePort -- %x\r", _toolErr),
+        sprintf(buffer, "TCPIPSetSourcePort -- %x\r", _toolErr),
         buffer);
 #endif
                                     
@@ -262,7 +264,7 @@ Word StartServer(void)
 #if DEBUG
   if (_toolErr)
       InsertString(
-        orca_sprintf(buffer, "TCPIPListenTCP -- %x\r", _toolErr),
+        sprintf(buffer, "TCPIPListenTCP -- %x\r", _toolErr),
         buffer);
 #endif
                                           
@@ -358,7 +360,7 @@ Word ipid;
   if (MyWindow)
   {
     static char buffer[6];
-    orca_sprintf(buffer, "%u", fActive);
+    sprintf(buffer, "%u", fActive);
     SetCtlTextByID(MyWindow, CtrlCount, 1, (Ref)buffer);
 
     SetCtlValueByID(fActive, MyWindow, CtrlTherm);
@@ -416,7 +418,7 @@ Word oldPrefs;
     if (srBuffer.srState == TCPSCLOSED)
     {
       #ifdef DEBUG
-      i = orca_sprintf(buffer, "TCPIPLogout(%d)\r", ipid);
+      i = sprintf(buffer, "TCPIPLogout(%d)\r", ipid);
       InsertString(i, buffer);
       #endif
 
@@ -432,7 +434,7 @@ Word oldPrefs;
       (srBuffer.srState == TCPSTIMEWAIT || srBuffer.srState == TCPSCLOSING))
     {
       #ifdef DEBUG
-      i = orca_sprintf(buffer, "TCPIPAbort(%d)\r", ipid);
+      i = sprintf(buffer, "TCPIPAbort(%d)\r", ipid);
       InsertString(i, buffer);
       #endif
 
@@ -456,7 +458,7 @@ Word oldPrefs;
       else if (tick > q->tick)
       {
         #ifdef DEBUG
-        i = orca_sprintf(buffer, "TCPIPCloseTCP(%d) [establish timeout]\r", ipid);
+        i = sprintf(buffer, "TCPIPCloseTCP(%d) [establish timeout]\r", ipid);
         InsertString(i, buffer);
         #endif
 
@@ -477,7 +479,7 @@ Word oldPrefs;
 	if (tick > q->tick)
 	{
           #ifdef DEBUG
-          i = orca_sprintf(buffer, "TCPIPCloseTCP(%d) [read timeout]\r", ipid);
+          i = sprintf(buffer, "TCPIPCloseTCP(%d) [read timeout]\r", ipid);
           InsertString(i, buffer);
           #endif
 
@@ -625,7 +627,7 @@ Word oldPrefs;
           WriteData(q, buffer, count);
 
           #ifdef DEBUG
-          i = orca_sprintf(buffer, "TCPIPWriteTCP(%d) [%d bytes sent]\r",
+          i = sprintf(buffer, "TCPIPWriteTCP(%d) [%d bytes sent]\r",
             ipid, count);
           InsertString(i, buffer);
           #endif
@@ -648,7 +650,7 @@ Word oldPrefs;
           else // read error - just close and be done with it.
           {
             #ifdef DEBUG
-            i = orca_sprintf(buffer, "TCPIPCloseTCP(%d) [read error]\r", ipid);
+            i = sprintf(buffer, "TCPIPCloseTCP(%d) [read error]\r", ipid);
             InsertString(i, buffer);
             #endif
 
@@ -682,8 +684,8 @@ Word oldPrefs;
 	  if (_toolErr)
           {
             #ifdef DEBUG
-            i = orca_sprintf(buffer, "WriteGS(%B): %04x\r",
-              q->fullpath, _toolErr);
+            i = sprintf(buffer, "WriteGS(%*.s): %04x\r",
+              B(q->fullpath), _toolErr);
             InsertString(i, buffer);
             #endif
             ProcessError(500,q);
@@ -727,7 +729,7 @@ Word oldPrefs;
           else
           {
             #ifdef DEBUG
-            i = orca_sprintf(buffer, "TCPIPCloseTCP(%d)\r", ipid);
+            i = sprintf(buffer, "TCPIPCloseTCP(%d)\r", ipid);
             InsertString(i, buffer);
             #endif
 
@@ -780,7 +782,7 @@ Word oldPrefs;
       {
 #if DEBUG
         InsertString(
-          orca_sprintf(buffer, " NewHandle -- %x\r", err),
+          sprintf(buffer, " NewHandle -- %x\r", err),
           buffer);
 #endif
         TCPIPAbortTCP(child);
@@ -797,7 +799,7 @@ Word oldPrefs;
     else if (_toolErr != terrNOINCOMING)
     {
       InsertString(
-        orca_sprintf(buffer, "TCPIPAcceptTCP -- %x\r", _toolErr),
+        sprintf(buffer, "TCPIPAcceptTCP -- %x\r", _toolErr),
         buffer);
     }
 #endif
@@ -809,7 +811,7 @@ Word oldPrefs;
 
 
     SetCtlValueByID(fActive, MyWindow, CtrlTherm);
-    orca_sprintf(buffer, "%u", fActive);
+    sprintf(buffer, "%u", fActive);
     SetCtlTextByID(MyWindow, CtrlCount, 1, (Ref)buffer);
   }
 

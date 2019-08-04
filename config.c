@@ -13,12 +13,11 @@
 #include <window.h>
 
 #include <string.h>
+#include <stdio.h>
 
 #include "config.h"
 #include "rez.h"
 #include "toolbox.h"
-
-extern int orca_sprintf(char *, const char *, ...);
 
 #define SCREEN_COUNT 5	// number of config screens.
 
@@ -364,7 +363,7 @@ void LoadControls(WindowPtr win, Word value)
           SetCtlTextByID(win, CtrlHomeStat, 2, (Ref)fRoot);
         else SetCtlTextByID(win, CtrlHomeStat, 1, (Ref)"");
 
-	i = orca_sprintf(buffer + 1, "%u", fPort);
+	i = sprintf(buffer + 1, "%u", fPort);
 	buffer[0] = i;
 	SetLETextByID(win, CtrlPort, (StringPtr)buffer);
 
