@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "config.h"
+#include "xstring.h"
 
 struct etable
 {
@@ -37,8 +38,6 @@ static struct etable binary[] =
   { 0, NULL, NULL}
 };
 
-
-
 const char *GetMimeString(const GSString255Ptr filename, Word fileType, LongWord auxType)
 {
 const char *mime;
@@ -57,7 +56,7 @@ struct etable *e;
     for (e = binary; i = e->length; e++)
     {
       if (l > i && filename->text[l -i -  1] == '.'
-        && !strincmp(e->ext, filename->text + l - i, i))
+        && !xstrncasecmp(e->ext, filename->text + l - i, i))
       {
         mime = e->mime;
         break;
@@ -72,7 +71,7 @@ struct etable *e;
     for (e = ascii; i = e->length; e++)
     {
       if (l > i && filename->text[l -i -  1] == '.'
-        && !strincmp(e->ext, filename->text + l - i, i))
+        && !xstrncasecmp(e->ext, filename->text + l - i, i))
       {
         mime = e->mime;
         break;

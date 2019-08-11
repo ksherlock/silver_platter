@@ -325,7 +325,7 @@ unsigned cmd;
   while (isspace(*cp)) cp++;
 
   // http version....
-  if (!strincmp("HTTP/", cp, 5))
+  if (!xstrncasecmp("HTTP/", cp, 5))
   {
   int major, minor;
     major = 0;
