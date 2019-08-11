@@ -1,10 +1,9 @@
-# HTTP headers we recognize
-#for use with ``dfa'' command
+#include "headers.h"
 
-"Keep-Alive:" 1
-"Connection:" 2
-"Host:" 3
-"Content-Length:" 4
-"Content-Type:" 5
-"Depth:" 6
-"Range:" 7
+"Keep-Alive:" h_KeepAlive
+"Connection:" h_Connection
+"Host:" h_Host
+"Content-Length:" h_ContentLength
+"Content-Type:" h_ContentType
+"Depth:" h_Depth
+"Range:" h_Range

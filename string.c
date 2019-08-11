@@ -6,18 +6,25 @@
 #include <types.h>
 #include <intmath.h>
 #include <memory.h>
-#include <dfa.h>
+
+
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
+#include <stdlib.h>
+
+#include "dfa.h"
 
 #include "server.h"
 #include "config.h"
 #include "pointer.h"
+#include "xstring.h"
 
-// dfa table for methods
-extern Word methods[];
-extern Word headers[];
+#include "headers.h"
+#include "methods.h"
 
+extern int scan_headers(const char *);
+extern int scan_methods(const char *);
 
 // checks for 
 // <name>?asingle
@@ -115,11 +122,11 @@ static void ScanConnection(char *cp, struct qEntry *q) {
     } while (c == ' ' || isspace(c));
     if (!c) return;
 
-    if (c == 'c' && cmptoken(cp, 'close')) {
+    if (c == 'c' && cmptoken(cp, "close")) {
       q->flags &= ~FLAG_KA;
       return;
     }
-    if (c == 'k' && cmptoken(cp, 'keep-alive')) {
+    if (c == 'k' && cmptoken(cp, "keep-alive")) {
       q->flags |= FLAG_KA;
       return;
     }
@@ -139,72 +146,70 @@ static void ScanRange(char *cp, struct qEntry *q) {
 void ScanHeader(char *cp, struct qEntry *q)
 {
 char c;
-int i;
+unsigned i;
 Handle h;
 GSString255Ptr host;
 Word header;
 
-  i = MatchDFA(headers, cp, &header);
-  if (i)
+
+  i = scan_headers(cp);
+  if (!i) return;
+  cp += i & 0xff;
+  i >>= 8;
+  while (isspace(*cp)) cp++;
+
+  switch(i)
   {
-    cp += i;
+  case h_KeepAlive: // Keep-Alive.
+    q->flags |= FLAG_KA;
+    break;
 
-    // move past any leading whitespace
-    while (isspace(*cp)) cp++;
+  case h_Connection: // Connection:
+    ScanConnection(cp, q);
+    break;
 
-    switch(header)
+  case h_Host: // Host:
+    if (!*cp) return;
+
+    // find the length...
+    i = 0;
+    while ((c = cp[i]) && !isspace(c)) i++;
+    if (!i) return;
+
+    host = NewPointer(i + 3);
+    if (host)
     {
-    case 1: // Keep-Alive.
-      q->flags |= FLAG_KA;
-      break;
+      q->host = host;
+      host->length = i;
+      BlockMove(cp, host->text, i);
+      host->text[i] = 0;
+    }
+    break;
 
-    case 2: // Connection:
-      ScanConnection(cp, q);
-      break;
+  case h_ContentLength:  //Content-Length
+    if (!*cp) return;
 
-    case 3: // Host:
-      if (!*cp) return;
+    i = 0;
 
-      // find the length...
-      i = 0;
-      while ((c = cp[i]) && !isspace(c)) i++;
-      if (!i) return;
+    while (isdigit(cp[i])) i++;
 
-      host = NewPointer(i + 3);
-      if (host)
-      {
-        q->host = host;
-        host->length = i;
-        BlockMove(cp, host->text, i);
-        host->text[i] = 0;
-      }
-      break;
+    q->contentlength = Dec2Long(cp, i, 0);
+    break;
 
-    case 4:  //Content-Length
-      if (!*cp) return;
+  case h_ContentType: // Content-Type ... check if text/*
+    if (!*cp) return;
 
-      i = 0;
+    if (!xstrncasecmp("text/", cp, 5)) q->flags |= FLAG_TEXT;
+    break;
 
-      while (isdigit(cp[i])) i++;
-
-      q->contentlength = Dec2Long(cp, i, 0);
-      break;
-
-    case 5: // Content-Type ... check if text/*
-      if (!*cp) return;
-
-      if (!strincmp("text/", cp, 5)) q->flags |= FLAG_TEXT;
-      break;
-
-    case 6: // Depth: 0, 1, or infinity.
-      if (isdigit(c = *cp)) q->depth = c - '0';
-      else q->depth = -1;
-      break;
-    case 7: // Range:
-      ScanRange(cp, q);
-      break;
-    }                     
-  }
+  case h_Depth: // Depth: 0, 1, or infinity.
+    if (isdigit(c = *cp)) q->depth = c - '0';
+    else q->depth = -1;
+    break;
+  case h_Range: // Range:
+    ScanRange(cp, q);
+    break;
+  }                     
 }
 
 
@@ -218,15 +223,17 @@ Handle h;
 GSString255Ptr path;
 Word match;
 int i, j;
+unsigned cmd;
 
-Word cmd = -1;
+
 
   // format: <method> <space>+ <path> <space>+ (HTTP/\d.\d)?
 
-  match = MatchDFA(methods, cp, &cmd);
-  if (match) cp += match;
-  else
-  {
+  cmd = scan_methods(cp);
+  if (cmd) {
+    cp += cmd & 0xff;
+    cmd >>= 8;
+  } else {
     // skip past the offending command.
     while ((c = *cp) && !isspace(c)) cp++;
     cmd = -1;
@@ -262,7 +269,7 @@ Word cmd = -1;
     cp += len;
 
     // now demangle %xx codes.
-    // since the demanglesd size will always be less, we're safe.
+    // since the demangled size will always be less, we're safe.
     i = j = 0;
     while (c = path->text[i++])
     {

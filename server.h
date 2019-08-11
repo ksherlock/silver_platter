@@ -34,26 +34,7 @@ enum
   STATE_PUT
 };
 
-enum
-{
-  CMD_OPTIONS = 1,
-  CMD_GET,
-  CMD_HEAD,
-  CMD_POST,
-  CMD_PUT,
-  CMD_DELETE,
-  CMD_TRACE,
-  CMD_CONNECT,
-
-  // WebDAV
-  CMD_PROPFIND,
-  CMD_PROPPATCH,
-  CMD_MKCOL,
-  CMD_COPY,
-  CMD_MOVE,
-  CMD_LOCK,
-  CMD_UNLOCK
-};
+#include "methods.h"
 
 struct qEntry
 {
