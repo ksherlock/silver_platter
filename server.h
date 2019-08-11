@@ -7,7 +7,8 @@ enum
   FLAG_KA = 0x0001,		// keep-alive
   FLAG_CHUNKED = 0x0002,	// chunked transfer
   FLAG_TEXT = 0x0004,		// PUT - is text/*
-  FLAG_CREATE = 0x0008		// PUT - created file.
+  FLAG_CREATE = 0x0008,		// PUT - created file.
+  FLAG_RANGE = 0x0010		// Range: request
 };
 
 // moreFlags
@@ -50,6 +51,9 @@ struct qEntry
   LongWord ip;
   LongWord contentlength;
   Word depth;
+
+  LongWord rangeStart;
+  LongWord rangeEnd;
 
   GSString255Ptr host;
   GSString255Ptr request;

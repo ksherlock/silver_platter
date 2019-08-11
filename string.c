@@ -135,10 +135,40 @@ static void ScanConnection(char *cp, struct qEntry *q) {
 
 static void ScanRange(char *cp, struct qEntry *q) {
   /* process a Range: header */
-  /* expect bytes=\d+-\d+ (n1 to n2) */
-  /* bytes=-\d+ (last n bytes of file)*/
-  /* bytes=\d+- (n to eof) */
+  /* bytes=-<suffix-length> */
+  /* bytes=<range-start>- */
+  /* bytes=<range-start>-<range-end> */
+
   /* more complicated expressions are possible but not supported */
+  long start = 0;
+  long end = 0;
+  char *ptr = NULL;
+
+  if (strncmp(cp, "bytes=", 6)) return;
+  cp += 6;
+
+  errno = 0;
+  start = strtol(cp, &ptr, 10);
+  if (errno) return;
+  cp = ptr;
+
+  if (start >= 0) {
+    if (*cp != '-') return;
+    end = -1;
+    if (isdigit(*cp)) {
+      end = strtol(cp, &ptr, 10);
+      if (errno) return;
+      cp = ptr;
+      if (end <= start) return;
+    }
+  }
+
+  while (isspace(*cp)) ++cp;
+  if (*cp) return;
+
+  q->rangeStart = start;
+  q->rangeEnd = end;
+  q->flags |= FLAG_RANGE;
 }
 
 
