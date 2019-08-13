@@ -15,6 +15,9 @@
 #include "server.h"
 #include "config.h"
 
+#define B(x) x->length, x->text
+#define PRIB ".*s"
+
 static char tiBuffer[38];
 static char buffer16[16];
 
@@ -79,17 +82,17 @@ Word i;
 
 
     if (size != -1)
-      fdprintf(logfd, "%b - - [%02u/%b/%04u:%02u:%02u:%02u %b] \"%.*s\" %u %lu\r",
+      fdprintf(logfd, "%b - - [%02u/%b/%04u:%02u:%02u:%02u %b] \"%" PRIB "\" %u %lu\r",
         buffer16,
         tr.day + 1, months + (tr.month << 2), 1900 + tr.year,
         tr.hour, tr.minute, tr.second, buffer6,
-        req->length, req->text, status, size);
+        B(req), status, size);
     else
-      fdprintf(logfd, "%b - - [%02d/%b/%04u:%02u:%02u:%02u %b] \"%.*s\" %u -\r",
+      fdprintf(logfd, "%b - - [%02d/%b/%04u:%02u:%02u:%02u %b] \"%" PRIB "\" %u -\r",
         buffer16,
         tr.day + 1, months + (tr.month << 2), 1900 + tr.year,
         tr.hour, tr.minute, tr.second, buffer6,
-        req->length, req->text, status);
+        B(req), status);
 
   }
 

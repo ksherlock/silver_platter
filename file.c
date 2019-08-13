@@ -24,6 +24,7 @@
 #include "MemBuffer.h"
 
 #define B(x) x->length, x->text
+#define PRIB ".*s"
 
 extern const char *GetMimeString(GSString255Ptr, Word, LongWord);
 
@@ -105,7 +106,7 @@ GSString255Ptr path;
 	if (err) return ProcessError(500, q);
 
 #undef xstr
-#define xstr "<p>The document has moved <a href=\"%*.s%*.s\">here</a></p>\r\n" \
+#define xstr "<p>The document has moved <a href=\"%" PRIB "%" PRIB "\">here</a></p>\r\n" \
 "</body>\r\n</html>\r\n"
 
     i = sprintf(buffer, xstr, B(path_uri), B(append));
@@ -116,7 +117,7 @@ GSString255Ptr path;
   i = 0;
   if (q->host)
   {
-    i = sprintf(buffer, "Location: http://%*.s%*.s%*.s\r\n",
+    i = sprintf(buffer, "Location: http://%" PRIB "%" PRIB "%" PRIB "\r\n",
       B(q->host), B(path_uri), B(append));
   }
   
@@ -258,10 +259,10 @@ CREATE_BUFFER(m, q->workHandle);
   	
 
   	i = sprintf(buffer,
-	  "<title>Index of %*.s</title>\r\n" \
+	  "<title>Index of %" PRIB "</title>\r\n" \
 	  "</head>\r\n" \
 	  "<body>\r\n" \
-	  "<h1>Index of %*.s</h1>\r\n",  	 
+	  "<h1>Index of %" PRIB "</h1>\r\n",  	 
   	  B(path_html), B(path_html));
 
   	err = BufferAppend(&m, buffer, i);
@@ -278,7 +279,7 @@ CREATE_BUFFER(m, q->workHandle);
 	  path_uri->length = i + 1;
 	
 	  i = sprintf(buffer,
-	    "<p><a href=\"%*.s\">Parent Directory</a></p>\r\n",
+	    "<p><a href=\"%" PRIB "\">Parent Directory</a></p>\r\n",
 	    B(path_uri));
 	
   	  err = BufferAppend(&m, buffer, i);
@@ -333,7 +334,7 @@ CREATE_BUFFER(m, q->workHandle);
 	  {
 	    i = sprintf(buffer,
 	        "<tr>"
-	          "<td><a href=\"%*.s/\">%*.s/</a></td>"
+	          "<td><a href=\"%" PRIB "/\">%" PRIB "/</a></td>"
 	          "<td align=\"right\"> &mdash; </td>"
 	          "<td colspan=\"4\"> Folder </td>"
 	        "</tr>\r\n",
@@ -353,7 +354,7 @@ CREATE_BUFFER(m, q->workHandle);
 		
 		i = sprintf(buffer,
 			"<tr>"
-			"<td><a href=\"%*.s\">%*.s</a></td>"
+			"<td><a href=\"%" PRIB "\">%" PRIB "</a></td>"
 			"<td align=\"right\"> %uK </td>"
 			"<td> %b </td>",
 			B(file_uri), B(file_html),
@@ -369,7 +370,7 @@ CREATE_BUFFER(m, q->workHandle);
 		{
 			i += sprintf(buffer + i,
 			  "<td>"
-			  "<a href=\"%*.s?applesingle\">AppleSingle</a>"
+			  "<a href=\"%" PRIB "?applesingle\">AppleSingle</a>"
 			  "</td>",
 			  B(file_uri));
 		}
@@ -385,7 +386,7 @@ CREATE_BUFFER(m, q->workHandle);
 		{
 			i += sprintf(buffer + i,
 			  "<td>"
-			  "<a href=\"._%*.s\">AppleDouble</a>"
+			  "<a href=\"._%" PRIB "\">AppleDouble</a>"
 			  "</td>",
 			  B(file_uri));
 		}
@@ -400,7 +401,7 @@ CREATE_BUFFER(m, q->workHandle);
 		{
 			i += sprintf(buffer + i,
 			  "<td>"
-			  "<a href=\"%*.s?macbinary\">MacBinary</a>"
+			  "<a href=\"%" PRIB "?macbinary\">MacBinary</a>"
 			  "</td></tr>\r\n",
 			  B(file_uri));
 		}
@@ -530,7 +531,7 @@ CREATE_BUFFER(m, q->workHandle);
 
       i = sprintf(buffer,
         "<tr>"
-        "<td><a href=\"%*.s/\">%*.s/</a></td>"
+        "<td><a href=\"%" PRIB "/\">%" PRIB "/</a></td>"
         "<td align=\"right\"> &mdash; </td>"
         "<td> Folder </td>"
         "</tr>\r\n",

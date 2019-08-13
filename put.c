@@ -16,6 +16,7 @@
 #include "globals.h"
 
 #define B(x) x->length, x->text
+#define PRIB ".*s"
 
 extern void InsertString(Word, const char *);
 
@@ -146,7 +147,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
       {
 	#ifdef DEBUG
 	  InsertString(
-            sprintf(buffer, "CreateGS(%*.s): $%04x\r", B(q->fullpath), err),
+            sprintf(buffer, "CreateGS(%" PRIB "): $%04x\r", B(q->fullpath), err),
             buffer);
 	#endif
       }
@@ -155,7 +156,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
     {
 	#ifdef DEBUG
 	  InsertString(
-            sprintf(buffer, "GetFileInfoGS(%*.s): $%04x\r", B(q->fullpath), err),
+            sprintf(buffer, "GetFileInfoGS(%" PRIB "): $%04x\r", B(q->fullpath), err),
             buffer);
 	#endif    	
     }
@@ -184,7 +185,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
     {
       #ifdef DEBUG
 	InsertString(
-          sprintf(buffer, "CreateGS(%*.s): $%04x\r", B(q->fullpath), _toolErr),
+          sprintf(buffer, "CreateGS(%" PRIB "): $%04x\r", B(q->fullpath), _toolErr),
           buffer);
       #endif
       return ProcessError(501, q);
@@ -203,7 +204,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
   {
     #ifdef DEBUG
       InsertString(
-        sprintf(buffer, "OpenGS(%*.s): $%04x\r", B(q->fullpath), _toolErr),
+        sprintf(buffer, "OpenGS(%" PRIB "): $%04x\r", B(q->fullpath), _toolErr),
         buffer);
     #endif
     return ProcessError(500, q);
@@ -223,7 +224,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
     {
       #ifdef DEBUG
 	InsertString(
-          sprintf(buffer, "SetEOFGS(%*.s): $%04x\r", B(q->fullpath), _toolErr),
+          sprintf(buffer, "SetEOFGS(%" PRIB "): $%04x\r", B(q->fullpath), _toolErr),
           buffer);
       #endif
       return ProcessError(500, q);

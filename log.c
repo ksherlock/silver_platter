@@ -16,6 +16,7 @@
 #include "pointer.h"
 
 #define B(x) x->length, x->text
+#define PRIB ".*s"
 
 static IORecGS WriteDCB;
 static CreateRecGS CreateDCB;
@@ -46,7 +47,7 @@ Word oldPrefs;
     gstr = NewPointer(i + 17 + 2); // + 2 for length
     if (gstr == NULL) return 0;
 
-    i = sprintf(gstr->text, "%*.s/www%04u%02u%02u.txt",
+    i = sprintf(gstr->text, "%" PRIB "/www%04u%02u%02u.txt",
       B(fLogDir), tr.year + 1900, tr.month + 1, tr.day + 1);
 
     gstr->length = i;

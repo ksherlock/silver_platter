@@ -19,6 +19,7 @@
 #include "pointer.h"
 
 #define B(x) x->length, x->text
+#define PRIB ".*s"
 
 extern void tiTimeRec2ISO8601(TimeRecPtr t, char *str);
 extern void tiTimeRec2GMTString(TimeRecPtr t, char *str);
@@ -83,14 +84,14 @@ Word err;
 	{
 		i = sprintf(buffer,
       	"<D:response>\r\n"
-      	"<D:href>%*.s</D:href>\r\n",
+      	"<D:href>%" PRIB "</D:href>\r\n",
       	B(path_uri));		
 	}
 	else
 	{
 		i = sprintf(buffer,
       	"<D:response>\r\n"
-      	"<D:href>%*.s/%*.s</D:href>\r\n",
+      	"<D:href>%" PRIB "/%" PRIB "</D:href>\r\n",
       	B(path_uri), B(file_uri));
 	}
 	err = BufferAppend(m, buffer, i);
@@ -112,7 +113,7 @@ Word err;
     tiTimeRec2GMTString(&info->modDateTime, buffer32);
 
     i = sprintf(buffer,
-      "<D:displayname>%*.s</D:displayname>\r\n"
+      "<D:displayname>%" PRIB "</D:displayname>\r\n"
       "<D:getlastmodified>%b</D:getlastmodified>\r\n"
       "<D:getcontentlength>%lu</D:getcontentlength>\r\n"
       "<D:getcontenttype>%s</D:getcontenttype>\r\n"
@@ -157,7 +158,7 @@ Word err;
 	{
 		i = sprintf(buffer,
 	      "<D:response>\r\n"
-	      "<D:href>%*.s/</D:href>\r\n",
+	      "<D:href>%" PRIB "/</D:href>\r\n",
 	      B(path_uri));		
 		
 	}
@@ -165,7 +166,7 @@ Word err;
 	{
 		i = sprintf(buffer,
 	      "<D:response>\r\n"
-	      "<D:href>%*.s/%*.s/</D:href>\r\n",
+	      "<D:href>%" PRIB "/%" PRIB "/</D:href>\r\n",
 	      B(path_uri), B(file_uri));
 	}
   
@@ -180,7 +181,7 @@ Word err;
 	
 	
     i = sprintf(buffer,
-      "<D:displayname>%*.s</D:displayname>\r\n",
+      "<D:displayname>%" PRIB "</D:displayname>\r\n",
       B(file_utf));	
 	
 

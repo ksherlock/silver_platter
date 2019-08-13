@@ -11,6 +11,7 @@
 #include "config.h"
 
 #define B(x) x->length, x->text
+#define PRIB ".*s"
 
 static Word lock = 0;
 
@@ -37,7 +38,7 @@ GSString255Ptr host;
 		      "<D:lockscope><D:exclusive/></D:lockscope>\r\n"
 		      "<D:depth>Infinity</D:depth>\r\n"
 		      "<D:owner>\r\n"
-		        "<D:href>http://%*.s%*.s</D:href>\r\n"
+		        "<D:href>http://%" PRIB "%" PRIB "</D:href>\r\n"
 		      "</D:owner>\r\n"
 		      "<D:timeout>Infinite</D:timeout>\r\n"
 		      "<D:locktoken>\r\n"

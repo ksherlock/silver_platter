@@ -28,6 +28,7 @@
 #include "globals.h"
 
 #define B(x) x->length, x->text
+#define PRIB ".*s"
 
 
 extern Word ProcessPropfind(struct qEntry *q);
@@ -684,7 +685,7 @@ Word oldPrefs;
 	  if (_toolErr)
           {
             #ifdef DEBUG
-            i = sprintf(buffer, "WriteGS(%*.s): %04x\r",
+            i = sprintf(buffer, "WriteGS(%" PRIB "): %04x\r",
               B(q->fullpath), _toolErr);
             InsertString(i, buffer);
             #endif
