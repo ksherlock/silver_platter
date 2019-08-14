@@ -433,23 +433,21 @@ resource rText (CtrlTE) {
 };
 
 resource rComment (1) {
-	"Silver Platter v 1.0\n\n"
-	"Copyright 2004-2005 Kelvin W Sherlock\n"
-	"Published by Syndicomm\$AA"
+	"Silver Platter v 1.2\n\n"
+	"Copyright 2004-2019 Kelvin W Sherlock\n"
 };
 
 resource rVersion (1) {
 	{
 		1,
-		1,
+		2,
 		0,
 		release,
 		0
 	},
 	verUS,
 	"Silver Platter",
-	"(C) 2004-2005 Kelvin Sherlock\n"
-        "Published by Syndicomm\$AA"
+	"(C) 2004-2019 Kelvin Sherlock\n"
 };
 
 
@@ -1265,12 +1263,11 @@ resource rControlTemplate (CtrlAbout) {
 resource rTextForLETextBox2 (CtrlAbout) {
 	TBCenterJust
 	TBForeColor  TBColor1
-	"Silver Platter 1.1"
+	"Silver Platter 1.2"
 	TBForeColor TBColor0
 	"\n\n"
-	"Copyright 2004-2005 Kelvin W Sherlock"
+	"Copyright 2004-2019 Kelvin W Sherlock"
 	"\n"
-	"Published by Syndicomm\$AA"
 	"\n"
 	"\n\n"
 	"This program contains materials from the ORCA/C Run-Time "
