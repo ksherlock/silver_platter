@@ -1,4 +1,4 @@
-* generated Sat Aug 10 21:43:29 2019
+* generated Sun Aug 11 00:10:32 2019
 
 	case on
 
@@ -11,8 +11,8 @@ cp	equ 5
 
 	phb
 	tsc
-	tcd
 	phd
+	tcd
 	pei cp+1
 	plb
 	plb
@@ -32,6 +32,8 @@ cp	equ 5
 _action	anop
 	ldx #0
 
+	longi on
+	longa on
 	lda (cp)
 	cmp #$504f	; 'OP'
 	bne _1
@@ -77,6 +79,7 @@ _5	anop
 _9	anop
 	rts
 _7	anop
+	longa on
 	cmp #$4f50	; 'PO'
 	bne _10
 	ldy #2
@@ -93,6 +96,7 @@ _7	anop
 _12	anop
 	rts
 _10	anop
+	longa on
 	cmp #$5550	; 'PU'
 	bne _13
 	ldy #2
@@ -123,6 +127,7 @@ _13	anop
 _18	anop
 	rts
 _15	anop
+	longa on
 	cmp #$5254	; 'TR'
 	bne _19
 	ldy #2
@@ -167,6 +172,7 @@ _23	anop
 _27	anop
 	rts
 _22	anop
+	longa on
 	cmp #$4150	; 'PA'
 	bne _28
 	ldy #2
@@ -205,6 +211,7 @@ _28	anop
 _35	anop
 	rts
 _33	anop
+	longa on
 	cmp #$4150	; 'PA'
 	bne _38
 	ldy #6
@@ -249,6 +256,7 @@ _39	anop
 _44	anop
 	rts
 _42	anop
+	longa on
 	cmp #$4f4c	; 'LO'
 	bne _45
 	ldy #2
@@ -265,6 +273,7 @@ _42	anop
 _47	anop
 	rts
 _45	anop
+	longa on
 	cmp #$4e55	; 'UN'
 	bne _51
 	ldy #2

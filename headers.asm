@@ -1,4 +1,4 @@
-* generated Sat Aug 10 21:44:12 2019
+* generated Sun Aug 11 00:10:39 2019
 
 	case on
 
@@ -11,8 +11,8 @@ cp	equ 5
 
 	phb
 	tsc
-	tcd
 	phd
+	tcd
 	pei cp+1
 	plb
 	plb
@@ -32,6 +32,8 @@ cp	equ 5
 _action	anop
 	ldx #0
 
+	longi on
+	longa on
 	lda (cp)
 	ora #$2020
 	cmp #$656b	; 'ke'
@@ -66,6 +68,7 @@ _action	anop
 _6	anop
 	rts
 _1	anop
+	longa on
 	cmp #$6f63	; 'co'
 	beq *+5
 	brl _7
@@ -99,6 +102,7 @@ _1	anop
 _12	anop
 	rts
 _8	anop
+	longa on
 	cmp #$746e	; 'nt'
 	bne _22
 	ldy #4
@@ -136,6 +140,7 @@ _8	anop
 _19	anop
 	rts
 _16	anop
+	longa on
 	cmp #$7974	; 'ty'
 	bne _22
 	ldy #10
@@ -153,6 +158,7 @@ _16	anop
 _22	anop
 	rts
 _7	anop
+	longa on
 	cmp #$6f68	; 'ho'
 	bne _23
 	ldy #2
@@ -170,6 +176,7 @@ _7	anop
 _25	anop
 	rts
 _23	anop
+	longa on
 	cmp #$6564	; 'de'
 	bne _26
 	ldy #2
