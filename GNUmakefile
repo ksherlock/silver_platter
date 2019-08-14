@@ -16,7 +16,7 @@ LDLIBS =
 .PHONY: all clean clobber
 all: silverplatter
 clean:
-	$(RM) -f o
+	$(RM) -r o
 clobber: clean
 	$(RM) silverplatter
 
@@ -32,7 +32,7 @@ ROBJ = o/http.r
 
 silverplatter: $(OBJS) $(ROBJ)
 	$(CC) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $@
-	$(COPYFORK) $(ROBJ) $@ -r 
+	$(COPYFORK) $(ROBJ) $@ -r
 	$(CHTYP) -t nda $@
 
 
@@ -67,10 +67,10 @@ o/pointer.a: pointer.asm
 o/methods.a : methods.asm
 o/headers.a : headers.asm
 
-o/%.a : %.c
+o/%.a : %.c | o
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-o/%.a : %.asm
+o/%.a : %.asm | o
 	$(AS) -c $(ASMFLAGS) -o $@ $<
 	$(RM) $(patsubst %.a,%.root,$@)
 
@@ -78,7 +78,12 @@ o/%.a : %.asm
 # resource files
 o/http.r: http.rez rez.h html/err400.html html/err403.html \
     html/err404.html html/err409.html \
-	html/err500.html html/err501.html
+	html/err500.html html/err501.html | o
+	$(CC) -c -o $@ $<
+
+o/errors.r: errors.rez html/err400.html html/err403.html \
+    html/err404.html html/err409.html \
+	html/err500.html html/err501.html | o
 	$(CC) -c -o $@ $<
 
 #dfa table
