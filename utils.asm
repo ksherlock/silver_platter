@@ -1,59 +1,60 @@
-       case on
+	case on
 	copy 13/ainclude/e16.gsos
 	mcopy 13/ainclude/m16.gsos
+	mcopy 13/orcainclude/m16.orca
 
 	mcopy M16.util
 	mcopy M16.SmartStacks
 
-root   start
-       end
+root	start
+	end
 
-SWAP16 start
-ntohs  entry
-htons  entry
-
-	DefineStack
-	EndLocals
-	FixStack
-       BegParms
-value  Word
-       EndParms
-	BeginStack
-
-       lda <value
-       xba
-       tay
-
-       EndStack
-       tya
-       rtl
-
-       end
-
-SWAP32 start
-ntohl  entry
-htonl  entry
+SWAP16	start
+ntohs	entry
+htons	entry
 
 	DefineStack
 	EndLocals
 	FixStack
-       BegParms
-value  LongWord
-       EndParms
+	BegParms
+value	Word
+	EndParms
 	BeginStack
 
-       lda <value
-       xba
-       tax
-       lda <value+2
-       xba
-       tay
+	lda <value
+	xba
+	tay
 
-       EndStack
-       tya
-       rtl
+	EndStack
+	tya
+	rtl
 
-       end
+	end
+
+SWAP32	start
+ntohl	entry
+htonl	entry
+
+	DefineStack
+	EndLocals
+	FixStack
+	BegParms
+value	LongWord
+	EndParms
+	BeginStack
+
+	lda <value
+	xba
+	tax
+	lda <value+2
+	xba
+	tay
+
+	EndStack
+	tya
+	rtl
+
+	end
 
 
 
@@ -152,8 +153,6 @@ path	LongWord
 
 	BeginStack
 
-
-
 	stz <err
 
 	ldax <path
@@ -241,11 +240,11 @@ zloop	anop
 * store as 'p' <filetype> <aux lo> <aux hi>
 default anop
 
-       pha
-       txa
-       xba
-       tax
-       pla
+	pha
+	txa
+	xba
+	tax
+	pla
 
 	and #$00ff
 	xba
@@ -297,7 +296,6 @@ GETFSTID	start
 
 	using OptionData
 
-
 	DefineStack
 
 	endlocals
@@ -318,7 +316,6 @@ path	LongWord
 	bcc ok
 	cmp #buffTooSmall
 	bne exit
-	
 	
 ok	anop
 	lda optionData+oDataSize
