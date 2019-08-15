@@ -232,6 +232,15 @@ Word CloseDCB[2];
 
 extern Word CreateLog(void);
 
+static void Listening(void) {
+  static char ip[20];
+
+  TCPIPConvertIPToASCII(TCPIPGetMyIPAddress(), ip, 0);
+  InsertString(
+      sprintf(buffer, "Listening on %b:%u\r", ip, fPort),
+      buffer
+  );  
+}
 
 Word StartServer(void)
 {
@@ -276,6 +285,7 @@ Word StartServer(void)
   #undef xstr
   #define xstr "Server started\r"
   InsertString(sizeof(xstr) - 1, xstr);
+  Listening();
 
   if (MyWindow) SetCtlTextByID(MyWindow, CtrlCount, 1, (Ref)"0");
   if (MyWindow) SetCtlTextByID(MyWindow, CtrlCount, 1, (Ref)"0");
@@ -370,6 +380,7 @@ Word ipid;
   #undef xstr
   #define xstr "Server reset\r"
   InsertString(sizeof(xstr) - 1, xstr);
+  Listening();
 }
 
 
