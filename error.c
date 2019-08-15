@@ -116,20 +116,20 @@ Word err;
 	case devNotFound:
 	case pathNotFound:
 	case volNotFound:
-		err = RC_CONFLICT;
+		err = HTTP_CONFLICT;
 		break;
 	case fileNotFound:
-		err = RC_NOT_FOUND;
+		err = HTTP_NOT_FOUND;
 		break;
 	case volumeFull:
 	case volDirFull:
-		err = RC_INSUFFICIENT_STORAGE;
+		err = HTTP_INSUFFICIENT_STORAGE;
 		break;
 	case invalidAccess:
-		err = RC_FORBIDDEN;
+		err = HTTP_FORBIDDEN;
 		break;
 	default:
-		err = RC_INTERNAL_SERVER_ERROR;
+		err = HTTP_INTERNAL_SERVER_ERROR;
 	}
 	
 	return err;
