@@ -110,7 +110,7 @@ GSString255Ptr path;
 "</body>\r\n</html>\r\n"
 
     i = sprintf(buffer, xstr, B(path_uri), B(append));
-	err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
+	err = BufferAppend(&m, buffer, i);
 	if (err) return ProcessError(500, q);
   }
 
