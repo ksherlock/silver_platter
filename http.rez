@@ -192,8 +192,8 @@ resource rMenuItem (AboutMItem, locked, fixed, nocrossbank, nospecialmemory) {
 
 resource rMenuItem (ConfigMItem, locked, fixed, nocrossbank, nospecialmemory) {
 	ConfigMItem,
-	"",
-	"",
+	",",
+	",",
 	0x0,
 	0x8000,
 	ConfigMItem
