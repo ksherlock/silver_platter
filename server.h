@@ -8,7 +8,9 @@ enum
   FLAG_CHUNKED = 0x0002,	// chunked transfer
   FLAG_TEXT = 0x0004,		// PUT - is text/*
   FLAG_CREATE = 0x0008,		// PUT - created file.
-  FLAG_RANGE = 0x0010		// Range: request
+  FLAG_RANGE = 0x0010,
+  FLAG_RANGE0 = 0x0020,		// Range: request (range start valid)
+  FLAG_RANGE1 = 0x0040,    // Range: request (range end valid)
 };
 
 // moreFlags
@@ -17,9 +19,9 @@ enum
   CGI_APPLESINGLE = 1,		// convert file to apple single
   CGI_APPLEDOUBLE,			// convert file's resource fork.
   CGI_MACBINARY,
-  CGI_HTML					// convert file to html
+  CGI_HTML,					// convert file to html
+  CGI_DIR   // Virtual Directory listing
 };
-
 
 enum
 {
@@ -47,13 +49,13 @@ struct qEntry
   Word version;
   Word flags;
   Word moreFlags;
+  Word error;
   LongWord tick;
   LongWord ip;
   LongWord contentlength;
   Word depth;
 
-  LongWord rangeStart;
-  LongWord rangeEnd;
+  LongWord range[2];
 
   GSString255Ptr host;
   GSString255Ptr request;

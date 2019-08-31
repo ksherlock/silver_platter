@@ -145,6 +145,12 @@ Word i;
       TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
     }
 
+    if (status == 206) {
+      i = sprintf(buffer, "Content-Range: bytes %lu-%lu/%lu\r\n",
+        q->range[0], q->range[1], q->contentlength);
+      TCPIPWriteTCP(ipid, buffer, i, false, false);
+    }
+
     if (mimeString)
     {
       i = sprintf(buffer, "Content-Type: %s\r\n", mimeString);

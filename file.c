@@ -216,10 +216,12 @@ GSString255Ptr path_html;
 CREATE_BUFFER(m, q->workHandle);
 
   q->state = STATE_CLOSE;
+
   path = q->pathname;
 
   if (err = CheckIndex(q)) return err;
 
+  q->state = CGI_DIR;
   if (!fDir)
   {
     return ProcessError(403, q);
@@ -458,6 +460,7 @@ Word err;
 CREATE_BUFFER(m, q->workHandle);
 
   q->state = STATE_CLOSE;
+  q->moreFlags = CGI_DIR;
 
   if (!fDir)
   {
@@ -582,9 +585,10 @@ Word ipid;
 
   //
   if (!q->fullpath)
-  {
     return ProcessError(400, q);
-  }
+
+  if (q->contentlength)
+  	return ProcessError(400, q);
 
   path = q->fullpath;
 
@@ -605,6 +609,10 @@ Word ipid;
 	{
 		return ProcessError(404, q);			
 	}
+
+	if (InfoDCB.fileType == 0x0f || q->moreFlags) {
+		q->flags &= ~(FLAG_RANGE|FLAG_RANGE0|FLAG_RANGE1);
+	}
 	     
 	switch (q->moreFlags)
 	{
@@ -616,11 +624,48 @@ Word ipid;
 		return MacBinary(q);
 		break;
 	}
-	
-	
+
+
+	eof = InfoDCB.eof;
+	/* check for range error here, after verifying file exists */
+	if (q->flags & FLAG_RANGE) {
+		// asm { brk 0xea }
+		#define MASK (FLAG_RANGE0|FLAG_RANGE1)
+		q->contentlength = eof;
+		if (!(q->flags & MASK))
+			return ProcessError(416, q);
+
+
+		/* if starting range > eof, error */
+		if (q->flags & FLAG_RANGE0) {
+			/* start-end or start-[eof] */
+
+			if (q->range[0] >= eof)
+				return ProcessError(416, q);
+
+			if (q->flags & FLAG_RANGE1) {
+				if (q->range[1] >= eof)
+					q->range[1] = eof - 1;
+			} else {
+				q->range[1] = eof - 1;
+			}
+		} else {
+			/* -range */
+			LongWord c = q->range[1];
+			if (c == 0)
+				return ProcessError(416, q);
+
+			q->range[1] = eof - 1;
+			if (c >= eof) q->range[0] = 0;
+			else q->range[0] = eof - c; 
+		}
+
+		q->flags |= MASK;
+		#undef MASK
+	}
+
 	if (q->command == CMD_HEAD)
 	{
-		eof = InfoDCB.eof;
 		fileType = InfoDCB.fileType;
 		auxType = InfoDCB.auxType;
 		modDateTime = InfoDCB.modDateTime;
@@ -658,6 +703,27 @@ Word ipid;
 			return Redirect(q, (GSString255Ptr)"\x01\x00/");
 		}
 		return ListDirectory(q);
+	}
+
+	if (q->flags & FLAG_RANGE) {
+
+		/* SetMarkGS */
+		SetPositionRecGS markDCB;
+		markDCB.pCount = 3;
+		markDCB.refNum = OpenDCB.refNum;
+		markDCB.base = startPlus;
+		markDCB.displacement = q->range[0];
+		SetMarkGS(&markDCB);
+		if (_toolErr)
+			return ProcessError(416, q);
+
+		eof = q->range[1] - q->range[0] + 1;
+		SendHeader(q, 206, eof,
+			&modDateTime,
+			GetMimeString(path, fileType, auxType), NULL, 0);
+
+		q->contentlength = eof;
+		return 206;
 	}
 
 	SendHeader(q, 200,

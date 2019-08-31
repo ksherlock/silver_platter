@@ -12,6 +12,9 @@
 #include <tcpip.h>
 #include <timetool.h>
 
+
+#include <stdio.h>
+
 #include "server.h"
 #include "config.h"
 
@@ -68,7 +71,7 @@ char *extra;
   i = 0;
   extra = NULL;
 
-  if ((error == 405) || (error == 501))
+  if ((error == HTTP_METHOD_NOT_ALLOWED) || (error == HTTP_NOT_IMPLEMENTED))
   {
     if (fWebDav)
     {
@@ -88,6 +91,10 @@ char *extra;
     }	
   }
   
+  if (error == HTTP_REQUEST_RANGE_NOT_SATISFIABLE) {
+    i = sprintf(buffer, "Content-Range: bytes */%lu\r\n", q->contentlength);
+    extra = buffer;
+  }
 
   SendHeader(q, error, len, NULL, "text/html", extra, i);
 

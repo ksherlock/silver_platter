@@ -563,6 +563,11 @@ Word oldPrefs;
           {
             q->ip = srBuffer.srDestIP;
 
+            if (q->error) {
+              terr = ProcessError(q->error, q);
+              break;
+            }
+
             switch(q->command)
             {
             case CMD_OPTIONS:
@@ -619,6 +624,13 @@ Word oldPrefs;
         IODCB.refNum = q->state == STATE_ASINGLE_2 ? q->rfd : q->fd;
         IODCB.dataBuffer = buffer;
         IODCB.requestCount = 4096;
+
+
+        if (q->contentlength) {
+          /* range-based */
+          if (q->contentlength < 4096) IODCB.requestCount = q->contentlength;
+        }
+
         ReadGS(&IODCB);
         
         count = (Word)IODCB.transferCount;
@@ -643,6 +655,14 @@ Word oldPrefs;
             ipid, count);
           InsertString(i, buffer);
           #endif
+
+          if (q->contentlength) {
+            /* range-based */
+            q->contentlength -= count;
+            if (!q->contentlength) {
+              q->state = STATE_CLOSE;
+            }
+          }
         }                                   
         else
         {
@@ -655,8 +675,9 @@ Word oldPrefs;
             }
             else
             {
-			  WriteData(q, NULL, 0); // if chunked.
-                          q->state = STATE_CLOSE;
+              WriteData(q, NULL, 0); // if chunked.
+              q->contentlength = 0;
+              q->state = STATE_CLOSE;
             }
           }
           else // read error - just close and be done with it.

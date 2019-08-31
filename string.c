@@ -133,44 +133,68 @@ static void ScanConnection(char *cp, struct qEntry *q) {
   }
 }
 
-static void ScanRange(char *cp, struct qEntry *q) {
+static unsigned ScanRange(char *cp, struct qEntry *q) {
   /* process a Range: header */
   /* bytes=-<suffix-length> */
   /* bytes=<range-start>- */
   /* bytes=<range-start>-<range-end> */
 
   /* more complicated expressions are possible but not supported */
-  long start = 0;
-  long end = 0;
-  char *ptr = NULL;
+  unsigned i;
+  unsigned valid = 0;
 
-  if (strncmp(cp, "bytes=", 6)) return;
+  q->flags |= FLAG_RANGE;
+
+  if (strncmp(cp, "bytes=", 6)) return 0;
   cp += 6;
 
-  errno = 0;
-  start = strtol(cp, &ptr, 10);
-  if (errno) return;
-  cp = ptr;
 
-  if (start >= 0) {
-    if (*cp != '-') return;
-    end = -1;
-    if (isdigit(*cp)) {
-      end = strtol(cp, &ptr, 10);
-      if (errno) return;
-      cp = ptr;
-      if (end <= start) return;
-    }
+  if (isdigit(*cp)) {
+    for (i = 0; isdigit(cp[i]); ++i);
+    q->range[0] = Dec2Long(cp, i, 0);
+    if (_toolErr) return 0;
+    valid |= FLAG_RANGE0;
+    cp += i;
+  }
+  if (cp[0] != '-') {
+    return 0;
+    /* should send error 416 */
+  }
+  ++cp;
+  if (isdigit(*cp)) {
+    for (i = 0; isdigit(cp[i]); ++i);
+    q->range[1] = Dec2Long(cp, i, 0);
+    if (_toolErr) return 0;
+    valid |= FLAG_RANGE1;
+    cp += i;
+  }
+  if (!valid) return 0;
+
+  for (i = 0; isspace(cp[i]); ++i);
+
+  if (cp[i]) return 0;
+
+  if (valid == (FLAG_RANGE0|FLAG_RANGE1)) {
+    if (q->range[1] < q->range[0]) return 0;
   }
 
-  while (isspace(*cp)) ++cp;
-  if (*cp) return;
-
-  q->rangeStart = start;
-  q->rangeEnd = end;
-  q->flags |= FLAG_RANGE;
+  q->flags |= valid;
+  return 1;
 }
 
+
+static unsigned ScanContentLength(char *cp, struct qEntry *q) {
+
+  unsigned i;
+
+    for (i = 0; isdigit(cp[i]); ++i);
+    q->contentlength = Dec2Long(cp, i, 0);
+    if (_toolErr) return 0;
+
+  for(; isspace(cp[i]); ++i);
+  if (cp[i]) return 0;
+  return 1;
+}
 
 // scan for headers we recognize.
 void ScanHeader(char *cp, struct qEntry *q)
@@ -217,13 +241,8 @@ Word header;
     break;
 
   case h_ContentLength:  //Content-Length
-    if (!*cp) return;
-
-    i = 0;
-
-    while (isdigit(cp[i])) i++;
-
-    q->contentlength = Dec2Long(cp, i, 0);
+    if (!ScanContentLength(cp, q))
+      q->error = 400;
     break;
 
   case h_ContentType: // Content-Type ... check if text/*
@@ -236,6 +255,7 @@ Word header;
     if (isdigit(c = *cp)) q->depth = c - '0';
     else q->depth = -1;
     break;
+
   case h_Range: // Range:
     ScanRange(cp, q);
     break;

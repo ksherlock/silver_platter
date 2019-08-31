@@ -96,6 +96,8 @@ Word length;
 // file upload via PUT.
 // header won't be sent until file is actually received/saved.
 
+/* todo - support for Ranges header */
+
 Word ProcessPut(struct qEntry *q)
 {
 Word i;
@@ -110,6 +112,11 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
   // error out if PUT is not allowed.
   if (fPut == 0)
     return ProcessError(403,q);
+
+
+  if (q->flags & FLAG_RANGE) {
+    return ProcessError(501, q);
+  }
 
   // check/create directory tree.
 
@@ -171,7 +178,7 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
     if (eof != 0) return ProcessError(403, q);
   }
 
-  // if writing to a resoruce fork, we may need to create the fork.
+  // if writing to a resource fork, we may need to create the fork.
   if (res && !create && (InfoDCB.storageType != extendedFile))
   {
     CreateDCB.pCount = 5;
