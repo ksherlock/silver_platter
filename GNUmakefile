@@ -10,7 +10,7 @@ CHTYP = iix chtyp
 COPYFORK = iix copyfork
 CFLAGS	=  -v #-O
 ASFLAGS = 
-LDFLAGS =
+LDFLAGS = -M
 LDLIBS =
 
 .PHONY: all clean clobber
