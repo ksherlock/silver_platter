@@ -107,7 +107,7 @@ Word i;
     TCPIPWriteTCP(ipid, buffer, i, false, false);
 
     #undef xstr
-    #define xstr "Server: SilverPlatter/1.1 (IIgs)\r\n"
+    #define xstr "Server: SilverPlatter/1.2 (IIgs)\r\n"
     TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
 
     if (modTime)
