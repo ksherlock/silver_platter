@@ -132,7 +132,7 @@ Word i;
     if (flags & FLAG_KA)
     {
       #undef xstr
-      #define xstr "Connection: Keep-Alive\r\n"
+      #define xstr "Connection: keep-alive\r\n"
       TCPIPWriteTCP(ipid, xstr, sizeof(xstr) - 1, false, false);
       #undef xstr
       #define xstr "Keep-Alive: timeout=30\r\n"
