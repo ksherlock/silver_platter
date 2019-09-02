@@ -25,19 +25,19 @@
 static char tiBuffer[38];
 
 static char defaultErr[] =
-"<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r"
+"<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n"
 "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" "
-"\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\r"
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">\r"
-"<head>\r"
-"<title>500 Internal Server Error</title>\r"
-"</head>\r"
-"<body>\r"
-"<h1>Internal Server Error</h1>\r"
+"\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\r\n"
+"<html xmlns=\"http://www.w3.org/1999/xhtml\">\r\n"
+"<head>\r\n"
+"<title>500 Internal Server Error</title>\r\n"
+"</head>\r\n"
+"<body>\r\n"
+"<h1>Internal Server Error</h1>\r\n"
 "<p>The server encountered an internal error and was unable "
 "to complete your request.</p>"
-"</body>\r"
-"</html>\r";
+"</body>\r\n"
+"</html>\r\n";
 
 
 Word ProcessError(Word error, struct qEntry *q)
