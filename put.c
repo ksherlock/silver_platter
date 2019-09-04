@@ -118,6 +118,11 @@ Word res = (q->moreFlags == CGI_APPLEDOUBLE);
     return ProcessError(501, q);
   }
 
+  /* todo -- CGI_RESOURCE support to write the resource fork */
+  if (q->moreFlags) {
+    return ProcessError(422, q);
+  }
+
   // check/create directory tree.
 
   if (fPutMkdir)
