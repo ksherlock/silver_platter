@@ -13,15 +13,8 @@ enum
   FLAG_RANGE1 = 0x0040,    // Range: request (range end valid)
 };
 
-// moreFlags
-enum
-{
-  CGI_APPLESINGLE = 1,		// convert file to apple single
-  CGI_APPLEDOUBLE,			// convert file's resource fork.
-  CGI_MACBINARY,
-  CGI_HTML,					// convert file to html
-  CGI_DIR   // Virtual Directory listing
-};
+// moreFlags - see cgi.h
+
 
 enum
 {
@@ -38,6 +31,7 @@ enum
 };
 
 #include "methods.h"
+#include "cgi.h"
 
 struct qEntry
 {

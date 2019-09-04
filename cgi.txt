@@ -1,0 +1,6 @@
+#include "cgi.h"
+
+"applesingle" : CGI_APPLESINGLE
+"appledouble" : CGI_APPLEDOUBLE
+"macbinary" : CGI_MACBINARY
+"rsrc" : CGI_RESOURCE

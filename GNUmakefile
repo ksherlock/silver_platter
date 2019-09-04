@@ -10,7 +10,7 @@ CHTYP = iix chtyp
 COPYFORK = iix copyfork
 CFLAGS	=  -v #-O
 ASFLAGS = 
-LDFLAGS = -M
+LDFLAGS =
 LDLIBS =
 
 .PHONY: all clean clobber
@@ -24,7 +24,7 @@ clobber: clean
 OBJS	= o/httpnda.a o/tools.a o/server.a o/error.a o/file.a o/time.a \
  o/mime.a o/config.a o/ctrl.a o/toolbox.a o/header.a o/log.a \
  o/mangle.a o/ftype.a o/applesingle.a o/utils.a o/pointer.a \
- o/globals.a o/methods.a o/headers.a  o/string.a \
+ o/globals.a o/methods.a o/headers.a o/cgi.a o/string.a \
  o/put.a o/propfind.a o/options.a o/mkcol.a o/lock.a \
  o/tcp.a o/membuffer.a o/macbinary.a o/volumes.a o/xstring.a
 
@@ -69,6 +69,7 @@ o/pointer.a: pointer.asm
 
 o/methods.a : methods.asm
 o/headers.a : headers.asm
+o/cgi.a : cgi.asm
 
 o/%.a : %.c | o
 	$(CC) -c $(CFLAGS) -o $@ $<

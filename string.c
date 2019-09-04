@@ -25,6 +25,7 @@
 
 extern int scan_headers(const char *);
 extern int scan_methods(const char *);
+extern int scan_cgi(const char *);
 
 // checks for 
 // <name>?asingle
@@ -39,49 +40,26 @@ Word i;
 Word c;
 Word len = g->length;
 
-  for (i = len - 1; i; i--)
-  {
+  for (i = len - 1; i; i--) {
     c = g->text[i];
     if (c == '/') break;
-    if (c == '?')
-    {
-      // g->text is null-terminated, so strcmp is ok
-      if (!strcmp("?applesingle", &g->text[i]))
-      {
+    if (c == '?') {
         g->text[i] = 0;
         g->length = i;
-        return CGI_APPLESINGLE;
+      int type = scan_cgi(g->text + i + 1);
+      if (type) {
+        return type;
       }
-      if (!strcmp("?appledouble", &g->text[i]))
-      {
-        g->text[i] = 0;
-        g->length = i;
-        return CGI_APPLEDOUBLE;
+      return CGI_ERROR;
       }
-      if (!strcmp("?macbinary", &g->text[i]))
-      {
-        g->text[i] = 0;
-        g->length = i;
-        return CGI_MACBINARY;
-      }
-      
-      if (!strcmp("?html", &g->text[i]))
-      {
-        g->text[i] = 0;
-        g->length = i;
-        return CGI_HTML;
-      }
-    } // c == '?'
   }
   // check for ._<name>
   // at this point, i will be 0 or a pointer to the /.
   if (len - i < 4) return;
   
-  if ((g->text[i + 1] == '.') && (g->text[i + 2] == '_'))
-  {
+  if ((g->text[i + 1] == '.') && (g->text[i + 2] == '_')) {
         len -= 2;
-        for (i++ ; i < len; i++)
-        {
+    for (i++ ; i < len; i++) {
                 g->text[i] = g->text[i + 2];
         }
         g->text[i] = 0;  // NULL terminate for convenience.
