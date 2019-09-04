@@ -1,43 +1,38 @@
-#pragma nda NDAOpen NDAClose NDAAction NDAInit 30 0xffff  "--Silver Platter\\H**"
+#pragma nda NDAOpen NDAClose NDAAction NDAInit 30 0xffff "--Silver Platter\\H**"
 
-#pragma lint -1
-#pragma optimize -1
+#pragma lint - 1
+#pragma optimize - 1
 
 #include <Types.h>
 
 #include <Control.h>
 #include <Desk.h>
 #include <Event.h>
-#include <gsos.h>
+#include <Locator.h>
 #include <Memory.h>
 #include <Menu.h>
-#include <Locator.h>
 #include <MiscTool.h>
-#include <quickdraw.h>
 #include <Resources.h>
 #include <TextEdit.h>
 #include <Window.h>
+#include <gsos.h>
+#include <quickdraw.h>
 
-
-#include <tcpip.h>
 #include <string.h>
+#include <tcpip.h>
 
-
-#include "rez.h"
-#include "httpnda.h"
 #include "config.h"
-#include "toolbox.h"
 #include "ftype.h"
-
+#include "httpnda.h"
+#include "rez.h"
+#include "toolbox.h"
 
 extern void SaveLog(Word MyID, Handle teH);
 
-typedef struct split
-{
+typedef struct split {
   word lo;
   word hi;
 } split;
-
 
 const char *ReqName = "\pTCP/IP~kelvin~http~";
 
@@ -66,80 +61,65 @@ Handle HandleSF;
 Boolean FlagConfig;
 
 Word MyID;
-//Word MyRID;
+// Word MyRID;
 Word Ipid;
 
-
-
-void InsertString(word length, const char *cp)
-{
-Handle handle;
-TERecord **temp;
-longword oldStart, oldEnd;
+void InsertString(word length, const char *cp) {
+  Handle handle;
+  TERecord **temp;
+  longword oldStart, oldEnd;
 
   handle = (Handle)GetCtlHandleFromID(MyWindow, CtrlTE);
   temp = (TERecord **)handle;
 
   (**temp).textFlags &= (~fReadOnly);
 
-//  TEGetSelection((pointer)&oldStart, (pointer)&oldEnd, handle);
+  //  TEGetSelection((pointer)&oldStart, (pointer)&oldEnd, handle);
 
   TESetSelection((Pointer)-1, (Pointer)-1, handle);
-  TEInsert(teDataIsTextBlock, (Ref)cp, length,
-	  NULL, NULL, /* no style info */
-	  handle);
+  TEInsert(teDataIsTextBlock, (Ref)cp, length, NULL, NULL, /* no style info */
+           handle);
 
   (**temp).textFlags |= fReadOnly;
 
-//  TESetSelection((Pointer)oldStart, (Pointer)oldEnd, handle);
-
+  //  TESetSelection((Pointer)oldStart, (Pointer)oldEnd, handle);
 }
-
 
 // enable/disable the menu items.
 
-void UpdateMenuStatus(void)
-{
-  if (FlagConnect == false)
-  {
+void UpdateMenuStatus(void) {
+  if (FlagConnect == false) {
     EnableMItem(StartMMItem);
     DisableMItem(StopMMItem);
 
     DisableMItem(StartHTTPMItem);
     DisableMItem(StopHTTPMItem);
     DisableMItem(ResetMItem);
-  }
-  else
-  {
+  } else {
     DisableMItem(StartMMItem);
     EnableMItem(StopMMItem);
     EnableMItem(ResetMItem);
-                             
-    if (FlagHTTP == false)
-    {
+
+    if (FlagHTTP == false) {
       EnableMItem(StartHTTPMItem);
       DisableMItem(StopHTTPMItem);
       DisableMItem(ResetMItem);
-    } 
-    else
-    {
+    } else {
       DisableMItem(StartHTTPMItem);
       EnableMItem(StopHTTPMItem);
       EnableMItem(ResetMItem);
-    } 
+    }
   }
 }
 
-
-#pragma databank  1
+#pragma databank 1
 
 /*
  *  watch for
  */
-pascal word HandleRequest(word request, longword dataIn, longword dataOut)
-{
-Word oldRApp;
-MenuBarRecHndl oldMenuBar;
+pascal word HandleRequest(word request, longword dataIn, longword dataOut) {
+  Word oldRApp;
+  MenuBarRecHndl oldMenuBar;
 
   oldRApp = GetCurResourceApp();
   SetCurResourceApp(MyID);
@@ -147,16 +127,14 @@ MenuBarRecHndl oldMenuBar;
   oldMenuBar = GetMenuBar();
   SetMenuBar(MyMenuBar);
 
-
-  if (request == TCPIPSaysNetworkUp)
-  {
+  if (request == TCPIPSaysNetworkUp) {
     FlagConnect = true;
     UpdateMenuStatus();
   }
 
-  if (request == TCPIPSaysNetworkDown)
-  {
-    if (FlagHTTP) StopServer();
+  if (request == TCPIPSaysNetworkDown) {
+    if (FlagHTTP)
+      StopServer();
 
     FlagConnect = false;
     Ipid = 0;
@@ -165,12 +143,10 @@ MenuBarRecHndl oldMenuBar;
 
   SetMenuBar(oldMenuBar);
   SetCurResourceApp(oldRApp);
-
 }
 
-pascal void DrawInfo(void *rect, MenuBarRecHndl menubar, GrafPortPtr w)
-{
-Word oldRApp;
+pascal void DrawInfo(void *rect, MenuBarRecHndl menubar, GrafPortPtr w) {
+  Word oldRApp;
 
   oldRApp = GetCurResourceApp();
   SetCurResourceApp(MyID);
@@ -180,39 +156,33 @@ Word oldRApp;
   SetMenuBar(NULL);
 
   SetCurResourceApp(oldRApp);
-
 }
 
-void DrawWindow(void)
-{
-  DrawControls(MyWindow);
-}
+void DrawWindow(void) { DrawControls(MyWindow); }
 #pragma databank 0
 
-GrafPortPtr NDAOpen(void)
-{
-const char *err = NULL;
-//Pointer myPath;
-Word oldLevel;
-Word oldPrefs;
-Word oldRApp; 
-LevelRecGS levelDCB;
-//SysPrefsRecGS prefsDCB;
-Handle H;
-Rect r;
-CtlRec *ctl;
+GrafPortPtr NDAOpen(void) {
+  const char *err = NULL;
+  // Pointer myPath;
+  Word oldLevel;
+  Word oldPrefs;
+  Word oldRApp;
+  LevelRecGS levelDCB;
+  // SysPrefsRecGS prefsDCB;
+  Handle H;
+  Rect r;
+  CtlRec *ctl;
 
-static Word menuColor[] = {0x00e0, 0x000f, 0x0000 };
+  static Word menuColor[] = {0x00e0, 0x000f, 0x0000};
 
-
-  if (QDVersion() < 0x0308)
-  {
+  if (QDVersion() < 0x0308) {
     AlertWindow(awCString, NULL,
-      (Ref)"24~System 6.0.1 or greater is required.~^Too Bad");
+                (Ref) "24~System 6.0.1 or greater is required.~^Too Bad");
     return NULL;
   }
 
-  if (!LoadNDATools(MyID)) return NULL;
+  if (!LoadNDATools(MyID))
+    return NULL;
 
   // Check if Marinetti Active.
 
@@ -224,20 +194,19 @@ static Word menuColor[] = {0x00e0, 0x000f, 0x0000 };
   levelDCB.level = 0;
   SetLevelGS(&levelDCB);
 
-
   oldPrefs = DoSysPrefs(0xE000, 0x8000);
 
   oldRApp = OpenResourceFileByID(readEnable, MyID);
   //
-  MyWindow = NewWindow2(NULL, 0, DrawWindow, NULL,
-    refIsResource, rHTTPWindow, rWindParam1);
+  MyWindow = NewWindow2(NULL, 0, DrawWindow, NULL, refIsResource, rHTTPWindow,
+                        rWindParam1);
 
   CenterWindow(MyWindow);
   WindowW = MyWindow->portRect.h2 - MyWindow->portRect.h1;
 
   SetInfoDraw(DrawInfo, MyWindow);
 
-  MyMenuBar = NewMenuBar2(refIsResource,(Ref)1, (Pointer)MyWindow);
+  MyMenuBar = NewMenuBar2(refIsResource, (Ref)1, (Pointer)MyWindow);
   SetInfoRefCon((LongWord)MyMenuBar, MyWindow);
   SetMenuBar(MyMenuBar);
 
@@ -248,10 +217,9 @@ static Word menuColor[] = {0x00e0, 0x000f, 0x0000 };
   ctl->ctlRect.v1 = r.v1 - 1;
   ctl->ctlRect.h1 = r.h1 - 2;
   ctl->ctlRect.v2 = r.v2 + 1;
-  //ctl->ctlRect.h2 = r.h2 + 2;
+  // ctl->ctlRect.h2 = r.h2 + 2;
 
   ctl->ctlColor = (Pointer)menuColor;
-
 
   FixMenuBar();
 
@@ -265,7 +233,8 @@ static Word menuColor[] = {0x00e0, 0x000f, 0x0000 };
 
   SetMenuBar(NULL);
 
-  if (!FlagConfig) FlagConfig = LoadConfig(MyID);
+  if (!FlagConfig)
+    FlagConfig = LoadConfig(MyID);
   LoadFTypes(MyID);
 
   DoSysPrefs(0xffff, oldPrefs);
@@ -276,36 +245,32 @@ static Word menuColor[] = {0x00e0, 0x000f, 0x0000 };
   SetCurResourceApp(oldRApp);
 
   return MyWindow;
-
 }
 
-void NDAClose(void)
-{
-    // if running, shut down.
+void NDAClose(void) {
+  // if running, shut down.
 
-    if (FlagHTTP) StopServer();
+  if (FlagHTTP)
+    StopServer();
 
-    CloseWindow(MyWindow);
-    MyWindow = NULL;
-    MyMenuBar = NULL;
+  CloseWindow(MyWindow);
+  MyWindow = NULL;
+  MyMenuBar = NULL;
 
-    if (FlagConfig)
-    {
-      UnloadConfig();
-      FlagConfig = 0;
-    }
-    UnloadFTypes();
+  if (FlagConfig) {
+    UnloadConfig();
+    FlagConfig = 0;
+  }
+  UnloadFTypes();
 
-    // todo -- don't shut down, so server can run w/o window???
-    AcceptRequests(ReqName, MyID, NULL);
-    //CloseResourceFile(MyRID);
-    ResourceShutDown();
+  // todo -- don't shut down, so server can run w/o window???
+  AcceptRequests(ReqName, MyID, NULL);
+  // CloseResourceFile(MyRID);
+  ResourceShutDown();
 }
 
-void NDAInit(Word code)
-{
-  if (code)
-  {
+void NDAInit(Word code) {
+  if (code) {
     MyWindow = NULL;
     MyMenuBar = NULL;
 
@@ -327,101 +292,86 @@ void NDAInit(Word code)
 
     MyID = MMStartUp();
     Ipid = 0;
-    //MyRID = 0;
+    // MyRID = 0;
 
-  }
-  else
-  {
+  } else {
     UnloadNDATools();
   }
 }
 
-word NDAAction(void *param, int code)
-{
-word eventCode;
-static EventRecord event;
-Rect r;
-Handle h;
+word NDAAction(void *param, int code) {
+  word eventCode;
+  static EventRecord event;
+  Rect r;
+  Handle h;
 
-  if (code == runAction)
-  {
-    if (FlagHTTP) Server();
+  if (code == runAction) {
+    if (FlagHTTP)
+      Server();
     return 1;
   }
-  if (code == copyAction)
-  {
+  if (code == copyAction) {
     h = (Handle)GetCtlHandleFromID(MyWindow, CtrlTE);
     TECopy(h);
     return 1; // yes we handled it.
   }
 
-  if (code == eventAction)
-  {
-  Word skip_tmda = 0;
+  if (code == eventAction) {
+    Word skip_tmda = 0;
 
     memset(&event, 0, sizeof(event));
 
     BlockMove((Pointer)param, (Pointer)&event, 16);
 
-    if (event.what == autoKeyEvt || event.what == keyDownEvt)
-    {
-      SetMenuBar(MyMenuBar);                            
+    if (event.what == autoKeyEvt || event.what == keyDownEvt) {
+      SetMenuBar(MyMenuBar);
       StartInfoDrawing(&r, MyWindow);
       MenuKey(&event, (MenuRecHndl)MyMenuBar);
 
-      if ((word)event.wmTaskData)  // menu item selected...
+      if ((word)event.wmTaskData) // menu item selected...
       {
         eventCode = wInMenuBar;
         skip_tmda++;
-        //HiliteMenu(0, ((split)event.wmTaskData).hi);
-      }
-      else
-      {
-        EndInfoDrawing();          
+        // HiliteMenu(0, ((split)event.wmTaskData).hi);
+      } else {
+        EndInfoDrawing();
         SetMenuBar(NULL);
       }
     }
 
-    if (!skip_tmda)
-    {
+    if (!skip_tmda) {
       event.wmTaskMask = 0x001FFFFF;
       eventCode = TaskMasterDA(0, &event);
     }
 
     // do menu tracking, convert to a menu item....
-    if (eventCode == wInInfo)
-    {
-    GrafPortPtr win = (GrafPortPtr)event.wmTaskData;
+    if (eventCode == wInInfo) {
+      GrafPortPtr win = (GrafPortPtr)event.wmTaskData;
 
       SetMenuBar(MyMenuBar);
       StartInfoDrawing(&r, win);
       MenuSelect(&event, (MenuRecHndl)MyMenuBar);
-      if ((word)event.wmTaskData)  // menu item selected...
+      if ((word)event.wmTaskData) // menu item selected...
       {
         eventCode = wInMenuBar;
-        //HiliteMenu(0, ((split)event.wmTaskData).hi);
-      }
-      else
-      {
-        EndInfoDrawing();          
+        // HiliteMenu(0, ((split)event.wmTaskData).hi);
+      } else {
+        EndInfoDrawing();
         SetMenuBar(NULL);
       }
     }
 
-    switch(eventCode)
-    {
+    switch (eventCode) {
     case wInControl:
       // if it's the TE control, we may be resized... barf.
-      if (event.wmTaskData4 == CtrlTE)
-      {
+      if (event.wmTaskData4 == CtrlTE) {
         Word w;
         CtlRecHndl ctrlH;
         CtlRecPtr ctrlP;
         GrafPortPtr oldPort;
 
         w = MyWindow->portRect.h2 - MyWindow->portRect.h1;
-        if (w != WindowW)
-        {
+        if (w != WindowW) {
           WindowW = w;
 
           oldPort = GetPort();
@@ -438,8 +388,7 @@ Handle h;
       break;
     case wInMenuBar:
 
-      switch((word)event.wmTaskData)
-      {
+      switch ((word)event.wmTaskData) {
       case SelectAllMItem:
         h = (Handle)GetCtlHandleFromID(MyWindow, CtrlTE);
         TESetSelection((Pointer)0, (Pointer)-1, h);
@@ -453,7 +402,7 @@ Handle h;
 
       case 252:
         h = (Handle)GetCtlHandleFromID(MyWindow, CtrlTE);
-	TECopy(h);
+        TECopy(h);
         break;
 
       case 253:
@@ -466,30 +415,26 @@ Handle h;
         TEClear(h);
         break;
 
-      case AboutMItem:
-        {
+      case AboutMItem: {
         WindowPtr win;
         static EventRecord ev;
 
-          memset(&ev, 0, sizeof(ev));
-          ev.wmTaskMask = 0x001f0004;
+        memset(&ev, 0, sizeof(ev));
+        ev.wmTaskMask = 0x001f0004;
 
-          win = NewWindow2(NULL, NULL, NULL, NULL,
-            refIsResource, (long)rAboutWindow, rWindParam1);
+        win = NewWindow2(NULL, NULL, NULL, NULL, refIsResource,
+                         (long)rAboutWindow, rWindParam1);
 
-          CenterWindow(win);
-          ShowWindow(win);
-          for(;;)
-          {
-            DoModalWindow(&ev, NULL, NULL, NULL, 0x0008);
-            if (ev.what == keyDownEvt
-              || ev.what == autoKeyEvt
-              || ev.what == mouseDownEvt)
-              break;
-          }
-          CloseWindow(win);
+        CenterWindow(win);
+        ShowWindow(win);
+        for (;;) {
+          DoModalWindow(&ev, NULL, NULL, NULL, 0x0008);
+          if (ev.what == keyDownEvt || ev.what == autoKeyEvt ||
+              ev.what == mouseDownEvt)
+            break;
         }
-        break;
+        CloseWindow(win);
+      } break;
 
       case ConfigMItem:
         DoConfig(MyID);
@@ -502,31 +447,25 @@ Handle h;
 
       case EmptyMItem:
         h = (Handle)GetCtlHandleFromID(MyWindow, CtrlTE);
-        TESetText(teDataIsTextBlock, (Ref)"", 0,
-	  NULL, NULL, h);
+        TESetText(teDataIsTextBlock, (Ref) "", 0, NULL, NULL, h);
         break;
 
       case StartMMItem:
-        if (TCPIPGetConnectStatus())
-        {
+        if (TCPIPGetConnectStatus()) {
           FlagConnect = true;
           UpdateMenuStatus();
-        }
-        else
-        {
+        } else {
           TCPIPConnect(NULL);
         }
         break;
 
       case StopMMItem:
-        if (!TCPIPGetConnectStatus())
-        {
+        if (!TCPIPGetConnectStatus()) {
           FlagConnect = false;
           UpdateMenuStatus();
-        }
-        else
-        {
-	  if (FlagHTTP) StopServer();
+        } else {
+          if (FlagHTTP)
+            StopServer();
           // if option key down, force a shutdown.
           TCPIPDisconnect(event.modifiers & optionKey, NULL);
         }
@@ -546,9 +485,9 @@ Handle h;
         ResetServer();
         break;
       } // switch((word)event.wmTaskData)
-                              
+
       HiliteMenu(0, ((split)event.wmTaskData).hi);
-      EndInfoDrawing();          
+      EndInfoDrawing();
       SetMenuBar(NULL);
       break; // case wInMenu
 
@@ -557,9 +496,8 @@ Handle h;
       DrawWindow();
       EndUpdate(MyWindow);
       break; // case updateEvt
-    } // switch(eventCode)
-  }  // if (code == eventAction
+    }        // switch(eventCode)
+  }          // if (code == eventAction
 
- return 0;
-
+  return 0;
 }

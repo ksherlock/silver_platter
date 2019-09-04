@@ -1,30 +1,28 @@
 #pragma noroot
-#pragma optimize -1
-#pragma lint -1
+#pragma optimize - 1
+#pragma lint - 1
 #pragma debug 0x8000
 
-#include <ctype.h>
 #include "pointer.h"
+#include <ctype.h>
 
 // returns:
 //-1 on error
-//0 if no mangling needed
+// 0 if no mangling needed
 // valid handle otherwise.
 
-// rfc 1738:  everything except 
+// rfc 1738:  everything except
 // a-zA-Z$-_.+!*'(),/?:@=&
 // must be converted to %xx entities
-// i also convert & for xhtml compatability. 
-GSString255Ptr EncodeURL(const GSString255 *gstr)
-{
-Word i, j;
-Word c;
-Word extra;
-GSString255Ptr dest;
+// i also convert & for xhtml compatability.
+GSString255Ptr EncodeURL(const GSString255 *gstr) {
+  Word i, j;
+  Word c;
+  Word extra;
+  GSString255Ptr dest;
 
   extra = 0;
-  for (i = 0; i < gstr->length; i++)
-  {
+  for (i = 0; i < gstr->length; i++) {
     c = gstr->text[i];
     if (isalnum(c)
     	|| c == '$'
@@ -44,19 +42,20 @@ GSString255Ptr dest;
 		|| c == '@'
 		|| c == '='
     	) continue;
-    
-	extra += 2;
+
+    extra += 2;
   }
-  if (!extra) return NULL;
+  if (!extra)
+    return NULL;
 
   dest = (GSString255Ptr)NewPointer(gstr->length + 3 + extra);
-  if (!dest) return NULL;
+  if (!dest)
+    return NULL;
 
   i = j = 0;
-  while ( i < gstr->length)
-  {
+  while (i < gstr->length) {
     c = gstr->text[i++];
-    
+
     if (isalnum(c)
     	|| c == '$'
     	|| c == '-'
@@ -76,10 +75,8 @@ GSString255Ptr dest;
 		|| c == '='
 		)
     {
-    	dest->text[j++] = c;
-    }
-	else
-    {
+      dest->text[j++] = c;
+    } else {
       Word x;
 
       dest->text[j++] = '%';
@@ -89,7 +86,6 @@ GSString255Ptr dest;
 
       x = c & 0x0f;
       dest->text[j++] = "0123456789abcdef"[x];
-
     }
   }
   dest->text[j] = 0; // make a cstring
@@ -98,17 +94,15 @@ GSString255Ptr dest;
   return dest;
 }
 
+#define x(utf, y)                                                              \
+  { utf, sizeof(y) - 1, y }
 
-#define x(utf, y) { utf, sizeof(y) -1 , y}
-
-struct ConvTable
-{
+struct ConvTable {
   Word utf;
   Word length;
   char *text;
-} mr2html[] =
-{
-  //0x80
+} mr2html[] = {
+    // 0x80
   x(0xc4, "Auml"),
   x(0xc5, "Aring"),
   x(0xc7, "Ccedil"),
@@ -125,7 +119,7 @@ struct ConvTable
   x(0xe7, "ccedil"),
   x(0xe9, "eacute"),
   x(0xe8, "egrave"),
-  //0x90
+    // 0x90
   x(0xea, "ecirc"),
   x(0xeb, "euml"),
   x(0xed, "iacute"),
@@ -142,7 +136,7 @@ struct ConvTable
   x(0xf9, "ugrave"),
   x(0xfb, "ucirc"),
   x(0xfc, "uuml"),
-  //0xA0      
+    // 0xA0
   x(0x2020, "dagger"),
   x(0xb0, "deg"),
   x(0xa2, "cent"),
@@ -159,7 +153,7 @@ struct ConvTable
   x(0x2260, "ne"),
   x(0xc6, "AElig"),
   x(0xd8, "Oslash"),
-  //0xB0      
+    // 0xB0
   x(0x221e, "infin"),
   x(0xb1, "plusmn"),
   x(0x2264, "le"),
@@ -176,7 +170,7 @@ struct ConvTable
   x(0x03a9, "Omega"),
   x(0xe6, "aelig"),
   x(0xf8, "oslash"),
-  //0xC0
+    // 0xC0
   x(0xbf, "iquest"),
   x(0xa1, "iexcl"),
   x(0xac, "not"),
@@ -192,8 +186,8 @@ struct ConvTable
   x(0xc3, "Atilde"),
   x(0xd5, "Otilde"),
   x(0x152, "OElig"),
-  x(0x153, "oelig"),
-  // 0xD0
+    x(0x153, "oelig"),
+    // 0xD0
   x(0x2013, "ndash"),
   x(0x2014, "mdash"),    
   x(0x201c, "ldquo"),    
@@ -210,7 +204,7 @@ struct ConvTable
   x(0x203a, "rsaquo"),    
   x(0xfb01, "#xfb01"),    
   x(0xfb02, "#xfb02"),
-  // 0xE0
+    // 0xE0
   x(0x2021, "Dagger"),
   x(0xb7, "middot"),
   x(0x201a, "sbquo"),
@@ -226,9 +220,9 @@ struct ConvTable
   x(0xcf, "Iuml"),
   x(0xcc, "Igrave"),
   x(0xd3, "Oacute"),
-  x(0xd4, "Ocirc"),
-  // 0xF0
-  x(0xf8ff, "#xf8ff"),  // apple logo
+    x(0xd4, "Ocirc"),
+    // 0xF0
+    x(0xf8ff, "#xf8ff"), // apple logo
   x(0xd2, "Ograve"),
   x(0xda, "Uacute"),
   x(0xdb, "Ucirc"),
@@ -250,63 +244,59 @@ struct ConvTable
 //
 // returns:
 //-1 on error
-//0 if no conversion needed
+// 0 if no conversion needed
 // valid handle otherwise.
-GSString255Ptr MacRoman2HTML(const GSString255 *gstr)
-{
-Word i, j;
-Word c;
-Word extra;
-GSString255Ptr dest;
+GSString255Ptr MacRoman2HTML(const GSString255 *gstr) {
+  Word i, j;
+  Word c;
+  Word extra;
+  GSString255Ptr dest;
 
   extra = 0;
-  for (i = 0; i < gstr->length; i++)
-  {
+  for (i = 0; i < gstr->length; i++) {
     c = gstr->text[i];
-    if (c & 0x80)
-    {
+    if (c & 0x80) {
       // -1 since we're overwriting 1 char, +2 for &;
       extra += mr2html[c & 0x7f].length + 2 - 1;
     }
     // &amp;
-    else if (c == '&') extra += 5 - 1;
+    else if (c == '&')
+      extra += 5 - 1;
     // &quot;
-    else if (c == '"') extra += 6 - 1;
+    else if (c == '"')
+      extra += 6 - 1;
     // &apos;
-    //else if (c == '\'') extra += 6 - 1;
+    // else if (c == '\'') extra += 6 - 1;
     // &lt; &gt;
-    else if (c == '>' || c == '<') extra += 4 - 1;
+    else if (c == '>' || c == '<')
+      extra += 4 - 1;
   }
-  if (!extra) return NULL;
+  if (!extra)
+    return NULL;
 
   dest = (GSString255Ptr)NewPointer(gstr->length + 3 + extra);
-  if (!dest) return NULL;
-  
-  
+  if (!dest)
+    return NULL;
+
   i = j = 0;
-  while ( i < gstr->length)
-  {
+  while (i < gstr->length) {
     c = gstr->text[i++];
-    if (c & 0x80)
-    {
-    Word l;
-    char *cp;
+    if (c & 0x80) {
+      Word l;
+      char *cp;
 
       cp = mr2html[c & 0x7f].text;
       dest->text[j++] = '&';
-      while (c = *cp++) dest->text[j++] = c;
+      while (c = *cp++)
+        dest->text[j++] = c;
       dest->text[j++] = ';';
-    }
-    else if (c == '&')
-    {
+    } else if (c == '&') {
       dest->text[j++] = '&';
       dest->text[j++] = 'a';
       dest->text[j++] = 'm';
       dest->text[j++] = 'p';
       dest->text[j++] = ';';
-    }                       
-    else if (c == '"')
-    {
+    } else if (c == '"') {
       dest->text[j++] = '&';
       dest->text[j++] = 'q';
       dest->text[j++] = 'u';
@@ -325,22 +315,20 @@ GSString255Ptr dest;
       dest->text[j++] = ';';
     }
 #endif
-    else if (c == '>')
-    {
+    else if (c == '>') {
       dest->text[j++] = '&';
       dest->text[j++] = 'g';
       dest->text[j++] = 't';
       dest->text[j++] = ';';
-    }                       
-    else if (c == '<')
-    {
+    } else if (c == '<') {
       dest->text[j++] = '&';
       dest->text[j++] = 'l';
       dest->text[j++] = 't';
       dest->text[j++] = ';';
-    }                       
+    }
 
-    else dest->text[j++] = c;
+    else
+      dest->text[j++] = c;
   }
   dest->text[j] = 0; // make a cstring
   dest->length = j;
@@ -348,56 +336,51 @@ GSString255Ptr dest;
   return dest;
 }
 
-
 // Convert MacRoman --> utf-8
 // returns:
 //-1 on error
-//0 if no conversion needed
+// 0 if no conversion needed
 // valid handle otherwise.
-GSString255Ptr MacRoman2UTF8(const GSString255 *gstr)
-{
-Word i, j;
-Word c;
-Word extra;
-GSString255Ptr dest;
-Word utf;
+GSString255Ptr MacRoman2UTF8(const GSString255 *gstr) {
+  Word i, j;
+  Word c;
+  Word extra;
+  GSString255Ptr dest;
+  Word utf;
 
   extra = 0;
-  for (i = 0; i < gstr->length; i++)
-  {
+  for (i = 0; i < gstr->length; i++) {
     c = gstr->text[i];
-    if (c & 0x80)
-    {
-    	utf = mr2html[c & 0x7f].utf;
-    	if (utf > 0x0fff) extra += 3; //
-    	else extra += 2;
+    if (c & 0x80) {
+      utf = mr2html[c & 0x7f].utf;
+      if (utf > 0x0fff)
+        extra += 3; //
+      else
+        extra += 2;
     }
   }
-  if (!extra) return NULL;
+  if (!extra)
+    return NULL;
 
   dest = (GSString255Ptr)NewPointer(gstr->length + 3 + extra);
-  if (!dest) return NULL;
+  if (!dest)
+    return NULL;
 
   i = j = 0;
-  while ( i < gstr->length)
-  {
+  while (i < gstr->length) {
     c = gstr->text[i++];
-    if (c & 0x80)
-    {
-    	utf = mr2html[c & 0x7f].utf;
-    	if (utf > 0x0fff)
-    	{
-    	  dest->text[j++] = 0xe0 | (utf >> 12);
-    	  dest->text[j++] = 0x80 | ((utf >> 6) & 0x3f);
-    	  dest->text[j++] = 0x80 | (utf & 0x3f);	
-    	}
-    	else
-    	{
-    		dest->text[j++] = 0xc0 | (utf >> 6);
-    		dest->text[j++] = 0x80 | (utf & 0x3f);
-    	}
-    }
-    else dest->text[j++] = c;
+    if (c & 0x80) {
+      utf = mr2html[c & 0x7f].utf;
+      if (utf > 0x0fff) {
+        dest->text[j++] = 0xe0 | (utf >> 12);
+        dest->text[j++] = 0x80 | ((utf >> 6) & 0x3f);
+        dest->text[j++] = 0x80 | (utf & 0x3f);
+      } else {
+        dest->text[j++] = 0xc0 | (utf >> 6);
+        dest->text[j++] = 0x80 | (utf & 0x3f);
+      }
+    } else
+      dest->text[j++] = c;
   }
   dest->text[j] = 0; // make a cstring
   dest->length = j;

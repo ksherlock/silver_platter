@@ -2,22 +2,19 @@
 #define __SERVER_H__
 
 // flags
-enum
-{
-  FLAG_KA = 0x0001,		// keep-alive
-  FLAG_CHUNKED = 0x0002,	// chunked transfer
-  FLAG_TEXT = 0x0004,		// PUT - is text/*
-  FLAG_CREATE = 0x0008,		// PUT - created file.
+enum {
+  FLAG_KA = 0x0001,      // keep-alive
+  FLAG_CHUNKED = 0x0002, // chunked transfer
+  FLAG_TEXT = 0x0004,    // PUT - is text/*
+  FLAG_CREATE = 0x0008,  // PUT - created file.
   FLAG_RANGE = 0x0010,
-  FLAG_RANGE0 = 0x0020,		// Range: request (range start valid)
-  FLAG_RANGE1 = 0x0040,    // Range: request (range end valid)
+  FLAG_RANGE0 = 0x0020, // Range: request (range start valid)
+  FLAG_RANGE1 = 0x0040, // Range: request (range end valid)
 };
 
 // moreFlags - see cgi.h
 
-
-enum
-{
+enum {
   STATE_ESTABLISH = 1,
   STATE_READ,
   STATE_WRITE,
@@ -30,11 +27,10 @@ enum
   STATE_PUT
 };
 
-#include "methods.h"
 #include "cgi.h"
+#include "methods.h"
 
-struct qEntry
-{
+struct qEntry {
   Word state;
   Word ipid;
   Word fd;
@@ -56,14 +52,12 @@ struct qEntry
 
   GSString255Ptr pathname;
   GSString255Ptr fullpath;
-  
 
   Handle buffer;
   Handle workHandle;
 };
 
 extern char buffer[4096];
-
 
 void WriteData(struct qEntry *, const char *, Word);
 
@@ -73,9 +67,9 @@ Word ProcessFile(struct qEntry *);
 Word ProcessPut(struct qEntry *);
 
 void SendHeader(struct qEntry *q, Word status, LongWord size,
-  const TimeRec * modTime, const char *mimeString, const char *extra, Word);
+                const TimeRec *modTime, const char *mimeString,
+                const char *extra, Word);
 
 Word AppleSingle(struct qEntry *);
-
 
 #endif

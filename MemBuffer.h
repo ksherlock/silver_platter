@@ -3,17 +3,13 @@
 
 #include <Types.h>
 
-
-typedef struct MemBuffer
-{
-	Handle h;
-	Word alloc;
-	Word used;
+typedef struct MemBuffer {
+  Handle h;
+  Word alloc;
+  Word used;
 } MemBuffer;
 
-
-#define CREATE_BUFFER(name, h) MemBuffer name = { h, 0, 0}
-
+#define CREATE_BUFFER(name, h) MemBuffer name = {h, 0, 0}
 
 Word BufferAppend(MemBuffer *, void *, Word);
 

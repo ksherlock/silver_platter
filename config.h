@@ -18,12 +18,11 @@ extern Handle fRootH;
 // PUT
 extern Word fPut;
 extern Word fPutOverwrite;
-extern Word fPutMkdir;	
+extern Word fPutMkdir;
 
 extern Word fAppleSingle;
 extern Word fAppleDouble;
 extern Word fMacBinary;
-
 
 extern Word fDir;
 extern Word fDirHidden;
