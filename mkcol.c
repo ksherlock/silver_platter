@@ -3,11 +3,14 @@
 #pragma optimize -1
 #pragma debug 0x8000
 
+segment "WebDAV    ";
+
 #include <gsos.h>
 
 #include "server.h"
 #include "globals.h"
 #include "config.h"
+#include "http.h"
 
 
 // create a colection (aka directory)
@@ -23,9 +26,10 @@ Word ProcessMkcol(struct qEntry *q)
 {
 	
   if (fWebDav == false)
-  {
-    return ProcessError(405, q);	
-  }
+    return ProcessError(HTTP_METHOD_NOT_ALLOWED, q);  
+
+  if (q->moreFlags)
+    return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
 	
   CreateDCB.pCount = 5;
   CreateDCB.pathname = q->fullpath;
@@ -38,8 +42,8 @@ Word ProcessMkcol(struct qEntry *q)
   
   if (_toolErr) return ProcessError(409, q);
   
-  SendHeader(q, 201, 0, NULL, NULL, NULL, 0);
+  SendHeader(q, HTTP_CREATED, 0, NULL, NULL, NULL, 0);
   
   q->state = STATE_CLOSE;
-  return 201;
+  return HTTP_CREATED;
 }
