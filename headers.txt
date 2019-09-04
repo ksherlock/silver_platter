@@ -1,9 +1,9 @@
 #include "headers.h"
 
-"Keep-Alive:" : h_KeepAlive
-"Connection:" : h_Connection
-"Host:" : h_Host
-"Content-Length:" : h_ContentLength
-"Content-Type:" : h_ContentType
-"Depth:" : h_Depth
-"Range:" : h_Range
+"Keep-Alive:" : HDR_KEEP_ALIVE
+"Connection:" : HDR_CONNECTION
+"Host:" : HDR_HOST
+"Content-Length:" : HDR_CONTENT_LENGTH
+"Content-Type:" : HDR_CONTENT_TYPE
+"Depth:" : HDR_DEPTH
+"Range:" : HDR_RANGE

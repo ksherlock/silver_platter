@@ -1,12 +1,12 @@
 #ifndef headers_h
 #define headers_h
 
-#define h_KeepAlive 1
-#define h_Connection 2
-#define h_Host 3
-#define h_ContentLength 4
-#define h_ContentType 5
-#define h_Depth 6
-#define h_Range 7
+#define HDR_KEEP_ALIVE 1
+#define HDR_CONNECTION 2
+#define HDR_HOST 3
+#define HDR_CONTENT_LENGTH 4
+#define HDR_CONTENT_TYPE 5
+#define HDR_DEPTH 6
+#define HDR_RANGE 7
 
 #endif

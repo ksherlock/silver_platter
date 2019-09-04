@@ -207,15 +207,15 @@ void ScanHeader(char *cp, struct qEntry *q) {
     cp++;
 
   switch (i) {
-  case h_KeepAlive: // Keep-Alive.
+  case HDR_KEEP_ALIVE: // Keep-Alive.
     q->flags |= FLAG_KA;
     break;
 
-  case h_Connection: // Connection:
+  case HDR_CONNECTION: // Connection:
     ScanConnection(cp, q);
     break;
 
-  case h_Host: // Host:
+  case HDR_HOST: // Host:
     if (!*cp)
       return;
 
@@ -235,12 +235,12 @@ void ScanHeader(char *cp, struct qEntry *q) {
     }
     break;
 
-  case h_ContentLength: // Content-Length
+  case HDR_CONTENT_LENGTH: // Content-Length
     if (!ScanContentLength(cp, q))
       q->error = 400;
     break;
 
-  case h_ContentType: // Content-Type ... check if text/*
+  case HDR_CONTENT_TYPE: // Content-Type ... check if text/*
     if (!*cp)
       return;
 
@@ -248,14 +248,14 @@ void ScanHeader(char *cp, struct qEntry *q) {
       q->flags |= FLAG_TEXT;
     break;
 
-  case h_Depth: // Depth: 0, 1, or infinity.
+  case HDR_DEPTH: // Depth: 0, 1, or infinity.
     if (isdigit(c = *cp))
       q->depth = c - '0';
     else
       q->depth = -1;
     break;
 
-  case h_Range: // Range:
+  case HDR_RANGE: // Range:
     ScanRange(cp, q);
     break;
   }
