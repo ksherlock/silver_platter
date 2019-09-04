@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "httpnda.h"
+#include "http.h"
 #include "server.h"
 #include "config.h"
 #include "rez.h"
@@ -565,6 +566,10 @@ Word oldPrefs;
 
             if (q->error) {
               terr = ProcessError(q->error, q);
+              break;
+            }
+            if (q->moreFlags == CGI_ERROR) {
+              terr = ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
               break;
             }
 
