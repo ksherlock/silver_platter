@@ -16,7 +16,7 @@
 #include <stdio.h>
 
 #include "globals.h"
-
+#include "http.h"
 #include "server.h"
 #include "config.h"
 #include "ftype.h"
@@ -460,16 +460,18 @@ Word err;
 CREATE_BUFFER(m, q->workHandle);
 
   q->state = STATE_CLOSE;
-  q->moreFlags = CGI_DIR;
 
   if (!fDir)
-  {
-    return ProcessError(403, q);
-  }
-  if (q->command == CMD_HEAD)
-  {
-    SendHeader(q, 200, -1, NULL, "text/html", NULL, 0);
-    return 200;
+    return ProcessError(HTTP_FORBIDDEN, q);
+
+  if (q->moreFlags)
+  	return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
+
+  q->moreFlags = CGI_DIR;
+
+  if (q->command == CMD_HEAD) {
+    SendHeader(q, HTTP_OK, -1, NULL, "text/html", NULL, 0);
+    return HTTP_OK;
   }
 
   HUnlock(q->workHandle);
@@ -559,12 +561,12 @@ CREATE_BUFFER(m, q->workHandle);
   if (err) return ProcessError(500, q);
 
 
-  SendHeader(q, 200, m.used, NULL, "text/html", NULL, 0);
+  SendHeader(q, HTTP_OK, m.used, NULL, "text/html", NULL, 0);
 
   WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);
   
-  return 200;
+  return HTTP_OK;
 }
 
 
@@ -586,10 +588,10 @@ Word resNumber = 0;
 
   //
   if (!q->fullpath)
-    return ProcessError(400, q);
+    return ProcessError(HTTP_BAD_REQUEST, q);
 
   if (q->contentlength)
-  	return ProcessError(400, q);
+  	return ProcessError(HTTP_BAD_REQUEST, q);
 
   path = q->fullpath;
 
@@ -607,7 +609,7 @@ Word resNumber = 0;
 	GetFileInfoGS(&InfoDCB);
 				
 	if (_toolErr) {
-		return ProcessError(404, q);			
+		return ProcessError(HTTP_NOT_FOUND, q);			
 	}
 
 	if (q->moreFlags == CGI_RESOURCE) {
@@ -694,7 +696,7 @@ Word resNumber = 0;
 		OpenGS(&OpenDCB);
 		if (_toolErr)
 		{
-			return ProcessError(404, q);
+			return ProcessError(HTTP_NOT_FOUND, q);
 		}
 		q->fd = OpenDCB.refNum;
 
@@ -733,22 +735,22 @@ Word resNumber = 0;
 		markDCB.displacement = q->range[0];
 		SetMarkGS(&markDCB);
 		if (_toolErr)
-			return ProcessError(416, q);
+			return ProcessError(HTTP_REQUEST_RANGE_NOT_SATISFIABLE, q);
 
 		eof = q->range[1] - q->range[0] + 1;
-		SendHeader(q, 206, eof,
+		SendHeader(q, HTTP_PARTIAL_CONTENT, eof,
 			&modDateTime,
 			GetMimeString(path, fileType, auxType), NULL, 0);
 
 		q->contentlength = eof;
-		return 206;
+		return HTTP_PARTIAL_CONTENT;
 	}
 
-	SendHeader(q, 200,
+	SendHeader(q, HTTP_OK,
 		eof,
 		&modDateTime,
 		GetMimeString(path, fileType, auxType), NULL, 0);
 	
 	// actual writing takes place in server.c
-	return 200;
+	return HTTP_OK;
 }
