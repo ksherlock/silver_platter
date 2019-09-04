@@ -3,12 +3,15 @@
 #pragma optimize -1
 #pragma debug 0x8000
 
+segment "WebDAV    ";
+
 #include <types.h>
 
 #include <stdio.h>
 
 #include "server.h"
 #include "config.h"
+#include "http.h"
 
 #define B(x) x->length, x->text
 #define PRIB ".*s"
@@ -22,9 +25,10 @@ Word len;
 GSString255Ptr host;
 
 	if (fWebDav == false)
-	{
-		return ProcessError(405, q);
-	}
+		return ProcessError(HTTP_METHOD_NOT_ALLOWED, q);	
+
+	if (q->moreFlags)
+		return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
 
 	host = q->host;
 	if (host == NULL) host = (GSString255Ptr)"\x09\x00" "localhost";
@@ -52,27 +56,27 @@ GSString255Ptr host;
 		B(q->pathname),
 		lock++);
 		
-	SendHeader(q, 200, len, NULL, "text/xml", NULL, 0);
+	SendHeader(q, HTTP_OK, len, NULL, "text/xml", NULL, 0);
 	
 	WriteData(q, buffer, len);
 	WriteData(q, NULL, 0);
 	
 	q->state = STATE_CLOSE;
-	return 200;
+	return HTTP_OK;
 }
 
 
 // pretend to unlock a resource.
 Word ProcessUnlock(struct qEntry *q)
 {
-	
 	if (fWebDav == false)
-	{
-		return ProcessError(405, q);
-	}	
+		return ProcessError(HTTP_METHOD_NOT_ALLOWED, q);	
+
+	if (q->moreFlags)
+		return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);	
 	
-  SendHeader(q, 204, 0, NULL, NULL, NULL, 0);
-  
-  q->state = STATE_CLOSE;
-  return 204;
+	SendHeader(q, HTTP_NO_CONTENT, 0, NULL, NULL, NULL, 0);
+
+	q->state = STATE_CLOSE;
+	return HTTP_NO_CONTENT;
 }

@@ -3,6 +3,8 @@
 #pragma optimize -1
 #pragma debug 0x8000
 
+segment "WebDAV    ";
+
 #include <gsos.h>
 #include <memory.h>
 #include <tcpip.h>
@@ -13,6 +15,7 @@
 #include <stdio.h>
 
 #include "server.h"
+#include "http.h"
 #include "globals.h"
 #include "MemBuffer.h"
 #include "config.h"
@@ -20,6 +23,8 @@
 
 #define B(x) x->length, x->text
 #define PRIB ".*s"
+
+
 
 extern void tiTimeRec2ISO8601(TimeRecPtr t, char *str);
 extern void tiTimeRec2GMTString(TimeRecPtr t, char *str);
@@ -359,9 +364,10 @@ static char buffer32[32];
 CREATE_BUFFER(m, q->workHandle);
 
   if (fWebDav == false)
-  {
-    return ProcessError(405, q);	
-  }
+    return ProcessError(HTTP_METHOD_NOT_ALLOWED, q);	
+
+  if (q->moreFlags)
+    return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
 
   HUnlock(q->workHandle);
   SetHandleSize(0, q->workHandle);
