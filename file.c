@@ -579,6 +579,7 @@ Word fileType;
 LongWord auxType;
 TimeRec modDateTime;
 Word ipid;
+Word resNumber = 0;
 
 
   ipid = q->ipid;
@@ -605,17 +606,22 @@ Word ipid;
 	InfoDCB.optionList = NULL;
 	GetFileInfoGS(&InfoDCB);
 				
-	if (_toolErr)
-	{
+	if (_toolErr) {
 		return ProcessError(404, q);			
 	}
 
-	if (InfoDCB.fileType == 0x0f || q->moreFlags) {
+	if (q->moreFlags == CGI_RESOURCE) {
+		q->moreFlags = 0;
+		resNumber = 1;
+	}
+
+	if (InfoDCB.fileType == 0x0f || q->moreFlags || q->command == CMD_HEAD) {
 		q->flags &= ~(FLAG_RANGE|FLAG_RANGE0|FLAG_RANGE1);
 	}
 	     
 	switch (q->moreFlags)
 	{
+
 	case CGI_APPLESINGLE:
 	case CGI_APPLEDOUBLE:
 		return AppleSingle(q);
@@ -626,7 +632,17 @@ Word ipid;
 	}
 
 
-	eof = InfoDCB.eof;
+	if (resNumber) {
+		eof = InfoDCB.resourceEOF;
+		fileType = 0x06; /* binary */
+		auxType = 0x0000;
+	} else {
+		eof = InfoDCB.eof;
+		fileType = InfoDCB.fileType;
+		auxType = InfoDCB.auxType;
+	}
+	modDateTime = InfoDCB.modDateTime;
+
 	/* check for range error here, after verifying file exists */
 	if (q->flags & FLAG_RANGE) {
 		// asm { brk 0xea }
@@ -666,10 +682,6 @@ Word ipid;
 
 	if (q->command == CMD_HEAD)
 	{
-		fileType = InfoDCB.fileType;
-		auxType = InfoDCB.auxType;
-		modDateTime = InfoDCB.modDateTime;
-		
 		q->state = STATE_CLOSE;
 	}
 	else
@@ -677,7 +689,7 @@ Word ipid;
 		OpenDCB.pCount = 15;
 		OpenDCB.pathname = path;
 		OpenDCB.requestAccess = readEnable;
-		OpenDCB.resourceNumber = 0;
+		OpenDCB.resourceNumber = resNumber;
 		OpenDCB.optionList = NULL;
 		OpenGS(&OpenDCB);
 		if (_toolErr)
@@ -685,10 +697,16 @@ Word ipid;
 			return ProcessError(404, q);
 		}
 		q->fd = OpenDCB.refNum;
-		
-		eof = OpenDCB.eof;
-		fileType = OpenDCB.fileType;
-		auxType = OpenDCB.auxType;
+
+		if (resNumber) {
+			eof = OpenDCB.resourceEOF;
+			fileType = 0x06; /* binary */
+			auxType = 0x0000;
+		} else {
+			eof = OpenDCB.eof;
+			fileType = OpenDCB.fileType;
+			auxType = OpenDCB.auxType;
+		}
 		modDateTime = OpenDCB.modDateTime;
 		
 		q->state = STATE_WRITE;
