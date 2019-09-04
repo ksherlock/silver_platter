@@ -15,6 +15,28 @@
 // a-zA-Z$-_.+!*'(),/?:@=&
 // must be converted to %xx entities
 // i also convert & for xhtml compatability.
+
+/* pre-computed table of a-zA-Z$-_.+!*'(),/?:@=& */
+static unsigned char safe_url_chars[256] = {
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 
+  0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+};
+static char hex_map[16] = "0123456789abcdef";
+
 GSString255Ptr EncodeURL(const GSString255 *gstr) {
   Word i, j;
   Word c;
@@ -24,25 +46,7 @@ GSString255Ptr EncodeURL(const GSString255 *gstr) {
   extra = 0;
   for (i = 0; i < gstr->length; i++) {
     c = gstr->text[i];
-    if (isalnum(c)
-    	|| c == '$'
-    	|| c == '-'
-    	|| c == '_'
-    	|| c == '.'
-    	|| c == '+'
-    	|| c == '!'
-    	|| c == '*'
-    	|| c == '\''
-    	|| c == '('
-    	|| c == ')'
-    	|| c == ','
-    	|| c == '/'
-		|| c == '?'
-		|| c == ':'
-		|| c == '@'
-		|| c == '='
-    	) continue;
-
+    if (safe_url_chars[c]) continue;
     extra += 2;
   }
   if (!extra)
@@ -56,25 +60,7 @@ GSString255Ptr EncodeURL(const GSString255 *gstr) {
   while (i < gstr->length) {
     c = gstr->text[i++];
 
-    if (isalnum(c)
-    	|| c == '$'
-    	|| c == '-'
-    	|| c == '_'
-    	|| c == '.'
-    	|| c == '+'
-    	|| c == '!'
-    	|| c == '*'
-    	|| c == '\''
-    	|| c == '('
-    	|| c == ')'
-    	|| c == ','
-    	|| c == '/'
-		|| c == '?'
-		|| c == ':'
-		|| c == '@'
-		|| c == '='
-		)
-    {
+    if (safe_url_chars[c]) {
       dest->text[j++] = c;
     } else {
       Word x;
@@ -82,10 +68,10 @@ GSString255Ptr EncodeURL(const GSString255 *gstr) {
       dest->text[j++] = '%';
 
       x = (c & 0xf0) >> 4;
-      dest->text[j++] = "0123456789abcdef"[x];
+      dest->text[j++] = hex_map[x];
 
       x = c & 0x0f;
-      dest->text[j++] = "0123456789abcdef"[x];
+      dest->text[j++] = hex_map[x];
     }
   }
   dest->text[j] = 0; // make a cstring
