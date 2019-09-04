@@ -5,7 +5,7 @@
 dummy	START
 	END
 
-scan_headers	START
+scan_header	START
 
 cp	equ 5
 

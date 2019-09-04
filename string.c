@@ -23,8 +23,8 @@
 #include "headers.h"
 #include "methods.h"
 
-extern int scan_headers(const char *);
-extern int scan_methods(const char *);
+extern int scan_header(const char *);
+extern int scan_method(const char *);
 extern int scan_cgi(const char *);
 
 // checks for 
@@ -44,27 +44,27 @@ Word len = g->length;
     c = g->text[i];
     if (c == '/') break;
     if (c == '?') {
-        g->text[i] = 0;
-        g->length = i;
+      g->text[i] = 0;
+      g->length = i;
       int type = scan_cgi(g->text + i + 1);
       if (type) {
         return type;
       }
       return CGI_ERROR;
-      }
+    }
   }
   // check for ._<name>
   // at this point, i will be 0 or a pointer to the /.
   if (len - i < 4) return;
   
   if ((g->text[i + 1] == '.') && (g->text[i + 2] == '_')) {
-        len -= 2;
+    len -= 2;
     for (i++ ; i < len; i++) {
-                g->text[i] = g->text[i + 2];
-        }
-        g->text[i] = 0;  // NULL terminate for convenience.
-        g->length = len;
-        return CGI_APPLEDOUBLE; 
+      g->text[i] = g->text[i + 2];
+    }
+    g->text[i] = 0;  // NULL terminate for convenience.
+    g->length = len;
+    return CGI_APPLEDOUBLE; 
   }
   
   return 0;
@@ -184,7 +184,7 @@ GSString255Ptr host;
 Word header;
 
 
-  i = scan_headers(cp);
+  i = scan_header(cp);
   if (!i) return;
   cp += i & 0xff;
   i >>= 8;
@@ -257,7 +257,7 @@ unsigned cmd;
 
   // format: <method> <space>+ <path> <space>+ (HTTP/\d.\d)?
 
-  cmd = scan_methods(cp);
+  cmd = scan_method(cp);
   if (cmd) {
     cp += cmd & 0xff;
     cmd >>= 8;

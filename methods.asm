@@ -5,7 +5,7 @@
 dummy	START
 	END
 
-scan_methods	START
+scan_method	START
 
 cp	equ 5
 
