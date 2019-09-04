@@ -30,7 +30,8 @@ OBJS	= o/httpnda.a o/tools.a o/server.a o/error.a o/file.a o/time.a \
 
 ROBJ = o/http.r
 
-HTML = html/err400.html html/err403.html html/err404.html html/err409.html html/err416.html \
+HTML = html/err400.html html/err403.html html/err404.html html/err409.html \
+ html/err416.html html/err422.html \
  html/err500.html html/err501.html
 
 silverplatter: $(OBJS) $(ROBJ)
