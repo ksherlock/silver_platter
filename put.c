@@ -90,14 +90,19 @@ Word MakeDirs(GSString255Ptr path) {
 // file upload via PUT.
 // header won't be sent until file is actually received/saved.
 
-/* todo - support for Ranges header */
+/* todo - support for Content-Range header? */
 
 Word ProcessPut(struct qEntry *q) {
   Word i;
   Word create = false;
   Word err;
   SetPositionRecGS eofDCB;
-  Word res = (q->moreFlags == CGI_APPLEDOUBLE);
+  Word resNumber = 0;
+
+  if (q->moreFlags == CGI_RESOURCE) {
+    resNumber = 1;
+    q->moreFlags = 0;
+  }
 
   q->flags &= ~FLAG_KA;
 
@@ -135,7 +140,7 @@ Word ProcessPut(struct qEntry *q) {
       CreateDCB.fileType = q->flags & FLAG_TEXT ? 4 : 6;
       CreateDCB.auxType = 0;
       CreateDCB.access = 0xc3;
-      if (res) {
+      if (resNumber) {
         CreateDCB.storageType = extendedFile;
         CreateDCB.pCount = 5;
       }
@@ -161,13 +166,13 @@ Word ProcessPut(struct qEntry *q) {
 
   if (!fPutOverwrite) {
     LongWord eof;
-    eof = res ? InfoDCB.resourceEOF : InfoDCB.eof;
+    eof = resNumber ? InfoDCB.resourceEOF : InfoDCB.eof;
     if (eof != 0)
       return ProcessError(403, q);
   }
 
   // if writing to a resource fork, we may need to create the fork.
-  if (res && !create && (InfoDCB.storageType != extendedFile)) {
+  if (resNumber && !create && (InfoDCB.storageType != extendedFile)) {
     CreateDCB.pCount = 5;
     CreateDCB.pathname = q->fullpath;
     CreateDCB.fileType = 0;
@@ -189,7 +194,7 @@ Word ProcessPut(struct qEntry *q) {
   OpenDCB.pCount = 15;
   OpenDCB.pathname = q->fullpath;
   OpenDCB.requestAccess = writeEnable;
-  OpenDCB.resourceNumber = res ? 1 : 0;
+  OpenDCB.resourceNumber = resNumber ? 1 : 0;
   OpenDCB.optionList = NULL;
   OpenGS(&OpenDCB);
   if (_toolErr) {
