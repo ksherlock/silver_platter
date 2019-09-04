@@ -97,12 +97,13 @@ GSString255Ptr EncodeURL(const GSString255 *gstr) {
 #define x(utf, y)                                                              \
   { utf, sizeof(y) - 1, y }
 
+/* clang-format off */
 struct ConvTable {
   Word utf;
   Word length;
   char *text;
 } mr2html[] = {
-    // 0x80
+  // 0x80
   x(0xc4, "Auml"),
   x(0xc5, "Aring"),
   x(0xc7, "Ccedil"),
@@ -119,7 +120,7 @@ struct ConvTable {
   x(0xe7, "ccedil"),
   x(0xe9, "eacute"),
   x(0xe8, "egrave"),
-    // 0x90
+  // 0x90
   x(0xea, "ecirc"),
   x(0xeb, "euml"),
   x(0xed, "iacute"),
@@ -136,7 +137,7 @@ struct ConvTable {
   x(0xf9, "ugrave"),
   x(0xfb, "ucirc"),
   x(0xfc, "uuml"),
-    // 0xA0
+  // 0xA0
   x(0x2020, "dagger"),
   x(0xb0, "deg"),
   x(0xa2, "cent"),
@@ -153,7 +154,7 @@ struct ConvTable {
   x(0x2260, "ne"),
   x(0xc6, "AElig"),
   x(0xd8, "Oslash"),
-    // 0xB0
+  // 0xB0
   x(0x221e, "infin"),
   x(0xb1, "plusmn"),
   x(0x2264, "le"),
@@ -170,7 +171,7 @@ struct ConvTable {
   x(0x03a9, "Omega"),
   x(0xe6, "aelig"),
   x(0xf8, "oslash"),
-    // 0xC0
+  // 0xC0
   x(0xbf, "iquest"),
   x(0xa1, "iexcl"),
   x(0xac, "not"),
@@ -186,8 +187,8 @@ struct ConvTable {
   x(0xc3, "Atilde"),
   x(0xd5, "Otilde"),
   x(0x152, "OElig"),
-    x(0x153, "oelig"),
-    // 0xD0
+  x(0x153, "oelig"),
+  // 0xD0
   x(0x2013, "ndash"),
   x(0x2014, "mdash"),    
   x(0x201c, "ldquo"),    
@@ -204,7 +205,7 @@ struct ConvTable {
   x(0x203a, "rsaquo"),    
   x(0xfb01, "#xfb01"),    
   x(0xfb02, "#xfb02"),
-    // 0xE0
+  // 0xE0
   x(0x2021, "Dagger"),
   x(0xb7, "middot"),
   x(0x201a, "sbquo"),
@@ -220,9 +221,9 @@ struct ConvTable {
   x(0xcf, "Iuml"),
   x(0xcc, "Igrave"),
   x(0xd3, "Oacute"),
-    x(0xd4, "Ocirc"),
-    // 0xF0
-    x(0xf8ff, "#xf8ff"), // apple logo
+  x(0xd4, "Ocirc"),
+  // 0xF0
+  x(0xf8ff, "#xf8ff"), // apple logo
   x(0xd2, "Ograve"),
   x(0xda, "Uacute"),
   x(0xdb, "Ucirc"),
@@ -238,7 +239,8 @@ struct ConvTable {
   x(0x02dd, "#x02dd"),
   x(0x02db, "#x02db"),
   x(0x02c7, "#x02c7")
-};        
+};
+/* clang-format off */
 #undef x
 
 //
