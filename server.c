@@ -82,20 +82,23 @@ void AppendHandle(Handle h1, Handle h2) {
 // -1 == for no line
 // bit 31 set == dispose the buffer.
 // line may be delimited by \r, \n, \r\n, or \n\r... <sigh>
-Handle GetLine(Handle h) {
+Handle GetLine(struct qEntry *q, Boolean *done) {
   Word hsize;
-  char c;
+  unsigned c;
   Word i;
   char *cp;
   Handle ret;
   Word length;
+  Handle h;
+
+  h = q->buffer;
 
   if (!h)
-    return (Handle)-1;
+    return NULL;
 
   hsize = GetHandleSize(h);
   if (!hsize)
-    return (Handle)-1;
+    return NULL;
 
   HLock(h);
   cp = *h;
@@ -103,47 +106,53 @@ Handle GetLine(Handle h) {
   length = 0;
 
   while (i < hsize) {
-    c = *cp++;
-    i++;
+    c = cp[i++];
 
     if (c == '\r') {
       length = i;
-      if (i < hsize && *cp == '\n') {
+      if (i < hsize && cp[i] == '\n') {
         i++;
-        cp++;
       }
       break;
     }
     if (c == '\n') {
       length = i;
-      if (i < hsize && *cp == '\r') {
+      if (i < hsize && cp[i] == '\r') {
         i++;
-        cp++;
       }
       break;
     }
   }
-  if (length == 0)
-    return (Handle)-1;
 
-  if (length == 1) // actually a blank line
-  {
-    ret = (Handle)0;
+  if (length == 0)
+    return NULL;
+
+  /* length include the first \r or \n terminator */
+  --length;
+  if (length == 0) {
+    ret = (Handle)0; // actually a blank line;
+    *done = true;
   } else {
     ret = NewHandle(length, MyID | 0x0d00, attrLocked, 0);
     if (!_toolErr) {
       char *cp;
-      HandToHand(h, ret, length - 1);
+      HandToHand(h, ret, length);
 
       cp = *ret;
-      cp[length - 1] = 0; // null terminate for convenience.
+      cp[length] = 0; // null terminate for convenience.
     }
   }
 
-  if (hsize == i)
-    ret = (Handle)(0x80000000 | (LongWord)ret);
+  /* 
+   * could be optimized to return the old handle
+   * instead of allocating and copying over
+   */
+  if (hsize == i) {
+    DisposeHandle(h);
+    q->buffer = NULL;
+  }
   else {
-    PtrToHand(cp, h, hsize - i);
+    PtrToHand(cp + i, h, hsize - i);
     SetHandleSize(hsize - i, h);
   }
   return ret;
@@ -478,22 +487,8 @@ void Server(void) {
           char *cp;
 
           do {
-            h = GetLine(q->buffer);
-
-            if (h == (Handle)-1)
-              break; // no line
-
-            if (0x80000000 & (LongWord)h) // dispose the buffer...
-            {
-              DisposeHandle(q->buffer);
-              q->buffer = NULL;
-
-              h = (Handle)(0x7fffffff & (LongWord)(h));
-              done = true;
-            }
-
-            if (h == (Handle)0)
-              break; // blank line
+            h = GetLine(q, &done);
+            if (!h) break;
 
             cp = *h;
             if (q->method == 0) {
@@ -509,8 +504,9 @@ void Server(void) {
                 req->length = i - 1; // includes null terminator.
                 HandToPtr(h, req->text, i);
               }
-            } else
+            } else {
               ScanHeader(cp, q);
+            }
 
             DisposeHandle(h);
           } while (!done);
