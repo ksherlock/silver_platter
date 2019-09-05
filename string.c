@@ -360,7 +360,7 @@ void ScanMethod(char *cp, struct qEntry *q) {
   } // if (len)
 
   q->version = 0x0009; // 0.9
-  q->command = cmd;
+  q->method = cmd;
 
   if (!*cp)
     return;

@@ -84,7 +84,7 @@ Word ProcessError(Word error, struct qEntry *q) {
 
   SendHeader(q, error, len, NULL, "text/html", extra, i);
 
-  if (q->command != CMD_HEAD) {
+  if (q->method != CMD_HEAD) {
     WriteData(q, cp, len);
     WriteData(q, NULL, 0);
   }

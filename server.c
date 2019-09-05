@@ -197,7 +197,7 @@ void ReleaseQ(struct qEntry *q) {
   q->ipid = 0;
   q->fd = 0;
   q->rfd = 0;
-  q->command = 0;
+  q->method = 0;
   q->version = 0;
   q->flags = 0;
   q->moreFlags = 0;
@@ -496,7 +496,7 @@ void Server(void) {
               break; // blank line
 
             cp = *h;
-            if (q->command == 0) {
+            if (q->method == 0) {
               GSString255Ptr req;
 
               Word i = GetHandleSize(h);
@@ -528,7 +528,7 @@ void Server(void) {
               break;
             }
 
-            switch (q->command) {
+            switch (q->method) {
             case CMD_OPTIONS:
               terr = ProcessOptions(q);
               break;
@@ -553,6 +553,7 @@ void Server(void) {
             case CMD_LOCK:
               terr = ProcessLock(q);
               break;
+
             case CMD_UNLOCK:
               terr = ProcessUnlock(q);
               break;

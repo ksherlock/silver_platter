@@ -77,7 +77,7 @@ static Word Redirect(struct qEntry *q, GSString255Ptr append) {
 
   // build the html...sigh
 
-  if (q->command != CMD_HEAD) {
+  if (q->method != CMD_HEAD) {
     Word err;
 
     err = BufferAppend(&m, _htmlHead, sizeof(_htmlHead) - 1);
@@ -112,12 +112,12 @@ static Word Redirect(struct qEntry *q, GSString255Ptr append) {
                 B(q->host), B(path_uri), B(append));
   }
 
-  SendHeader(q, 301, q->command == CMD_HEAD ? (LongWord)-1 : m.used, NULL,
+  SendHeader(q, 301, q->method == CMD_HEAD ? (LongWord)-1 : m.used, NULL,
              "text/html", buffer, i);
 
   ReleasePointer(path_uri);
 
-  if (q->command == CMD_GET) {
+  if (q->method == CMD_GET) {
     WriteData(q, *m.h, m.used);
     WriteData(q, NULL, 0);
   }
@@ -208,7 +208,7 @@ static Word ListDirectory(struct qEntry *q) {
   if (!fDir) {
     return ProcessError(403, q);
   }
-  if (q->command == CMD_HEAD) {
+  if (q->method == CMD_HEAD) {
     SendHeader(q, 200, -1, NULL, "text/html", NULL, 0);
     return 200;
   }
@@ -426,7 +426,7 @@ static Word ListVolumes(struct qEntry *q) {
 
   q->moreFlags = CGI_DIR;
 
-  if (q->command == CMD_HEAD) {
+  if (q->method == CMD_HEAD) {
     SendHeader(q, HTTP_OK, -1, NULL, "text/html", NULL, 0);
     return HTTP_OK;
   }
@@ -566,7 +566,7 @@ Word ProcessFile(struct qEntry *q) {
     resNumber = 1;
   }
 
-  if (InfoDCB.fileType == 0x0f || q->moreFlags || q->command == CMD_HEAD) {
+  if (InfoDCB.fileType == 0x0f || q->moreFlags || q->method == CMD_HEAD) {
     q->flags &= ~(FLAG_RANGE | FLAG_RANGE0 | FLAG_RANGE1);
   }
 
@@ -630,7 +630,7 @@ Word ProcessFile(struct qEntry *q) {
 #undef MASK
   }
 
-  if (q->command == CMD_HEAD) {
+  if (q->method == CMD_HEAD) {
     q->state = STATE_CLOSE;
   } else {
     OpenDCB.pCount = 15;

@@ -55,7 +55,7 @@ Word AppleSingle(struct qEntry *q) {
   if (InfoDCB.fileType == 0x0f)
     return ProcessError(400, q);
 
-  if (q->command == CMD_HEAD) {
+  if (q->method == CMD_HEAD) {
     SendHeader(q, 200, -1L, &InfoDCB.modDateTime,
                asingle ? "application/applesingle" : "multipart/appledouble",
                NULL, 0);

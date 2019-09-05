@@ -35,7 +35,7 @@ struct qEntry {
   Word ipid;
   Word fd;
   Word rfd;
-  Word command;
+  Word method;
   Word version;
   Word flags;
   Word moreFlags;
