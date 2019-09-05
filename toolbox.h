@@ -2,7 +2,6 @@
 #include <Types.h>
 #endif
 
-
 #ifdef __CONTROL__
 extern pascal void SetCtlTextByID(WindowPtr, LongWord, Word, Ref);
 #endif

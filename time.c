@@ -1,20 +1,17 @@
 #pragma noroot
-#pragma optimize -1
-#pragma lint -1
+#pragma optimize - 1
+#pragma lint - 1
 #pragma debug 0x8000
 
-#include <timetool.h>
-#include <misctool.h>
 #include <intmath.h>
-
+#include <misctool.h>
+#include <timetool.h>
 
 // yyyy-mm-ddThh:mm:ssZ
-void tiTimeRec2ISO8601(const TimeRecPtr t, char *str)
-{
-LongWord secs;
-tiPrefRec tiPrefs;
-TimeRec tr;
-
+void tiTimeRec2ISO8601(const TimeRecPtr t, char *str) {
+  LongWord secs;
+  tiPrefRec tiPrefs;
+  TimeRec tr;
 
   tiPrefs.pCount = 3;
   tiGetTimePrefs(&tiPrefs);
@@ -54,19 +51,18 @@ TimeRec tr;
   Int2Dec(tr.second, &str[18], 2, 0);
   str[18] |= 0x10; // convert ' ' -> '0'
   str[20] = 'Z';
-
 }
 
-void tiTimeRec2GMTString(const TimeRecPtr t, char *str)
-{
-static const char weekday[] = "Sun,Mon,Tue,Wed,Thu,Fri,Sat,";
-static const char month[] = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec ";
+void tiTimeRec2GMTString(const TimeRecPtr t, char *str) {
+  static const char weekday[] = "Sun,Mon,Tue,Wed,Thu,Fri,Sat,";
+  static const char month[] =
+      "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec ";
 
-int i;
-LongWord secs;
+  int i;
+  LongWord secs;
 
-tiPrefRec tiPrefs;
-TimeRec tr;
+  tiPrefRec tiPrefs;
+  TimeRec tr;
 
   tiPrefs.pCount = 3;
   tiGetTimePrefs(&tiPrefs);
@@ -124,5 +120,4 @@ TimeRec tr;
   str[27] = 'G';
   str[28] = 'M';
   str[29] = 'T';
-
 }

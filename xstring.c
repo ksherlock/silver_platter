@@ -1,5 +1,5 @@
-#pragma lint -1
-#pragma optimize -1
+#pragma lint - 1
+#pragma optimize - 1
 #pragma noroot
 #pragma debug 0x8000
 
@@ -10,29 +10,32 @@
 int xstrncasecmp(const char *a, const char *b, unsigned l) {
   unsigned i;
 
-  for(i = 0; i < l; ++i) {
+  for (i = 0; i < l; ++i) {
     unsigned aa = a[i];
     unsigned bb = b[i];
-    if (!(aa | bb)) return 0;
+    if (!(aa | bb))
+      return 0;
     aa = tolower(aa);
     bb = tolower(bb);
-    if (aa == bb) continue;
+    if (aa == bb)
+      continue;
     return (int)aa - (int)bb;
   }
   return 0;
 }
 
-
 int xstrcasecmp(const char *a, const char *b) {
-	unsigned i;
+  unsigned i;
 
-	for (i = 0; ; ++i) {
-	    unsigned aa = a[i];
-	    unsigned bb = b[i];
-	    if (!(aa | bb)) return 0;
-	    aa = tolower(aa);
-	    bb = tolower(bb);
-	    if (aa == bb) continue;
-	    return (int)aa - (int)bb;
-	}
+  for (i = 0;; ++i) {
+    unsigned aa = a[i];
+    unsigned bb = b[i];
+    if (!(aa | bb))
+      return 0;
+    aa = tolower(aa);
+    bb = tolower(bb);
+    if (aa == bb)
+      continue;
+    return (int)aa - (int)bb;
+  }
 }
