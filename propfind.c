@@ -220,6 +220,9 @@ static Word ListVolumes(struct qEntry *q) {
 
   CREATE_BUFFER(m, q->workHandle);
 
+  if (q->moreFlags)
+    return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
+
   HUnlock(q->workHandle);
   SetHandleSize(0, q->workHandle);
 
@@ -393,6 +396,7 @@ static Word ListDirectory(MemBuffer *m, GSString255Ptr path_uri,
 Word ProcessPropfind(struct qEntry *q) {
   LongWord size;
   Word i;
+  Word resNumber = 0;
   GSString255Ptr path;
   GSString255Ptr fullpath;
 
@@ -407,11 +411,11 @@ Word ProcessPropfind(struct qEntry *q) {
   if (fWebDav == false)
     return ProcessError(HTTP_METHOD_NOT_ALLOWED, q);
 
-  if (q->moreFlags)
-    return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
+  if (!q->fullpath)
+    return ProcessError(HTTP_BAD_REQUEST, q);
 
-  HUnlock(q->workHandle);
-  SetHandleSize(0, q->workHandle);
+  if (q->contentlength)
+    return ProcessError(HTTP_BAD_REQUEST, q);
 
   path = q->pathname;
   fullpath = q->fullpath;
@@ -427,6 +431,21 @@ Word ProcessPropfind(struct qEntry *q) {
   if (_toolErr) {
     return ProcessError(404, q);
   }
+
+
+  if (q->moreFlags = CGI_RESOURCE && InfoDCB.fileType != 0x0f) {
+    resNumber = 1;
+    q->moreFlags = 0;
+  }
+
+  if (q->moreFlags)
+    return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
+
+  HUnlock(q->workHandle);
+  SetHandleSize(0, q->workHandle);
+
+
+
 
   // if it's a directory, strip / off end ...
   // it will be tacked on later.
@@ -466,6 +485,12 @@ Word ProcessPropfind(struct qEntry *q) {
       err = ListDirectory(&m, path_uri, q);
     } else {
       GSString255Ptr file_utf = BaseName(path_utf);
+      if (resNumber) {
+        /* quick and dirty hack */
+        InfoDCB.fileType = 0x06;
+        InfoDCB.auxType = 0x0000;
+        InfoDCB.eof = InfoDCB.resourceEOF;
+      }
       err = AddFile(&m, path_uri, EmptyName, file_utf, &InfoDCB, true);
       ReleasePointer(file_utf);
     }
