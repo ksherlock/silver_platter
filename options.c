@@ -13,7 +13,7 @@ Word ProcessOptions(struct qEntry *q) {
   if (fWebDav) {
 #undef xstr
 #define xstr                                                                   \
-  "AcceptRanges: none\r\n"                                                     \
+  "Accept-Ranges: bytes\r\n"                                                   \
   "DAV: 1, 2\r\n"                                                              \
   "Allow: OPTIONS, GET, HEAD, PUT, PROPFIND, MKCOL, LOCK, UNLOCK\r\n"
 
@@ -21,7 +21,7 @@ Word ProcessOptions(struct qEntry *q) {
   } else {
 #undef xstr
 #define xstr                                                                   \
-  "AcceptRanges: none\r\n"                                                     \
+  "Accept-Ranges: bytes\r\n"                                                   \
   "Allow: OPTIONS, GET, HEAD, PUT\r\n"
 
     SendHeader(q, 200, 0, NULL, NULL, xstr, sizeof(xstr) - 1);
