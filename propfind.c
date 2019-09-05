@@ -44,7 +44,7 @@ static DirEntryRecGS DirDCB = {14, 0, 0, 1, 1, &vName};
 
 static char buffer32[32];
 
-GSString255Ptr BaseName(GSString255Ptr path) {
+static GSString255Ptr BaseName(GSString255Ptr path) {
   Word i;
   Word len;
 
@@ -312,6 +312,81 @@ static Word ListVolumes(struct qEntry *q) {
   return 207;
 }
 
+static Word ListDirectory(MemBuffer *m, GSString255Ptr path_uri,
+                          struct qEntry *q) {
+
+  Word err = 0;
+
+  err = AddFolder(m, path_uri, EmptyName, SlashName, &InfoDCB, true);
+  if (err)
+    return err;
+
+  if (q->depth != 0) {
+
+    OpenDCB.pCount = 15;
+    OpenDCB.pathname = q->fullpath;
+    OpenDCB.requestAccess = readEnable;
+    OpenDCB.resourceNumber = 0;
+    OpenDCB.optionList = NULL;
+    OpenGS(&OpenDCB);
+    if (_toolErr) {
+      return 403;
+    }
+    q->fd = OpenDCB.refNum;
+
+    DirDCB.refNum = OpenDCB.refNum;
+
+    for (;;) {
+      Word alloc = 0;
+      GSString255Ptr file_utf;
+      GSString255Ptr file_uri;
+
+      GetDirEntryGS(&DirDCB);
+      if (_toolErr)
+        break;
+
+      // check for hidden files
+      if ((DirDCB.access & 0x0004) && (fDirHidden == false))
+        continue;
+
+      file_uri = EncodeURL(&vName.bufString);
+      if (file_uri)
+        alloc |= 0x0001;
+      else
+        file_uri = &vName.bufString;
+
+      file_utf = MacRoman2UTF8(&vName.bufString);
+
+      if (file_utf)
+        alloc |= 0x0002;
+      else
+        file_utf = &vName.bufString;
+
+      InfoDCB.fileType = DirDCB.fileType;
+      InfoDCB.auxType = DirDCB.auxType;
+      InfoDCB.createDateTime = DirDCB.createDateTime;
+      InfoDCB.modDateTime = DirDCB.modDateTime;
+      InfoDCB.eof = DirDCB.eof;
+
+      if (DirDCB.fileType == 0x0f) {
+        err = AddFolder(m, path_uri, file_uri, file_utf, &InfoDCB, false);
+      } else {
+        err = AddFile(m, path_uri, file_uri, file_utf, &InfoDCB, false);
+      }
+
+      if (alloc & 0x0001)
+        ReleasePointer(file_uri);
+      if (alloc & 0x0002)
+        ReleasePointer(file_utf);
+
+      if (err)
+        return err;
+    }
+
+    return err;
+  }
+}
+
 // this provides support for the WebDAV PROPFIND command.
 // an XML description of the resource will be created and sent.
 
@@ -366,7 +441,6 @@ Word ProcessPropfind(struct qEntry *q) {
   err = 0;
 
   path_utf = MacRoman2UTF8(path);
-  // path_utf = MacRoman2HTML(path);
   if (path_utf == NULL) {
     path_utf = path;
     RetainPointer(path);
@@ -378,107 +452,30 @@ Word ProcessPropfind(struct qEntry *q) {
     RetainPointer(path);
   }
 
-  do // allows breakage.
-  {
-
-    // start with the header...
+  // start with the header...
 
 #undef xstr
 #define xstr                                                                   \
   "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n"                             \
   "<D:multistatus xmlns:D=\"DAV:\">\r\n"
 
-    err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
-    if (err)
-      break;
+  err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
+  if (!err) {
 
     if (InfoDCB.fileType == 0x0f) {
-      AddFolder(&m, path_uri, EmptyName, SlashName, &InfoDCB, true);
-      if (err)
-        break;
-      if (q->depth != 0) {
-
-        OpenDCB.pCount = 15;
-        OpenDCB.pathname = fullpath;
-        OpenDCB.requestAccess = readEnable;
-        OpenDCB.resourceNumber = 0;
-        OpenDCB.optionList = NULL;
-        OpenGS(&OpenDCB);
-        if (_toolErr) {
-          err = 403;
-          break;
-        }
-        q->fd = OpenDCB.refNum;
-
-        DirDCB.refNum = OpenDCB.refNum;
-
-        for (;;) {
-          Word alloc = 0;
-          GSString255Ptr file_utf;
-          GSString255Ptr file_uri;
-
-          GetDirEntryGS(&DirDCB);
-          if (_toolErr)
-            break;
-
-          // check for hidden files
-          if ((DirDCB.access & 0x0004) && (fDirHidden == false))
-            continue;
-
-          file_uri = EncodeURL(&vName.bufString);
-          if (file_uri)
-            alloc |= 0x0001;
-          else
-            file_uri = &vName.bufString;
-
-          file_utf = MacRoman2UTF8(&vName.bufString);
-          // file_utf = MacRoman2HTML(&vName.bufString);
-          if (file_utf)
-            alloc |= 0x0002;
-          else
-            file_utf = &vName.bufString;
-
-          InfoDCB.fileType = DirDCB.fileType;
-          InfoDCB.auxType = DirDCB.auxType;
-          InfoDCB.createDateTime = DirDCB.createDateTime;
-          InfoDCB.modDateTime = DirDCB.modDateTime;
-          InfoDCB.eof = DirDCB.eof;
-
-          if (DirDCB.fileType == 0x0f) {
-            err = AddFolder(&m, path_uri, file_uri, file_utf, &InfoDCB, false);
-          } else {
-
-            err = AddFile(&m, path_uri, file_uri, file_utf, &InfoDCB, false);
-          }
-
-          if (alloc & 0x0001)
-            ReleasePointer(file_uri);
-          if (alloc & 0x0002)
-            ReleasePointer(file_utf);
-
-          if (err)
-            break;
-        }
-        if (err)
-          break;
-      }
+      err = ListDirectory(&m, path_uri, q);
     } else {
       GSString255Ptr file_utf = BaseName(path_utf);
       err = AddFile(&m, path_uri, EmptyName, file_utf, &InfoDCB, true);
       ReleasePointer(file_utf);
     }
-    if (err)
-      break;
 
 // finish with the trailer.
 #undef xstr
 #define xstr "</D:multistatus>\r\n"
-
-    err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
-    if (err)
-      break;
-
-  } while (false);
+    if (!err)
+      err = BufferAppend(&m, xstr, sizeof(xstr) - 1);
+  }
 
   ReleasePointer(path_uri);
   ReleasePointer(path_utf);
