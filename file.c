@@ -55,7 +55,7 @@ static char _htmlHead[] =
 // list a directory.
 
 // handle a redirect (301)
-Word Redirect(struct qEntry *q, GSString255Ptr append) {
+static Word Redirect(struct qEntry *q, GSString255Ptr append) {
   Word ipid = q->ipid;
   Word i;
   GSString255Ptr path_uri;
@@ -129,7 +129,7 @@ Word Redirect(struct qEntry *q, GSString255Ptr append) {
 // returns 0 if no index.html/index.htm file
 // returns HTTP error if we handled it.
 
-Word CheckIndex(struct qEntry *q) {
+static Word CheckIndex(struct qEntry *q) {
   GSString255Ptr newpath;
   GSString255Ptr oldpath;
   char *cp;
@@ -186,7 +186,7 @@ Word CheckIndex(struct qEntry *q) {
   return 0;
 }
 
-Word ListDirectory(struct qEntry *q) {
+static Word ListDirectory(struct qEntry *q) {
   Word i;
   Word err;
 
@@ -408,7 +408,7 @@ Word ListDirectory(struct qEntry *q) {
 }
 
 // list the volumes
-Word ListVolumes(struct qEntry *q) {
+static Word ListVolumes(struct qEntry *q) {
   Word i;
   Word d;
 
