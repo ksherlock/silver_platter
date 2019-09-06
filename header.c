@@ -49,6 +49,16 @@ extern void tiTimeRec2GMTString(const TimeRec *, char *);
 void SendHeader(struct qEntry *q, Word status, LongWord size,
                 const TimeRec *modTime, const char *mimeString,
                 const char *extra, word extralen) {
+
+  // must be broken out to prevent \x from grabbing too much.
+  /* clang-format off */
+  static const char months[] = "\x03" "Jan" "\x03" "Feb" "\x03" "Mar"
+                               "\x03" "Apr" "\x03" "May" "\x03" "Jun"
+                               "\x03" "Jul" "\x03" "Aug" "\x03" "Sep"
+                               "\x03" "Oct" "\x03" "Nov" "\x03" "Dec";
+  /* clang-format on */
+
+
   static char buffer[128];
 
   Word ipid = q->ipid;
@@ -56,11 +66,6 @@ void SendHeader(struct qEntry *q, Word status, LongWord size,
   Word i;
 
   if (fLog && logfd) {
-    // must be broken out to prevent \x from grabbing too much.
-  static char months[] = "\x03" "Jan" "\x03" "Feb" "\x03" "Mar"
-                         "\x03" "Apr" "\x03" "May" "\x03" "Jun"
-                         "\x03" "Jul" "\x03" "Aug" "\x03" "Sep"
-                         "\x03" "Oct" "\x03" "Nov" "\x03" "Dec";
 
     static char buffer6[6];
     static tiPrefRec ti;
