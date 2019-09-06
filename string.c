@@ -278,7 +278,7 @@ Word ScanRequest(char *cp, struct qEntry *q) {
     method >>= 8;
   } else {
     method = -1;
-    return 400;
+    return 405;
   }
   q->method = method;
   q->version = 0x0009;
