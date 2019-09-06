@@ -135,7 +135,7 @@ void SendHeader(struct qEntry *q, Word status, LongWord size,
 
     if (status == 206) {
       i = sprintf(buffer, "Content-Range: bytes %lu-%lu/%lu\r\n", q->range[0],
-                  q->range[1], q->contentlength);
+                  q->range[1], q->contentLength);
       TCPIPWriteTCP(ipid, buffer, i, false, false);
     }
 

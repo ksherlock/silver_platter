@@ -78,7 +78,7 @@ Word ProcessError(Word error, struct qEntry *q) {
   }
 
   if (error == HTTP_REQUEST_RANGE_NOT_SATISFIABLE) {
-    i = sprintf(buffer, "Content-Range: bytes */%lu\r\n", q->contentlength);
+    i = sprintf(buffer, "Content-Range: bytes */%lu\r\n", q->contentLength);
     extra = buffer;
   }
 

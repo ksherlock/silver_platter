@@ -179,7 +179,7 @@ static unsigned ScanContentLength(char *cp, struct qEntry *q) {
 
   for (i = 0; isdigit(cp[i]); ++i)
     ;
-  q->contentlength = Dec2Long(cp, i, 0);
+  q->contentLength = Dec2Long(cp, i, 0);
   if (_toolErr)
     return 400;
 

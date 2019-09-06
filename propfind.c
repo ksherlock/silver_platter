@@ -414,7 +414,7 @@ Word ProcessPropfind(struct qEntry *q) {
   if (!q->fullpath)
     return ProcessError(HTTP_BAD_REQUEST, q);
 
-  if (q->contentlength)
+  if (q->contentLength)
     return ProcessError(HTTP_BAD_REQUEST, q);
 
   path = q->pathname;

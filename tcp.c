@@ -54,9 +54,9 @@ Word ReadData(struct qEntry *q, void *data, word req) {
     return 0;
 
   if (q->version > 0x0009) {
-    if (q->contentlength == 0)
+    if (q->contentLength == 0)
       return 0;
-    req = MIN(req, q->contentlength);
+    req = MIN(req, q->contentLength);
   }
 
   // step one -- if buffer has data, read from that.
@@ -81,7 +81,7 @@ Word ReadData(struct qEntry *q, void *data, word req) {
       }
 
       if (q->version > 0x0009)
-        q->contentlength -= i;
+        q->contentLength -= i;
       return i;
     }
   }
@@ -101,7 +101,7 @@ Word ReadData(struct qEntry *q, void *data, word req) {
     i = (Word)rrBuffer.rrBuffCount;
 
     if (q->version > 0x0009)
-      q->contentlength -= i;
+      q->contentLength -= i;
     return i;
   }
   return 0;

@@ -41,7 +41,7 @@ struct qEntry {
   Word moreFlags;
   LongWord tick;
   LongWord ip;
-  LongWord contentlength;
+  LongWord contentLength;
   Word depth;
 
   LongWord range[2];

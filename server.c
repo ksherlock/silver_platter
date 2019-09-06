@@ -209,7 +209,7 @@ void ReleaseQ(struct qEntry *q) {
   q->flags = 0;
   q->moreFlags = 0;
   q->tick = 0;
-  q->contentlength = 0;
+  q->contentLength = 0;
   q->depth = -1;
 }
 
@@ -579,10 +579,10 @@ void Server(void) {
         IODCB.dataBuffer = buffer;
         IODCB.requestCount = 4096;
 
-        if (q->contentlength) {
+        if (q->contentLength) {
           /* range-based */
-          if (q->contentlength < 4096)
-            IODCB.requestCount = q->contentlength;
+          if (q->contentLength < 4096)
+            IODCB.requestCount = q->contentLength;
         }
 
         ReadGS(&IODCB);
@@ -607,10 +607,10 @@ void Server(void) {
           InsertString(i, buffer);
 #endif
 
-          if (q->contentlength) {
+          if (q->contentLength) {
             /* range-based */
-            q->contentlength -= count;
-            if (!q->contentlength) {
+            q->contentLength -= count;
+            if (!q->contentLength) {
               q->state = STATE_CLOSE;
             }
           }
@@ -621,7 +621,7 @@ void Server(void) {
               q->state = STATE_ASINGLE_2;
             } else {
               WriteData(q, NULL, 0); // if chunked.
-              q->contentlength = 0;
+              q->contentLength = 0;
               q->state = STATE_CLOSE;
             }
           } else // read error - just close and be done with it.
@@ -666,9 +666,9 @@ void Server(void) {
             break;
           }
         }
-        if ((q->version > 0x0009) && (!q->contentlength)) {
+        if ((q->version > 0x0009) && (!q->contentLength)) {
           q->state = STATE_CLOSE;
-        } // q->contentlength.
+        } // q->contentLength.
       } break;
 
       case STATE_CLOSE: {
@@ -679,9 +679,9 @@ void Server(void) {
             // if a content-length headers was sent, purge any remaining data.
             // since KA is only valid for HTTP 1.0+, no need to check version.
 
-            if (q->contentlength) {
+            if (q->contentLength) {
               ReadData(q, buffer, 4096);
-              if (q->contentlength)
+              if (q->contentLength)
                 break;
             }
 

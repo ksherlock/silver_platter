@@ -542,7 +542,7 @@ Word ProcessFile(struct qEntry *q) {
   if (!q->fullpath)
     return ProcessError(HTTP_BAD_REQUEST, q);
 
-  if (q->contentlength)
+  if (q->contentLength)
     return ProcessError(HTTP_BAD_REQUEST, q);
 
   path = q->fullpath;
@@ -596,7 +596,7 @@ Word ProcessFile(struct qEntry *q) {
   if (q->flags & FLAG_RANGE) {
 // asm { brk 0xea }
 #define MASK (FLAG_RANGE0 | FLAG_RANGE1)
-    q->contentlength = eof;
+    q->contentLength = eof;
     if (!(q->flags & MASK))
       return ProcessError(416, q);
 
@@ -683,7 +683,7 @@ Word ProcessFile(struct qEntry *q) {
     SendHeader(q, HTTP_PARTIAL_CONTENT, eof, &modDateTime,
                GetMimeString(path, fileType, auxType), NULL, 0);
 
-    q->contentlength = eof;
+    q->contentLength = eof;
     return HTTP_PARTIAL_CONTENT;
   }
 
