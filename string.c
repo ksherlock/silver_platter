@@ -263,7 +263,7 @@ Word ScanHeader(char *cp, struct qEntry *q) {
 }
 
 // scan a request for the request and http version.
-Word ScanMethod(char *cp, struct qEntry *q) {
+Word ScanRequest(char *cp, struct qEntry *q) {
   unsigned c;
   unsigned len;
   GSString255Ptr path;

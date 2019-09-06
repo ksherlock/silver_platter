@@ -40,7 +40,7 @@ extern Word ProcessUnlock(struct qEntry *q);
 extern Word ReadData(struct qEntry *, void *, Word);
 
 extern Word ScanHeader(char *, struct qEntry *);
-extern Word ScanMethod(char *, struct qEntry *);
+extern Word ScanRequest(char *, struct qEntry *);
 
 #define DEBUG 1
 
@@ -506,7 +506,7 @@ void Server(void) {
                 HandToPtr(h, req->text, i);
               }
 
-              err = ScanMethod(cp, q);
+              err = ScanRequest(cp, q);
 
             } else {
               err = ScanHeader(cp, q);
