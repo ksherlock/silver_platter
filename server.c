@@ -456,8 +456,6 @@ void Server(void) {
       case STATE_READ: {
         Boolean done = false;
         Word err = 0;
-        Handle h;
-        char *cp;
 
         if (tick > q->tick) {
 #ifdef DEBUG
@@ -473,21 +471,23 @@ void Server(void) {
         }
 
         // read any pending data...
-        if (srBuffer.srRcvQueued) {
-          terr = TCPIPReadTCP(ipid, 2, (Ref)0, srBuffer.srRcvQueued, &rrBuffer);
-          if (!q->buffer)
-            q->buffer = rrBuffer.rrBuffHandle;
-          else {
-            AppendHandle(q->buffer, rrBuffer.rrBuffHandle);
-            DisposeHandle(rrBuffer.rrBuffHandle);
-          }
-        }
+        if (!srBuffer.srRcvQueued) break;
+
+        terr = TCPIPReadTCP(ipid, 2, (Ref)0, srBuffer.srRcvQueued, &rrBuffer);
+  
         if (!q->buffer)
-          break;
+          q->buffer = rrBuffer.rrBuffHandle;
+        else {
+          AppendHandle(q->buffer, rrBuffer.rrBuffHandle);
+          DisposeHandle(rrBuffer.rrBuffHandle);
+        }
 
         // now try splitting it into a line.
 
         do {
+          char *cp;
+          Handle h;
+
           h = GetLine(q, &done);
           if (!h)
             break;
@@ -513,13 +513,14 @@ void Server(void) {
           }
           DisposeHandle(h);
 
-          if (err) {
-            ProcessError(err, q);
-            break;
-          }
-        } while (!done);
-        if (err)
+        } while (!done && !err);
+
+        if (err) {
+          ProcessError(err, q);
           break;
+        }
+
+
         if (!done)
           break;
 
@@ -556,7 +557,6 @@ void Server(void) {
         case CMD_PROPPATCH:
         case CMD_COPY:
         case CMD_MOVE:
-        case 0xffff:
           terr = ProcessError(501, q);
           break;
 
