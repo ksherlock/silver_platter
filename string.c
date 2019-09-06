@@ -129,7 +129,7 @@ static unsigned ScanRange(char *cp, struct qEntry *q) {
   q->flags |= FLAG_RANGE;
 
   if (strncmp(cp, "bytes=", 6))
-    return 0;
+    return 416;
   cp += 6;
 
   if (isdigit(*cp)) {
@@ -137,12 +137,12 @@ static unsigned ScanRange(char *cp, struct qEntry *q) {
       ;
     q->range[0] = Dec2Long(cp, i, 0);
     if (_toolErr)
-      return 0;
+      return 416;
     valid |= FLAG_RANGE0;
     cp += i;
   }
   if (cp[0] != '-') {
-    return 0;
+    return 416;
     /* should send error 416 */
   }
   ++cp;
@@ -151,26 +151,26 @@ static unsigned ScanRange(char *cp, struct qEntry *q) {
       ;
     q->range[1] = Dec2Long(cp, i, 0);
     if (_toolErr)
-      return 0;
+      return 416;
     valid |= FLAG_RANGE1;
     cp += i;
   }
   if (!valid)
-    return 0;
+    return 416;
 
   for (i = 0; isspace(cp[i]); ++i)
     ;
 
   if (cp[i])
-    return 0;
+    return 416;
 
   if (valid == (FLAG_RANGE0 | FLAG_RANGE1)) {
     if (q->range[1] < q->range[0])
-      return 0;
+      return 416;
   }
 
   q->flags |= valid;
-  return 1;
+  return 0;
 }
 
 static unsigned ScanContentLength(char *cp, struct qEntry *q) {
@@ -181,17 +181,17 @@ static unsigned ScanContentLength(char *cp, struct qEntry *q) {
     ;
   q->contentlength = Dec2Long(cp, i, 0);
   if (_toolErr)
-    return 0;
+    return 400;
 
   for (; isspace(cp[i]); ++i)
     ;
   if (cp[i])
-    return 0;
-  return 1;
+    return 400;
+  return 0;
 }
 
 // scan for headers we recognize.
-void ScanHeader(char *cp, struct qEntry *q) {
+Word ScanHeader(char *cp, struct qEntry *q) {
   char c;
   unsigned i;
   Handle h;
@@ -200,7 +200,7 @@ void ScanHeader(char *cp, struct qEntry *q) {
 
   i = scan_header(cp);
   if (!i)
-    return;
+    return 0;
   cp += i & 0xff;
   i >>= 8;
   while (isspace(*cp))
@@ -217,14 +217,14 @@ void ScanHeader(char *cp, struct qEntry *q) {
 
   case HDR_HOST: // Host:
     if (!*cp)
-      return;
+      return 400;
 
     // find the length...
     i = 0;
     while ((c = cp[i]) && !isspace(c))
       i++;
     if (!i)
-      return;
+      return 400;
 
     host = NewPointer(i + 3);
     if (host) {
@@ -236,13 +236,12 @@ void ScanHeader(char *cp, struct qEntry *q) {
     break;
 
   case HDR_CONTENT_LENGTH: // Content-Length
-    if (!ScanContentLength(cp, q))
-      q->error = 400;
+    return ScanContentLength(cp, q);
     break;
 
   case HDR_CONTENT_TYPE: // Content-Type ... check if text/*
     if (!*cp)
-      return;
+      return 0;
 
     if (!xstrncasecmp("text/", cp, 5))
       q->flags |= FLAG_TEXT;
@@ -256,42 +255,45 @@ void ScanHeader(char *cp, struct qEntry *q) {
     break;
 
   case HDR_RANGE: // Range:
-    ScanRange(cp, q);
+    return ScanRange(cp, q);
     break;
   }
+
+  return 0;
 }
 
 // scan a request for the request and http version.
-void ScanMethod(char *cp, struct qEntry *q) {
-  char c;
-  int len;
-  Handle h;
+Word ScanMethod(char *cp, struct qEntry *q) {
+  unsigned c;
+  unsigned len;
   GSString255Ptr path;
-  Word match;
-  int i, j;
-  unsigned cmd;
+  unsigned i, j;
+  unsigned method;
 
   // format: <method> <space>+ <path> <space>+ (HTTP/\d.\d)?
 
-  cmd = scan_method(cp);
-  if (cmd) {
-    cp += cmd & 0xff;
-    cmd >>= 8;
+  method = scan_method(cp);
+  if (method) {
+    cp += method & 0xff;
+    method >>= 8;
   } else {
-    // skip past the offending command.
-    while ((c = *cp) && !isspace(c))
-      cp++;
-    cmd = -1;
+    method = -1;
+    return 400;
   }
+  q->method = method;
+  q->version = 0x0009;
 
-  while (isspace(*cp))
-    cp++;
+  for (i = 0; isspace(cp[i]); ++i)
+    ;
+  cp += i;
 
   // URI: should be /fully/qualified/path
-  // TODO '*' is valid for OPTIONS.
+  // BUT '*' is valid for OPTIONS.
 
-  if (*cp != '/')
-    return;
+  c = *cp;
+  if (c != '/' && c != '*') {
+    return 400;
+  }
 
   // first, find the length of the URI
   // then copy it to a new handle
@@ -302,10 +304,15 @@ void ScanMethod(char *cp, struct qEntry *q) {
   while ((c = cp[len]) && !isspace(c))
     len++;
 
-  if (len) {
+  if (*cp == '*') {
+    if (method != CMD_OPTIONS || len != 1) {
+      return 400;
+    }
+  } else {
     path = NewPointer(len + 3);
-    if (!path)
-      return;
+    if (!path) {
+      return 400;
+    }
 
     q->pathname = path;
 
@@ -334,7 +341,10 @@ void ScanMethod(char *cp, struct qEntry *q) {
     path->text[j] = 0;
     path->length = j;
 
-    q->moreFlags = ScanCGI(path);
+    i = ScanCGI(path);
+    if (i == CGI_ERROR)
+      return 422;
+    q->moreFlags = i;
 
     // copy the path to the fullpath
     if (fJail) {
@@ -357,16 +367,14 @@ void ScanMethod(char *cp, struct qEntry *q) {
       q->fullpath = path;
       RetainPointer(path);
     }
-  } // if (len)
-
-  q->version = 0x0009; // 0.9
-  q->method = cmd;
+  }
 
   if (!*cp)
-    return;
+    return 0;
 
-  while (isspace(*cp))
-    cp++;
+  for (i = 0; isspace(cp[i]); ++i)
+    ;
+  cp += i;
 
   // http version....
   if (!xstrncasecmp("HTTP/", cp, 5)) {
@@ -390,4 +398,5 @@ void ScanMethod(char *cp, struct qEntry *q) {
     if (q->version > 0x0100)
       q->flags |= FLAG_KA;
   }
+  return 0;
 }

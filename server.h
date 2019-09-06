@@ -39,7 +39,6 @@ struct qEntry {
   Word version;
   Word flags;
   Word moreFlags;
-  Word error;
   LongWord tick;
   LongWord ip;
   LongWord contentlength;

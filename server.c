@@ -39,9 +39,8 @@ extern Word ProcessUnlock(struct qEntry *q);
 
 extern Word ReadData(struct qEntry *, void *, Word);
 
-extern Word ScanCGI(GSString255Ptr);
-extern void ScanHeader(char *, struct qEntry *);
-extern void ScanMethod(char *, struct qEntry *);
+extern Word ScanHeader(char *, struct qEntry *);
+extern Word ScanMethod(char *, struct qEntry *);
 
 #define DEBUG 1
 
@@ -143,15 +142,14 @@ Handle GetLine(struct qEntry *q, Boolean *done) {
     }
   }
 
-  /* 
+  /*
    * could be optimized to return the old handle
    * instead of allocating and copying over
    */
   if (hsize == i) {
     DisposeHandle(h);
     q->buffer = NULL;
-  }
-  else {
+  } else {
     PtrToHand(cp + i, h, hsize - i);
     SetHandleSize(hsize - i, h);
   }
@@ -452,6 +450,8 @@ void Server(void) {
         if (q->state != STATE_READ)
           break;
 
+        q->ip = srBuffer.srDestIP;
+
       // reading the request string...
       case STATE_READ: {
         Word j;
@@ -484,11 +484,13 @@ void Server(void) {
         // now try splitting it into a line.
         if (q->buffer) {
           Boolean done = false;
+          Word err = 0;
           char *cp;
 
           do {
             h = GetLine(q, &done);
-            if (!h) break;
+            if (!h)
+              break;
 
             cp = *h;
             if (q->method == 0) {
@@ -496,7 +498,6 @@ void Server(void) {
 
               Word i = GetHandleSize(h);
 
-              ScanMethod(cp, q);
               req = NewPointer(2 + i);
 
               if (req) {
@@ -504,66 +505,66 @@ void Server(void) {
                 req->length = i - 1; // includes null terminator.
                 HandToPtr(h, req->text, i);
               }
+
+              err = ScanMethod(cp, q);
+
             } else {
-              ScanHeader(cp, q);
+              err = ScanHeader(cp, q);
             }
-
             DisposeHandle(h);
+
+            if (err) {
+              ProcessError(err, q);
+              break;
+            }
           } while (!done);
+          if (err)
+            break;
+          if (!done)
+            break;
 
-          // if h == 0, all headers received.
-          if (h == (Handle)0) {
-            q->ip = srBuffer.srDestIP;
+          switch (q->method) {
+          case CMD_OPTIONS:
+            terr = ProcessOptions(q);
+            break;
 
-            if (q->error) {
-              terr = ProcessError(q->error, q);
-              break;
-            }
-            if (q->moreFlags == CGI_ERROR) {
-              terr = ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
-              break;
-            }
+          case CMD_HEAD:
+          case CMD_GET:
+            terr = ProcessFile(q);
+            break;
 
-            switch (q->method) {
-            case CMD_OPTIONS:
-              terr = ProcessOptions(q);
-              break;
+          case CMD_PUT:
+            terr = ProcessPut(q);
+            break;
 
-            case CMD_HEAD:
-            case CMD_GET:
-              terr = ProcessFile(q);
-              break;
+          case CMD_PROPFIND:
+            terr = ProcessPropfind(q);
+            break;
 
-            case CMD_PUT:
-              terr = ProcessPut(q);
-              break;
+          case CMD_MKCOL:
+            terr = ProcessMkcol(q);
+            break;
 
-            case CMD_PROPFIND:
-              terr = ProcessPropfind(q);
-              break;
+          case CMD_LOCK:
+            terr = ProcessLock(q);
+            break;
 
-            case CMD_MKCOL:
-              terr = ProcessMkcol(q);
-              break;
+          case CMD_UNLOCK:
+            terr = ProcessUnlock(q);
+            break;
 
-            case CMD_LOCK:
-              terr = ProcessLock(q);
-              break;
+          case CMD_PROPPATCH:
+          case CMD_COPY:
+          case CMD_MOVE:
+          case 0xffff:
+            terr = ProcessError(501, q);
+            break;
 
-            case CMD_UNLOCK:
-              terr = ProcessUnlock(q);
-              break;
+          case 0:
+            terr = ProcessError(400, q);
 
-            case CMD_PROPPATCH:
-            case CMD_COPY:
-            case CMD_MOVE:
-            case 0xffff:
-              terr = ProcessError(501, q);
-              break;
-
-            default:
-              terr = ProcessError(405, q);
-            }
+          default:
+            terr = ProcessError(405, q);
           }
         }
       } break; // case: STATE_READ
@@ -707,7 +708,7 @@ void Server(void) {
           }
         }
       } break; // STATE_CLOSE
-        // case STATE_LOGOUT: /* handled at start */
+               // case STATE_LOGOUT: /* handled at start */
 
       } // case (q->state)
     }
