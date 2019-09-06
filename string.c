@@ -55,7 +55,7 @@ Word ScanCGI(GSString255Ptr g) {
   // check for ._<name>
   // at this point, i will be 0 or a pointer to the /.
   if (len - i < 4)
-    return;
+    return 0;
 
   if ((g->text[i + 1] == '.') && (g->text[i + 2] == '_')) {
     len -= 2;
@@ -388,7 +388,7 @@ Word ScanRequest(char *cp, struct qEntry *q) {
       cp++;
     }
     if (*cp++ != '.')
-      return;
+      return 400;
 
     while (isdigit(c = *cp)) {
       minor = minor * 10 + c - '0';
