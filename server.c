@@ -454,9 +454,10 @@ void Server(void) {
 
       // reading the request string...
       case STATE_READ: {
-        Word j;
-        Word done;
+        Boolean done = false;
+        Word err = 0;
         Handle h;
+        char *cp;
 
         if (tick > q->tick) {
 #ifdef DEBUG
@@ -481,91 +482,89 @@ void Server(void) {
             DisposeHandle(rrBuffer.rrBuffHandle);
           }
         }
+        if (!q->buffer)
+          break;
+
         // now try splitting it into a line.
-        if (q->buffer) {
-          Boolean done = false;
-          Word err = 0;
-          char *cp;
 
-          do {
-            h = GetLine(q, &done);
-            if (!h)
-              break;
+        do {
+          h = GetLine(q, &done);
+          if (!h)
+            break;
 
-            cp = *h;
-            if (q->method == 0) {
-              GSString255Ptr req;
+          cp = *h;
+          if (q->method == 0) {
+            GSString255Ptr req;
 
-              Word i = GetHandleSize(h);
+            Word i = GetHandleSize(h);
 
-              req = NewPointer(2 + i);
+            req = NewPointer(2 + i);
 
-              if (req) {
-                q->request = req;
-                req->length = i - 1; // includes null terminator.
-                HandToPtr(h, req->text, i);
-              }
-
-              err = ScanRequest(cp, q);
-
-            } else {
-              err = ScanHeader(cp, q);
+            if (req) {
+              q->request = req;
+              req->length = i - 1; // includes null terminator.
+              HandToPtr(h, req->text, i);
             }
-            DisposeHandle(h);
 
-            if (err) {
-              ProcessError(err, q);
-              break;
-            }
-          } while (!done);
-          if (err)
-            break;
-          if (!done)
-            break;
+            err = ScanRequest(cp, q);
 
-          switch (q->method) {
-          case CMD_OPTIONS:
-            terr = ProcessOptions(q);
-            break;
-
-          case CMD_HEAD:
-          case CMD_GET:
-            terr = ProcessFile(q);
-            break;
-
-          case CMD_PUT:
-            terr = ProcessPut(q);
-            break;
-
-          case CMD_PROPFIND:
-            terr = ProcessPropfind(q);
-            break;
-
-          case CMD_MKCOL:
-            terr = ProcessMkcol(q);
-            break;
-
-          case CMD_LOCK:
-            terr = ProcessLock(q);
-            break;
-
-          case CMD_UNLOCK:
-            terr = ProcessUnlock(q);
-            break;
-
-          case CMD_PROPPATCH:
-          case CMD_COPY:
-          case CMD_MOVE:
-          case 0xffff:
-            terr = ProcessError(501, q);
-            break;
-
-          case 0:
-            terr = ProcessError(400, q);
-
-          default:
-            terr = ProcessError(405, q);
+          } else {
+            err = ScanHeader(cp, q);
           }
+          DisposeHandle(h);
+
+          if (err) {
+            ProcessError(err, q);
+            break;
+          }
+        } while (!done);
+        if (err)
+          break;
+        if (!done)
+          break;
+
+        switch (q->method) {
+        case CMD_OPTIONS:
+          terr = ProcessOptions(q);
+          break;
+
+        case CMD_HEAD:
+        case CMD_GET:
+          terr = ProcessFile(q);
+          break;
+
+        case CMD_PUT:
+          terr = ProcessPut(q);
+          break;
+
+        case CMD_PROPFIND:
+          terr = ProcessPropfind(q);
+          break;
+
+        case CMD_MKCOL:
+          terr = ProcessMkcol(q);
+          break;
+
+        case CMD_LOCK:
+          terr = ProcessLock(q);
+          break;
+
+        case CMD_UNLOCK:
+          terr = ProcessUnlock(q);
+          break;
+
+        case CMD_PROPPATCH:
+        case CMD_COPY:
+        case CMD_MOVE:
+        case 0xffff:
+          terr = ProcessError(501, q);
+          break;
+
+        case 0:
+          terr = ProcessError(400, q);
+
+        default:
+          terr = ProcessError(405, q);
         }
       } break; // case: STATE_READ
 
