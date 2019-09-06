@@ -114,7 +114,6 @@ Word ProcessPut(struct qEntry *q) {
     return ProcessError(501, q);
   }
 
-  /* todo -- CGI_RESOURCE support to write the resource fork */
   if (q->moreFlags) {
     return ProcessError(422, q);
   }
