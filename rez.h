@@ -23,6 +23,7 @@
 #define Ctrl_PU_3 rConfigWindow + 104
 #define Ctrl_PU_4 rConfigWindow + 105
 #define Ctrl_PU_5 rConfigWindow + 106
+#define Ctrl_PU_6 rConfigWindow + 107
 
 #define CtrlPathStat rConfigWindow + 1
 #define CtrlPortStat rConfigWindow + 2
@@ -59,6 +60,9 @@
 #define CtrlDirHidden rConfigWindow + 28
 #define CtrlDirAppleShare rConfigWindow + 29
 #define CtrlDirRemovable rConfigWindow + 30
+
+#define CtrlWebDAV rConfigWindow + 31
+
 
 #define CtrlAbout rAboutWindow + 1
 

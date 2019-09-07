@@ -19,7 +19,7 @@
 #include "rez.h"
 #include "toolbox.h"
 
-#define SCREEN_COUNT 5 // number of config screens.
+#define SCREEN_COUNT 6 // number of config screens.
 
 Word fAbort;
 Word fJail;
@@ -377,6 +377,11 @@ void LoadControls(WindowPtr win, Word value) {
         SetCtlValueByID(EncapNever + fAppleDouble, win, Ctrl_AD);
         SetCtlValueByID(EncapNever + fMacBinary, win, Ctrl_MB);
         break;
+
+      // WebDAV
+      case Ctrl_PU_6:
+        SetCtlValueByID(fWebDav, win, CtrlWebDAV);
+        break;
       }
     }
   } else {
@@ -627,6 +632,10 @@ void DoConfig(Word MyID) {
       SetConfigValue(1, NameAppleSingle, &fAppleSingle, sizeof(Word));
       SetConfigValue(1, NameAppleDouble, &fAppleDouble, sizeof(Word));
       SetConfigValue(1, NameMacBinary, &fMacBinary, sizeof(Word));
+    }
+    if (screens[5]) {
+      fWebDav = GetCtlValueByID(win, CtrlWebDAV);
+      SetConfigValue(1, NameWebDav, &fWebDav, sizeof(Word));
     }
 
     // SetConfigValue(1, NameMTU, &fMTU, sizeof(Word));

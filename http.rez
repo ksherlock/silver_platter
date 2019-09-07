@@ -802,8 +802,6 @@ resource rControlTemplate (CtrlLog) {
 };
 
 
-
-
 // AppleSingle
 resource rControlList(Ctrl_PU_5)
 {
@@ -969,6 +967,29 @@ resource rControlTemplate (Ctrl_MB_Stat) {
 };
 
 
+// uploads.
+resource rControlList(Ctrl_PU_6)
+{
+	{
+		CtrlWebDAV,
+	}
+};
+
+resource rControlTemplate (CtrlWebDAV) {
+	CtrlWebDAV,
+	{20, 10, 0, 0},
+	CheckControl {
+		 {	/* optional Fields */
+			0x0,
+			0x1002,
+			0x0,
+			CtrlWebDAV,
+			0
+		}
+	}
+};
+
+
 //
 
 
@@ -1005,11 +1026,12 @@ resource rMenu (CtrlPopUp, nocrossbank){
     0xA000,
     CtrlPopUp,
     {
-     	Ctrl_PU_1,
-	Ctrl_PU_2,
-	Ctrl_PU_3,
-	Ctrl_PU_4,
-	Ctrl_PU_5,
+        Ctrl_PU_1,
+        Ctrl_PU_2,
+        Ctrl_PU_3,
+        Ctrl_PU_4,
+        Ctrl_PU_5,
+        Ctrl_PU_6,
     };
 };
 
@@ -1055,12 +1077,22 @@ resource rMenuItem (Ctrl_PU_5, nocrossbank) {
 };
 
 
+resource rMenuItem (Ctrl_PU_6, nocrossbank) {
+       Ctrl_PU_6,                  // itemID
+       "","",                  // itemChar, itemAltChar
+       NIL,                    // itemCheck
+       $8000,                  // itemFlag
+       Ctrl_PU_6           // itemTitleRef
+};
+
+
 resource rPstring(CtrlPopUp, nocrossbank){""};
 resource rPstring(Ctrl_PU_1, nocrossbank){"General"};
 resource rPstring(Ctrl_PU_2, nocrossbank){"Directories"};
 resource rPstring(Ctrl_PU_3, nocrossbank){"Uploads"};
 resource rPstring(Ctrl_PU_4, nocrossbank){"Logging"};
 resource rPstring(Ctrl_PU_5, nocrossbank){"Encapsulation"};                                         
+resource rPstring(Ctrl_PU_6, nocrossbank){"WebDAV"};                                         
 
 resource rPstring(Ctrl_AS, nocrossbank){""};
 resource rPstring(Ctrl_AD, nocrossbank){""};
@@ -1207,6 +1239,10 @@ resource rTextForLETextBox2 (Ctrl_AD_Stat) {
 
 resource rTextForLETextBox2 (Ctrl_MB_Stat) {
 	"Show MacBinary"
+};
+
+resource rPString (CtrlWebDAV) {
+	"WebDAV"
 };
 
 
