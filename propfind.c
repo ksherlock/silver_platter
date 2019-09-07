@@ -432,8 +432,10 @@ Word ProcessPropfind(struct qEntry *q) {
     return ProcessError(404, q);
   }
 
+  if (InfoDCB.fileType == 0x0f && q->moreFlags)
+    return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
 
-  if (q->moreFlags = CGI_RESOURCE && InfoDCB.fileType != 0x0f) {
+  if (q->moreFlags = CGI_RESOURCE) {
     resNumber = 1;
     q->moreFlags = 0;
   }
@@ -443,8 +445,6 @@ Word ProcessPropfind(struct qEntry *q) {
 
   HUnlock(q->workHandle);
   SetHandleSize(0, q->workHandle);
-
-
 
 
   // if it's a directory, strip / off end ...

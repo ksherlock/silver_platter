@@ -561,6 +561,10 @@ Word ProcessFile(struct qEntry *q) {
     return ProcessError(HTTP_NOT_FOUND, q);
   }
 
+  if (InfoDCB.fileType == 0x0f && q->moreFlags)
+      return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
+
+
   if (q->moreFlags == CGI_RESOURCE) {
     q->moreFlags = 0;
     resNumber = 1;
@@ -594,7 +598,6 @@ Word ProcessFile(struct qEntry *q) {
 
   /* check for range error here, after verifying file exists */
   if (q->flags & FLAG_RANGE) {
-// asm { brk 0xea }
 #define MASK (FLAG_RANGE0 | FLAG_RANGE1)
     q->contentLength = eof;
     if (!(q->flags & MASK))

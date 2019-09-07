@@ -12,8 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dfa.h"
-
 #include "config.h"
 #include "pointer.h"
 #include "server.h"
@@ -33,7 +31,7 @@ extern int scan_cgi(const char *);
 //
 // the filename is updated and the moreFlags value is returned.
 //
-Word ScanCGI(GSString255Ptr g) {
+Word ScanCGI(GSString255Ptr g, struct qEntry *q) {
   Word i;
   Word c;
   Word len = g->length;
@@ -47,9 +45,10 @@ Word ScanCGI(GSString255Ptr g) {
       g->length = i;
       int type = scan_cgi(g->text + i + 1);
       if (type) {
-        return type;
+        q->moreFlags = type;
+        return 0;
       }
-      return CGI_ERROR;
+      return 422;
     }
   }
   // check for ._<name>
@@ -64,7 +63,7 @@ Word ScanCGI(GSString255Ptr g) {
     }
     g->text[i] = 0; // NULL terminate for convenience.
     g->length = len;
-    return CGI_APPLEDOUBLE;
+    q->moreFlags = CGI_APPLEDOUBLE;
   }
 
   return 0;
@@ -269,6 +268,7 @@ Word ScanRequest(char *cp, struct qEntry *q) {
   GSString255Ptr path;
   unsigned i, j;
   unsigned method;
+  unsigned err;
 
   // format: <method> <space>+ <path> <space>+ (HTTP/\d.\d)?
 
@@ -341,10 +341,8 @@ Word ScanRequest(char *cp, struct qEntry *q) {
     path->text[j] = 0;
     path->length = j;
 
-    i = ScanCGI(path);
-    if (i == CGI_ERROR)
-      return 422;
-    q->moreFlags = i;
+    err = ScanCGI(path, q);
+    if (err) return err;
 
     // copy the path to the fullpath
     if (fJail) {
