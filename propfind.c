@@ -393,6 +393,8 @@ static Word ListDirectory(MemBuffer *m, GSString255Ptr path_uri,
 // this provides support for the WebDAV PROPFIND command.
 // an XML description of the resource will be created and sent.
 
+// TODO - include ._ entries for resource files? (moreFlags = CGI_APPLEDOUBLE)
+// TODO - proper mimetype/size for directories...
 Word ProcessPropfind(struct qEntry *q) {
   LongWord size;
   Word i;
@@ -435,10 +437,12 @@ Word ProcessPropfind(struct qEntry *q) {
   if (InfoDCB.fileType == 0x0f && q->moreFlags)
     return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
 
+#if 0
   if (q->moreFlags = CGI_RESOURCE) {
     resNumber = 1;
     q->moreFlags = 0;
   }
+#endif
 
   if (q->moreFlags)
     return ProcessError(HTTP_UNPROCESSABLE_ENTITY, q);
