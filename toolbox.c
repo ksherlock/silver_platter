@@ -526,7 +526,7 @@ static Word GetFolder(void) {
 }
 
 #pragma databank 1
-static pascal HitTest(DialogPtr dialog, Word *itemPtr) {
+static pascal void HitTest(DialogPtr dialog, Word *itemPtr) {
   Word item;
   item = *itemPtr;
   if (item == 1) {
