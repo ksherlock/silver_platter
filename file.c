@@ -204,13 +204,15 @@ static Word ListDirectory(struct qEntry *q) {
   if (err = CheckIndex(q))
     return err;
 
-  q->state = CGI_DIR;
   if (!fDir) {
-    return ProcessError(403, q);
+    return ProcessError(HTTP_FORBIDDEN, q);
   }
+
+  q->moreFlags = CGI_DIR;
+
   if (q->method == CMD_HEAD) {
-    SendHeader(q, 200, -1, NULL, "text/html", NULL, 0);
-    return 200;
+    SendHeader(q, HTTP_OK, -1, NULL, "text/html", NULL, 0);
+    return HTTP_OK;
   }
 
   DirDCB.refNum = q->fd;
@@ -397,14 +399,14 @@ static Word ListDirectory(struct qEntry *q) {
   ReleasePointer(path_uri);
 
   if (err)
-    return ProcessError(500, q);
+    return ProcessError(HTTP_INTERNAL_SERVER_ERROR, q);
 
-  SendHeader(q, 200, m.used, NULL, "text/html", NULL, 0);
+  SendHeader(q, HTTP_OK, m.used, NULL, "text/html", NULL, 0);
 
   WriteData(q, *m.h, m.used);
   WriteData(q, NULL, 0);
 
-  return 200;
+  return HTTP_OK;
 }
 
 // list the volumes
