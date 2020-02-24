@@ -721,6 +721,11 @@ void Server(void) {
     if (!_toolErr) {
       Word err;
 
+#ifdef DEBUG
+      i = sprintf(buffer, "TCPIPAcceptTCP(%d)\r", child);
+      InsertString(i, buffer);
+#endif
+
       // find an open slot...
       for (mask = 1, q = queue; fUsed & mask; mask <<= 1, q++)
         ;
