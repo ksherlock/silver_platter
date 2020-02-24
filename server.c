@@ -132,7 +132,7 @@ Handle GetLine(struct qEntry *q, Boolean *done) {
     ret = (Handle)0; // actually a blank line;
     *done = true;
   } else {
-    ret = NewHandle(length, MyID | 0x0d00, attrLocked, 0);
+    ret = NewHandle(length + 1, MyID | 0x0d00, attrLocked, 0);
     if (!_toolErr) {
       char *cp;
       HandToHand(h, ret, length);
