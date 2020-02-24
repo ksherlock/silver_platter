@@ -20,9 +20,9 @@ PointerStartUp	start Memory
 	EndLocals
 	FixStack
 
-    BegParms
+	BegParms
 mid	Word
-    EndParms
+	EndParms
 
 	BeginStack
 
@@ -46,9 +46,9 @@ h	LongWord
 
 	FixStack
 
-    BegParms
-size  LongWord
-    EndParms
+	BegParms
+size	LongWord
+	EndParms
 
 	BeginStack
 
@@ -115,9 +115,9 @@ DisposePointer	start Memory
 
 	FixStack
 
-    BegParms
-ptr  LongWord
-    EndParms
+	BegParms
+ptr	LongWord
+	EndParms
 
 	BeginStack
 
@@ -157,9 +157,9 @@ RetainPointer	start Memory
 
 	FixStack
 
-    BegParms
-ptr  LongWord
-    EndParms
+	BegParms
+ptr	LongWord
+	EndParms
 
 	BeginStack
 
@@ -197,9 +197,9 @@ ReleasePointer	start Memory
 
 	FixStack
 
-    BegParms
-ptr  LongWord
-    EndParms
+	BegParms
+ptr	LongWord
+	EndParms
 
 	BeginStack
 
