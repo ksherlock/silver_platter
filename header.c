@@ -44,6 +44,53 @@ int fdprintf(word refNum, const char *fmt, ...) {
   return size;
 }
 
+#define SZ(x) (sizeof(x) / sizeof(x[0]))
+static const char *status_name(unsigned status) {
+
+  static const char *_100[] = {
+    "Continue", "Switching Protocols", "Processing", "Early Hints"
+  };
+  static const char *_200[] =  {
+    "OK", "Created", "Accepted", "Non-Authoritative Information",
+    "No Content", "Reset Content", "Partial Content", "Multi-Status",
+    "Already Reported"
+    /* [226] "IM Used" missing */
+  };
+
+  static const char *_300[] =  {
+    "Multiple Choices", "Moved Permanently", "Found", "See Other",
+    "Not Modified", "Use Proxy", "Switch Proxy", "Temporary Redirect",
+    "Permanent Redirect"
+  };
+
+  static const char *_400[] =  {
+    "Bad Request", "Unauthorized", "Payment Required", "Forbidden",
+    "Not Found", "Method Not Allowed", "Not Acceptable", "Proxy Authentication Required",
+    "Request Timeout", "Conflict", "Gone", "Length Required", 
+    "Precondition Failed", "Payload Too Large", "URI Too Long", "Unsupported Media Type",
+    "Range Not Satisfiable", "Expectation Failed", "I'm A Teapot", "",
+    "", "Misdirected Request", "Unprocessable Entity", "Locked",
+    "Failed Dependency", "Too Early", "Upgrade Required", "",
+    "Precondition Required", "Too Many Requests", "", "Request Header Fields Too Large"
+    /* [451] "Unavailable For Legal Reasons" missing */
+  };
+
+  static const char *_500[] =  {
+    "Internal Server Error", "Not Implemented", "Bad Gateway", "Service Unavailable",
+    "Gateway Timeout", "HTTP Version Not Supported", "Variant Also Negotiates", "Insufficient Storage",
+    "Loop Detected", "", "Not Extended", "Network Authentication Required"
+
+  };
+
+  if (status >= 100 && status < 100 + SZ(_100)) return _100[status - 100];
+  if (status >= 200 && status < 200 + SZ(_200)) return _200[status - 200];
+  if (status >= 300 && status < 300 + SZ(_300)) return _300[status - 300];
+  if (status >= 400 && status < 400 + SZ(_400)) return _400[status - 400];
+  if (status >= 500 && status < 500 + SZ(_500)) return _500[status - 500];
+
+  return "";
+}
+
 extern void tiTimeRec2GMTString(const TimeRec *, char *);
 
 void SendHeader(struct qEntry *q, Word status, LongWord size,
@@ -94,7 +141,7 @@ void SendHeader(struct qEntry *q, Word status, LongWord size,
   }
 
   if (q->version >= 0x0100) {
-    i = sprintf(buffer, "HTTP/1.1 %u\r\n", status);
+    i = sprintf(buffer, "HTTP/1.1 %u %s\r\n", status, status_name(status));
     TCPIPWriteTCP(ipid, buffer, i, false, false);
 
     tiToday2GMTString(tiBuffer);
