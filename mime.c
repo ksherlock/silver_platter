@@ -15,9 +15,12 @@ struct etable {
   const char *mime;
 };
 
-static struct etable ascii[] = {{4, "html", "text/html"},
+static struct etable ascii[] = {{3, "css", "text/css"},
+                                {4, "html", "text/html"},
                                 {3, "htm", "text/html"},
+                                {2, "js", "text/javascript"},
                                 {3, "xml", "text/xml"},
+                                {5, "xhtml", "application/xhtml+xml"},
                                 {0, NULL, NULL}};
 
 static struct etable binary[] = {{3, "bny", "application/x-BinaryII"},
