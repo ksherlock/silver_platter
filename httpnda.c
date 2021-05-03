@@ -1,4 +1,4 @@
-#pragma nda NDAOpen NDAClose NDAAction NDAInit 30 0xffff "--Silver Platter\\H**"
+#pragma nda NDAOpen NDAClose NDAAction NDAInit 6 0xffff "--Silver Platter\\H**"
 
 #pragma lint - 1
 #pragma optimize - 1
